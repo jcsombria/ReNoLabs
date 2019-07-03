@@ -1,0 +1,1284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    
+        <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+	<link href='/stylesheets/template_routes.css' rel='stylesheet'>
+    <link rel="stylesheet"  type="text/css" href="_ejs_library/css/ejsSimulation.css" />
+    <script src="/scripts/common_script.js"></script>
+    <script src="/scripts/textresizedetector.js"></script>
+    <script src="/scripts/ejsS.v1.min.js"></script>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    
+<script type="text/javascript"><!--//--><![CDATA[//><!--
+function motor_practice_15(_topFrame,_libraryPath,_codebasePath) {
+  var _model = EJSS_CORE.createAnimation();
+  var _view;
+  var _isPlaying = false;
+  var _isPaused = true;
+  var _isMobile = (navigator===undefined) ? false : navigator.userAgent.match(/iPhone|iPad|iPod|Android|BlackBerry|Opera Mini|IEMobile/i);
+
+var _stringProperties = {};
+  var _tools = {
+    showInputDialog : EJSS_INTERFACE.BoxPanel.showInputDialog,
+    showOkDialog : EJSS_INTERFACE.BoxPanel.showOkDialog,
+    showOkCancelDialog : EJSS_INTERFACE.BoxPanel.showOkCancelDialog
+  };
+
+  function _play()  { _isPaused = false; _isPlaying = true;  _model.play();  }
+  function _pause() { _isPaused = true;  _isPlaying = false; _model.pause(); }
+  function _step()  { _pause();  _model.step(); }
+  function _reset() { _model.reset();  _isPaused = _model.isPaused(); _isPlaying = _model.isPlaying(); }
+  function _update() { _model.update(); }
+  function _initialize() { _model.initialize(); }
+  function _setFPS(_fps) { _model.setFPS(_fps); }
+  function _setDelay(_delay) { _model.setDelay(_delay); }
+  function _setStepsPerDisplay(_spd) { _model.setStepsPerDisplay(_spd); }
+  function _setUpdateView(_updateView) { _model.setUpdateView(_updateView); }
+  function _setAutoplay(_auto) { _model.setAutoplay(_auto); }
+  function _println(_message) { console.log(_message); }
+
+  function _breakAfterThisPage() { _model.setShouldBreak(true); }
+
+  function _resetSolvers() { if (_model.resetSolvers) _model.resetSolvers(); }
+
+  function _saveText(name,type,content) { if (_model.saveText) _model.saveText(name,type,content); }
+
+  function _saveState(name) { if (_model.saveState) _model.saveState(name); }
+
+  function _saveImage(name,panelname) { if (_model.saveImage) _model.saveImage(name,panelname); }
+
+  function _readState(url,type) { if (_model.readState) _model.readState(url,type); }
+
+  function _readText(url,type,varname) { if (_model.readText) _model.readText(url,type,varname); }
+
+function _getStringProperty(propertyName) {
+  var _value = _stringProperties[propertyName];
+  if (_value===undefined) return propertyName;
+  else return _value;
+}
+  var __pagesEnabled = [];
+  function _setPageEnabled(pageName,enabled) { __pagesEnabled[pageName] = enabled; }
+
+  var w_buttons; // EjsS Model.Variables.view_variables.w_buttons
+  var h_buttons; // EjsS Model.Variables.view_variables.h_buttons
+  var w_Ncontroller; // EjsS Model.Variables.view_variables.w_Ncontroller
+  var h_Ncontroller; // EjsS Model.Variables.view_variables.h_Ncontroller
+  var w_TController; // EjsS Model.Variables.view_variables.w_TController
+  var h_TController; // EjsS Model.Variables.view_variables.h_TController
+  var w_Nfunction; // EjsS Model.Variables.view_variables.w_Nfunction
+  var h_Nfunction; // EjsS Model.Variables.view_variables.h_Nfunction
+  var w_Tfunction; // EjsS Model.Variables.view_variables.w_Tfunction
+  var h_Tfunction; // EjsS Model.Variables.view_variables.h_Tfunction
+  var font_style; // EjsS Model.Variables.view_variables.font_style
+  var graph_0; // EjsS Model.Variables.view_variables.graph_0
+  var graph_1; // EjsS Model.Variables.view_variables.graph_1
+  var graph_2; // EjsS Model.Variables.view_variables.graph_2
+  var referenceMode; // EjsS Model.Variables.view_variables.referenceMode
+  var referenceSelect; // EjsS Model.Variables.view_variables.referenceSelect
+  var controllerMode; // EjsS Model.Variables.view_variables.controllerMode
+  var controllerSelect; // EjsS Model.Variables.view_variables.controllerSelect
+  var button_state; // EjsS Model.Variables.view_variables.button_state
+  var windowElement; // EjsS Model.Variables.view_variables.windowElement
+
+  function _serialize() { return _model.serialize(); }
+
+  _model._userSerialize = function() {
+    return {
+      w_buttons : w_buttons,
+      h_buttons : h_buttons,
+      w_Ncontroller : w_Ncontroller,
+      h_Ncontroller : h_Ncontroller,
+      w_TController : w_TController,
+      h_TController : h_TController,
+      w_Nfunction : w_Nfunction,
+      h_Nfunction : h_Nfunction,
+      w_Tfunction : w_Tfunction,
+      h_Tfunction : h_Tfunction,
+      font_style : font_style,
+      graph_0 : graph_0,
+      graph_1 : graph_1,
+      graph_2 : graph_2,
+      referenceMode : referenceMode,
+      referenceSelect : referenceSelect,
+      controllerMode : controllerMode,
+      controllerSelect : controllerSelect,
+      button_state : button_state,
+      windowElement : windowElement
+    };
+  };
+
+  function _unserialize(json) { return _model.unserialize(json); }
+
+  _model._userUnserialize = function(json) {
+    if(typeof json.w_buttons != "undefined") w_buttons = json.w_buttons;
+    if(typeof json.h_buttons != "undefined") h_buttons = json.h_buttons;
+    if(typeof json.w_Ncontroller != "undefined") w_Ncontroller = json.w_Ncontroller;
+    if(typeof json.h_Ncontroller != "undefined") h_Ncontroller = json.h_Ncontroller;
+    if(typeof json.w_TController != "undefined") w_TController = json.w_TController;
+    if(typeof json.h_TController != "undefined") h_TController = json.h_TController;
+    if(typeof json.w_Nfunction != "undefined") w_Nfunction = json.w_Nfunction;
+    if(typeof json.h_Nfunction != "undefined") h_Nfunction = json.h_Nfunction;
+    if(typeof json.w_Tfunction != "undefined") w_Tfunction = json.w_Tfunction;
+    if(typeof json.h_Tfunction != "undefined") h_Tfunction = json.h_Tfunction;
+    if(typeof json.font_style != "undefined") font_style = json.font_style;
+    if(typeof json.graph_0 != "undefined") graph_0 = json.graph_0;
+    if(typeof json.graph_1 != "undefined") graph_1 = json.graph_1;
+    if(typeof json.graph_2 != "undefined") graph_2 = json.graph_2;
+    if(typeof json.referenceMode != "undefined") referenceMode = json.referenceMode;
+    if(typeof json.referenceSelect != "undefined") referenceSelect = json.referenceSelect;
+    if(typeof json.controllerMode != "undefined") controllerMode = json.controllerMode;
+    if(typeof json.controllerSelect != "undefined") controllerSelect = json.controllerSelect;
+    if(typeof json.button_state != "undefined") button_state = json.button_state;
+    if(typeof json.windowElement != "undefined") windowElement = json.windowElement;
+   _resetSolvers();
+   _model.update();
+  };
+
+  _model.addToReset(function() {
+    __pagesEnabled["Init1"] = true;
+    __pagesEnabled["Evol Page"] = true;
+    __pagesEnabled["FixRel Page"] = true;
+  });
+
+  _model.addToReset(function() {
+    w_buttons = 120; // EjsS Model.Variables.view_variables.w_buttons
+    h_buttons = 50; // EjsS Model.Variables.view_variables.h_buttons
+    w_Ncontroller = 150; // EjsS Model.Variables.view_variables.w_Ncontroller
+    h_Ncontroller = 25; // EjsS Model.Variables.view_variables.h_Ncontroller
+    w_TController = 100; // EjsS Model.Variables.view_variables.w_TController
+    h_TController = 25; // EjsS Model.Variables.view_variables.h_TController
+    w_Nfunction = 80; // EjsS Model.Variables.view_variables.w_Nfunction
+    h_Nfunction = 25; // EjsS Model.Variables.view_variables.h_Nfunction
+    w_Tfunction = 100; // EjsS Model.Variables.view_variables.w_Tfunction
+    h_Tfunction = 25; // EjsS Model.Variables.view_variables.h_Tfunction
+    font_style = "normal bold 16px"; // EjsS Model.Variables.view_variables.font_style
+    graph_0 = false; // EjsS Model.Variables.view_variables.graph_0
+    graph_1 = true; // EjsS Model.Variables.view_variables.graph_1
+    graph_2 = false; // EjsS Model.Variables.view_variables.graph_2
+    referenceMode = ["Step", "Square", "Triangular", "Sin", "Impulse", "Extern"]; // EjsS Model.Variables.view_variables.referenceMode
+    referenceSelect = "Sin"; // EjsS Model.Variables.view_variables.referenceSelect
+    controllerMode = ["Manual", "PID", "SS", "DOF"]; // EjsS Model.Variables.view_variables.controllerMode
+    controllerSelect = "Manual"; // EjsS Model.Variables.view_variables.controllerSelect
+    button_state = new Array(4); // EjsS Model.Variables.view_variables.button_state
+    windowElement = 100; // EjsS Model.Variables.view_variables.windowElement
+  });
+
+  _model.addToReset(function() {
+    _model.setAutoplay(true);
+    _model.setPauseOnPageExit(false);
+    _model.setFPS(20);
+    _model.setStepsPerDisplay(1);
+  });
+
+    var key_ejs =  <%- JSON.stringify(key) %>;  // > CustomCode.comunication_functions:1
+    var ip_ejs =  <%- JSON.stringify(ip) %>;  // > CustomCode.comunication_functions:2
+    var port_ejs =  <%- JSON.stringify(port) %>;  // > CustomCode.comunication_functions:3
+  var state_EJS = {reference:   // > CustomCode.comunication_functions:4
+                    {Tipo:0,  // > CustomCode.comunication_functions:5
+                     param:[40, 0, 0, 0] //Periodo, Amplitud, OffsetY, OffsetP]  // > CustomCode.comunication_functions:6
+                    },  // > CustomCode.comunication_functions:7
+                     controller:{  // > CustomCode.comunication_functions:8
+                     Tipo:0,  // > CustomCode.comunication_functions:9
+                     RealSys:0,  // > CustomCode.comunication_functions:10
+                     T:0.1,  // > CustomCode.comunication_functions:11
+                     PID:[1.8, 1000, 0.28, 15], //[Kp, Ki, Kd, N, Error]  // > CustomCode.comunication_functions:12
+                     SS:{  // > CustomCode.comunication_functions:13
+                       F:"[1,0.08457;0,0.708]",  // > CustomCode.comunication_functions:14
+                       G:"[0.0268;0.507]",  // > CustomCode.comunication_functions:15
+                       C:"[1,0]",  // > CustomCode.comunication_functions:16
+                       K:"[0.835,0.221]",  // > CustomCode.comunication_functions:17
+                       L:"[0.7835;0.205]",  // > CustomCode.comunication_functions:18
+                       Ki:"[0.0]",  // > CustomCode.comunication_functions:19
+                       FF:"[0.835]"  // > CustomCode.comunication_functions:20
+                       }  // > CustomCode.comunication_functions:21
+                     }  // > CustomCode.comunication_functions:22
+  };  // > CustomCode.comunication_functions:23
+  var state_REAL = {config: 0, //[0: disconnected, 1: ready, 2: play, 3: pause, 4: reset]  // > CustomCode.comunication_functions:24
+                    evolution: [0, 0, 0, 0, 0], //[t,u,y,v,r]  // > CustomCode.comunication_functions:25
+                    reference:   // > CustomCode.comunication_functions:26
+                    {Tipo:0,  // > CustomCode.comunication_functions:27
+                     param:[40, 0, 0, 0] //[Amplitud, Periodo, OffsetY, OffsetP]  // > CustomCode.comunication_functions:28
+                    },  // > CustomCode.comunication_functions:29
+                     controller:{  // > CustomCode.comunication_functions:30
+                     Tipo:0,  // > CustomCode.comunication_functions:31
+                     RealSys:0,  // > CustomCode.comunication_functions:32
+                     T:0.1,  // > CustomCode.comunication_functions:33
+                     PID:[1.8, 1000, 0.28, 15], //[Kp, Ki, Kd, N, Error]  // > CustomCode.comunication_functions:34
+                     SS:{  // > CustomCode.comunication_functions:35
+                       F:"[1,0.08457;0,0.708]",  // > CustomCode.comunication_functions:36
+                       G:"[0.0268;0.507]",  // > CustomCode.comunication_functions:37
+                       C:"[1,0]",  // > CustomCode.comunication_functions:38
+                       K:"[0.835,0.221]",  // > CustomCode.comunication_functions:39
+                       L:"[0.7835;0.205]",  // > CustomCode.comunication_functions:40
+                       Ki:"[0.0]",  // > CustomCode.comunication_functions:41
+                       FF:"[0.835]"  // > CustomCode.comunication_functions:42
+                       }  // > CustomCode.comunication_functions:43
+                     }  // > CustomCode.comunication_functions:44
+  };  // > CustomCode.comunication_functions:45
+  var first = {  // > CustomCode.comunication_functions:46
+               reference: true,  // > CustomCode.comunication_functions:47
+               controller: true,  // > CustomCode.comunication_functions:48
+               };  // > CustomCode.comunication_functions:49
+  //var socket = io.connect('http://147.96.67.98:8080');  // > CustomCode.comunication_functions:50
+  //var socket = io.connect('http://147.96.71.236:8080', { query: 'key='+key_ejs });  // > CustomCode.comunication_functions:51
+    var socket = io.connect(ip_ejs + ":" + port_ejs, { query: 'key='+key_ejs });  // > CustomCode.comunication_functions:52
+                 // > CustomCode.comunication_functions:53
+  function send_state (variable) {  // > CustomCode.comunication_functions:54
+        socket.emit('clientOut_serverIn', {variable: variable, value: state_EJS[variable]});  // > CustomCode.comunication_functions:55
+        // > CustomCode.comunication_functions:56
+  };  // > CustomCode.comunication_functions:57
+  function send_connect (variable) {  // > CustomCode.comunication_functions:58
+      var temp = [0];  // > CustomCode.comunication_functions:59
+      temp[0] = variable;  // > CustomCode.comunication_functions:60
+        socket.emit('clientOut_serverIn', {variable: 'config', value: temp});  // > CustomCode.comunication_functions:61
+  };  // > CustomCode.comunication_functions:62
+      // > CustomCode.comunication_functions:63
+    socket.on('serverOut_clientIn', function(data) {  // > CustomCode.comunication_functions:64
+  //UUNCOMMENT     if (data.variable in first){    // > CustomCode.comunication_functions:65
+  //UUNCOMMENT     if (first[data.variable]){    // > CustomCode.comunication_functions:66
+  //UUNCOMMENT           state_EJS[data.variable]=data.value;    // > CustomCode.comunication_functions:67
+  //UUNCOMMENT           first[data.variable]=false;     // > CustomCode.comunication_functions:68
+  //UUNCOMMENT             // > CustomCode.comunication_functions:69
+  //UUNCOMMENT      } else state_REAL[data.variable] = data.value;  // > CustomCode.comunication_functions:70
+  //UUNCOMMENT      } else state_REAL[data.variable] = data.value;  // > CustomCode.comunication_functions:71
+         state_REAL[data.variable] = data.value;  // > CustomCode.comunication_functions:72
+        _view._update();  // > CustomCode.comunication_functions:73
+    });  // > CustomCode.comunication_functions:74
+      // > CustomCode.comunication_functions:75
+    socket.on('disconnect_timeout', function(data) {  // > CustomCode.comunication_functions:76
+        alert(data.text);  // > CustomCode.comunication_functions:77
+        window.location = "./select";  // > CustomCode.comunication_functions:78
+    });  // > CustomCode.comunication_functions:79
+      // > CustomCode.comunication_functions:80
+
+  function select_update_reference(special) {  // > CustomCode.update_functions:1
+      // > CustomCode.update_functions:2
+      if (special==1)  // > CustomCode.update_functions:3
+      { if (referenceSelect=='Extern')  // > CustomCode.update_functions:4
+          return false;  // > CustomCode.update_functions:5
+        else  // > CustomCode.update_functions:6
+          return true;  // > CustomCode.update_functions:7
+      }  // > CustomCode.update_functions:8
+      else{  // > CustomCode.update_functions:9
+      if (referenceSelect=='Step' || referenceSelect=='Extern' )  // > CustomCode.update_functions:10
+          return false;  // > CustomCode.update_functions:11
+      else  // > CustomCode.update_functions:12
+          return true;  }    // > CustomCode.update_functions:13
+      // > CustomCode.update_functions:14
+  };  // > CustomCode.update_functions:15
+  function color_update_reference (i) {  // > CustomCode.update_functions:16
+     if (i=='Tipo')  // > CustomCode.update_functions:17
+    { if (state_REAL.reference.Tipo != state_EJS.reference.Tipo)  // > CustomCode.update_functions:18
+      return "Yellow";  // > CustomCode.update_functions:19
+      else  // > CustomCode.update_functions:20
+       return "White";  // > CustomCode.update_functions:21
+    }  // > CustomCode.update_functions:22
+    else{  // > CustomCode.update_functions:23
+    if (state_REAL.reference.param[i] != state_EJS.reference.param[i])  // > CustomCode.update_functions:24
+      return "Yellow";  // > CustomCode.update_functions:25
+    else  // > CustomCode.update_functions:26
+      return "White";  // > CustomCode.update_functions:27
+    }  // > CustomCode.update_functions:28
+  };  // > CustomCode.update_functions:29
+  function color_update_controller (str,i) {  // > CustomCode.update_functions:30
+    if (str=='Tipo')  // > CustomCode.update_functions:31
+    {  // > CustomCode.update_functions:32
+      if (state_REAL.controller.Tipo != state_EJS.controller.Tipo)  // > CustomCode.update_functions:33
+        return "Yellow";  // > CustomCode.update_functions:34
+      else  // > CustomCode.update_functions:35
+         return "White";  // > CustomCode.update_functions:36
+    }  // > CustomCode.update_functions:37
+    else  // > CustomCode.update_functions:38
+    {  // > CustomCode.update_functions:39
+      if (state_REAL.controller[str][i] != state_EJS.controller[str][i])  // > CustomCode.update_functions:40
+        return "Yellow";  // > CustomCode.update_functions:41
+      else  // > CustomCode.update_functions:42
+        return "White";  // > CustomCode.update_functions:43
+    }  // > CustomCode.update_functions:44
+  };  // > CustomCode.update_functions:45
+  function update () {  // > CustomCode.update_functions:46
+      for (key in state_EJS) {  // > CustomCode.update_functions:47
+        if (state_REAL[key] != state_EJS[key]) {  // > CustomCode.update_functions:48
+          send_state(key);    // > CustomCode.update_functions:49
+        }  // > CustomCode.update_functions:50
+      }  // > CustomCode.update_functions:51
+  };  // > CustomCode.update_functions:52
+
+  _model.addToInitialization(function() {
+    if (!__pagesEnabled["Init1"]) return;
+    select_update_reference(0);  // > Initialization.Init1:1
+  });
+
+  _model.addToEvolution(function() {
+    if (!__pagesEnabled["Evol Page"]) return;
+    /*state_REAL.signal[0] = state_REAL.signal[0]+0.01;  // > Evolution.Evol Page:1
+    state_REAL.signal[1] = state_REAL.signal[0]*state_REAL.signal[0];  // > Evolution.Evol Page:2
+    state_REAL.signal[2] = state_REAL.signal[0];*/  // > Evolution.Evol Page:3
+  });
+
+  _model.addToFixedRelations(function() { _isPaused = _model.isPaused(); _isPlaying = _model.isPlaying(); });
+
+  _model.addToFixedRelations(function() {
+    if (!__pagesEnabled["FixRel Page"]) return;
+    for (var i = 0; i < referenceMode.length; i++) {  // > FixedRelations.FixRel Page:1
+      if (referenceSelect == referenceMode[i])  // > FixedRelations.FixRel Page:2
+        state_EJS.reference.Tipo = i;  // > FixedRelations.FixRel Page:3
+    }  // > FixedRelations.FixRel Page:4
+    for (var i = 0; i < controllerMode.length; i++) {  // > FixedRelations.FixRel Page:5
+      if (controllerSelect == controllerMode[i])  // > FixedRelations.FixRel Page:6
+        state_EJS.controller.Tipo = i;  // > FixedRelations.FixRel Page:7
+    }  // > FixedRelations.FixRel Page:8
+    switch (state_REAL.config) {  // > FixedRelations.FixRel Page:9
+      case 0:  // > FixedRelations.FixRel Page:10
+        button_state = [0, 0, 0, 0];  // > FixedRelations.FixRel Page:11
+        break;  // > FixedRelations.FixRel Page:12
+      case 1: //En espera  // > FixedRelations.FixRel Page:13
+        button_state = [1, 1, 0, 0];  // > FixedRelations.FixRel Page:14
+        break;  // > FixedRelations.FixRel Page:15
+      case 2: //Play  // > FixedRelations.FixRel Page:16
+        button_state = [1, 0, 1, 1];  // > FixedRelations.FixRel Page:17
+        break;  // > FixedRelations.FixRel Page:18
+      case 3: //Pause  // > FixedRelations.FixRel Page:19
+        button_state = [1, 1, 0, 1];  // > FixedRelations.FixRel Page:20
+        break;  // > FixedRelations.FixRel Page:21
+    }  // > FixedRelations.FixRel Page:22
+  });
+
+  _model.addToFixedRelations(function() { _isPaused = _model.isPaused(); _isPlaying = _model.isPlaying(); });
+
+    _model._resized = function(_width,_height) {
+      _view._resized(_width,_height);
+  }; // end of _resized
+    _model._fontResized = function(iBase,iSize,iDelta) {
+      _view._fontResized(iBase,iSize,iDelta);
+  }; // end of _fontResized
+
+  function _getViews() {
+    var _viewsInfo = [];
+    var _counter = 0;
+    _viewsInfo[_counter++] = { name : "HtmlView Page", width : 800, height : 600 };
+    return _viewsInfo;
+  } // end of _getViews
+
+  function _selectView(_viewNumber) {
+    _view = null;
+    _view = new motor_practice_15_View(_topFrame,_viewNumber,_libraryPath,_codebasePath);
+    var _view_super_reset = _view._reset;
+    _view._reset = function() {
+      _view_super_reset();
+      switch(_viewNumber) {
+        case -10 : break; // make Lint happy
+        default :
+        case 0:
+          _view.htmlArea.linkProperty("Display",  function() {
+      if (graph_0) {return "inline"} else {return "none"}  // > htmlArea.Display:1
+      ;    }); // HtmlView Page linking property 'Display' for element 'htmlArea'
+          _view.evolution_graph.setAction("OnDoubleClick", _view._reset); // HtmlView Page setting action 'OnDoubleClick' for element 'evolution_graph'
+          _view.evolution_graph.linkProperty("Display",  function() {
+      if (graph_1) {return "inline"} else {return "none"}  // > evolution_graph.Display:1
+      ;    }); // HtmlView Page linking property 'Display' for element 'evolution_graph'
+          _view.t_r.linkProperty("Maximum",  function() { return windowElement; }, function(_v) { windowElement = _v; } ); // HtmlView Page linking property 'Maximum' for element 't_r'
+          _view.t_r.linkProperty("InputX",  function() { return state_REAL.evolution[0]; } ); // HtmlView Page linking property 'InputX' for element 't_r'
+          _view.t_r.linkProperty("InputY",  function() { return state_REAL.evolution[4]; } ); // HtmlView Page linking property 'InputY' for element 't_r'
+          _view.t_u.linkProperty("Maximum",  function() { return windowElement; }, function(_v) { windowElement = _v; } ); // HtmlView Page linking property 'Maximum' for element 't_u'
+          _view.t_u.linkProperty("InputX",  function() { return state_REAL.evolution[0]; } ); // HtmlView Page linking property 'InputX' for element 't_u'
+          _view.t_u.linkProperty("InputY",  function() { return state_REAL.evolution[1]; } ); // HtmlView Page linking property 'InputY' for element 't_u'
+          _view.t_y.linkProperty("Maximum",  function() { return windowElement; }, function(_v) { windowElement = _v; } ); // HtmlView Page linking property 'Maximum' for element 't_y'
+          _view.t_y.linkProperty("InputX",  function() { return state_REAL.evolution[0]; } ); // HtmlView Page linking property 'InputX' for element 't_y'
+          _view.t_y.linkProperty("InputY",  function() { return state_REAL.evolution[2]; } ); // HtmlView Page linking property 'InputY' for element 't_y'
+          _view.lissajous_graph.setAction("OnDoubleClick", _view._reset); // HtmlView Page setting action 'OnDoubleClick' for element 'lissajous_graph'
+          _view.lissajous_graph.linkProperty("Display",  function() {
+      if (graph_2) {return "inline"} else {return "none"}  // > lissajous_graph.Display:1
+      ;    }); // HtmlView Page linking property 'Display' for element 'lissajous_graph'
+          _view.y_u.linkProperty("Maximum",  function() { return windowElement; }, function(_v) { windowElement = _v; } ); // HtmlView Page linking property 'Maximum' for element 'y_u'
+          _view.y_u.linkProperty("InputX",  function() { return state_REAL.evolution[1]; } ); // HtmlView Page linking property 'InputX' for element 'y_u'
+          _view.y_u.linkProperty("InputY",  function() { return state_REAL.evolution[3]; } ); // HtmlView Page linking property 'InputY' for element 'y_u'
+          _view.camera_button.linkProperty("Checked",  function() { return graph_0; }, function(_v) { graph_0 = _v; } ); // HtmlView Page linking property 'Checked' for element 'camera_button'
+          _view.camera_button.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'camera_button'
+          _view.evolution_button.linkProperty("Checked",  function() { return graph_1; }, function(_v) { graph_1 = _v; } ); // HtmlView Page linking property 'Checked' for element 'evolution_button'
+          _view.evolution_button.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'evolution_button'
+          _view.lissajous_button.linkProperty("Checked",  function() { return graph_2; }, function(_v) { graph_2 = _v; } ); // HtmlView Page linking property 'Checked' for element 'lissajous_button'
+          _view.lissajous_button.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'lissajous_button'
+          _view.window_.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'window_'
+          _view.windowNumerico.linkProperty("Value",  function() { return windowElement; }, function(_v) { windowElement = _v; } ); // HtmlView Page linking property 'Value' for element 'windowNumerico'
+          _view.windowNumerico.setAction("OnChange", function() { if (windowElement<50)
+  windowElement=50;
+if (windowElement>1000)
+  windowElement=1000; }); // HtmlView Page setting action 'OnChange' for element 'windowNumerico'
+          _view.windowNumerico.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'windowNumerico'
+          _view.empty.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'empty'
+          _view.empty.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'empty'
+          _view.REAL_label_input.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'REAL_label_input'
+          _view.REAL_label_input.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'REAL_label_input'
+          _view.EJS_label_intup.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'EJS_label_intup'
+          _view.EJS_label_intup.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'EJS_label_intup'
+          _view.EJS_label_intup.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'EJS_label_intup'
+          _view.input_mode.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'input_mode'
+          _view.input_mode.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'input_mode'
+          _view.input_mode.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'input_mode'
+          _view.mode_REAL.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'mode_REAL'
+          _view.mode_REAL.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'mode_REAL'
+          _view.mode_REAL.linkProperty("Value",  function() { return referenceMode[state_REAL.reference.Tipo]; }, function(_v) { referenceMode[state_REAL.reference.Tipo] = _v; } ); // HtmlView Page linking property 'Value' for element 'mode_REAL'
+          _view.mode_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'mode_REAL'
+          _view.mode_EJS.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'mode_EJS'
+          _view.mode_EJS.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'mode_EJS'
+          _view.mode_EJS.linkProperty("Options",  function() { return referenceMode; }, function(_v) { referenceMode = _v; } ); // HtmlView Page linking property 'Options' for element 'mode_EJS'
+          _view.mode_EJS.linkProperty("Background",  function() { return color_update_reference('Tipo'); }, function(_v) { color_update_reference('Tipo') = _v; } ); // HtmlView Page linking property 'Background' for element 'mode_EJS'
+          _view.mode_EJS.linkProperty("SelectedOptions",  function() { return referenceSelect; }, function(_v) { referenceSelect = _v; } ); // HtmlView Page linking property 'SelectedOptions' for element 'mode_EJS'
+          _view.mode_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'mode_EJS'
+          _view.wave_amp.linkProperty("Visibility",  function() { return select_update_reference(0); } ); // HtmlView Page linking property 'Visibility' for element 'wave_amp'
+          _view.amp_title.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'amp_title'
+          _view.amp_title.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'amp_title'
+          _view.amp_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'amp_title'
+          _view.amp_REAL.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'amp_REAL'
+          _view.amp_REAL.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'amp_REAL'
+          _view.amp_REAL.linkProperty("Value",  function() { return state_REAL.reference.param[1]; }, function(_v) { state_REAL.reference.param[1] = _v; } ); // HtmlView Page linking property 'Value' for element 'amp_REAL'
+          _view.amp_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'amp_REAL'
+          _view.amp_EJS.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'amp_EJS'
+          _view.amp_EJS.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'amp_EJS'
+          _view.amp_EJS.linkProperty("Background",  function() { return color_update_reference(1); }, function(_v) { color_update_reference(1) = _v; } ); // HtmlView Page linking property 'Background' for element 'amp_EJS'
+          _view.amp_EJS.linkProperty("Value",  function() { return state_EJS.reference.param[1]; }, function(_v) { state_EJS.reference.param[1] = _v; } ); // HtmlView Page linking property 'Value' for element 'amp_EJS'
+          _view.amp_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'amp_EJS'
+          _view.wave_period.linkProperty("Visibility",  function() { return select_update_reference(1); } ); // HtmlView Page linking property 'Visibility' for element 'wave_period'
+          _view.period_title.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'period_title'
+          _view.period_title.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'period_title'
+          _view.period_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'period_title'
+          _view.period_REAL.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'period_REAL'
+          _view.period_REAL.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'period_REAL'
+          _view.period_REAL.linkProperty("Value",  function() { return state_REAL.reference.param[0]; }, function(_v) { state_REAL.reference.param[0] = _v; } ); // HtmlView Page linking property 'Value' for element 'period_REAL'
+          _view.period_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'period_REAL'
+          _view.period_EJS.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'period_EJS'
+          _view.period_EJS.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'period_EJS'
+          _view.period_EJS.linkProperty("Background",  function() { return color_update_reference(0); }, function(_v) { color_update_reference(0) = _v; } ); // HtmlView Page linking property 'Background' for element 'period_EJS'
+          _view.period_EJS.linkProperty("Value",  function() { return state_EJS.reference.param[0]; }, function(_v) { state_EJS.reference.param[0] = _v; } ); // HtmlView Page linking property 'Value' for element 'period_EJS'
+          _view.period_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'period_EJS'
+          _view.wave_offsetY.linkProperty("Visibility",  function() { return select_update_reference(0); } ); // HtmlView Page linking property 'Visibility' for element 'wave_offsetY'
+          _view.offsetY_title.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'offsetY_title'
+          _view.offsetY_title.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'offsetY_title'
+          _view.offsetY_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'offsetY_title'
+          _view.offsetY_REAL.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'offsetY_REAL'
+          _view.offsetY_REAL.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'offsetY_REAL'
+          _view.offsetY_REAL.linkProperty("Value",  function() { return state_REAL.reference.param[2]; }, function(_v) { state_REAL.reference.param[2] = _v; } ); // HtmlView Page linking property 'Value' for element 'offsetY_REAL'
+          _view.offsetY_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'offsetY_REAL'
+          _view.offsetY_EJS.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'offsetY_EJS'
+          _view.offsetY_EJS.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'offsetY_EJS'
+          _view.offsetY_EJS.linkProperty("Background",  function() { return color_update_reference(2); }, function(_v) { color_update_reference(2) = _v; } ); // HtmlView Page linking property 'Background' for element 'offsetY_EJS'
+          _view.offsetY_EJS.linkProperty("Value",  function() { return state_EJS.reference.param[2]; }, function(_v) { state_EJS.reference.param[2] = _v; } ); // HtmlView Page linking property 'Value' for element 'offsetY_EJS'
+          _view.offsetY_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'offsetY_EJS'
+          _view.wave_offsetT.linkProperty("Visibility",  function() { return select_update_reference(0); } ); // HtmlView Page linking property 'Visibility' for element 'wave_offsetT'
+          _view.offsetT_title.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'offsetT_title'
+          _view.offsetT_title.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'offsetT_title'
+          _view.offsetT_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'offsetT_title'
+          _view.offsetT_REAL.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'offsetT_REAL'
+          _view.offsetT_REAL.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'offsetT_REAL'
+          _view.offsetT_REAL.linkProperty("Value",  function() { return state_REAL.reference.param[3]; }, function(_v) { state_REAL.reference.param[3] = _v; } ); // HtmlView Page linking property 'Value' for element 'offsetT_REAL'
+          _view.offsetT_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'offsetT_REAL'
+          _view.offsetT_EJS.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'offsetT_EJS'
+          _view.offsetT_EJS.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'offsetT_EJS'
+          _view.offsetT_EJS.linkProperty("Background",  function() { return color_update_reference(3); }, function(_v) { color_update_reference(3) = _v; } ); // HtmlView Page linking property 'Background' for element 'offsetT_EJS'
+          _view.offsetT_EJS.linkProperty("Value",  function() { return state_EJS.reference.param[3]; }, function(_v) { state_EJS.reference.param[3] = _v; } ); // HtmlView Page linking property 'Value' for element 'offsetT_EJS'
+          _view.offsetT_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'offsetT_EJS'
+          _view.empty3.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'empty3'
+          _view.empty3.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'empty3'
+          _view.REAL_label_controller.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'REAL_label_controller'
+          _view.REAL_label_controller.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'REAL_label_controller'
+          _view.REAL_label_controller.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'REAL_label_controller'
+          _view.EJS_label_controller.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'EJS_label_controller'
+          _view.EJS_label_controller.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'EJS_label_controller'
+          _view.EJS_label_controller.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'EJS_label_controller'
+          _view.input_mode2.linkProperty("Height",  function() { return h_Tfunction; }, function(_v) { h_Tfunction = _v; } ); // HtmlView Page linking property 'Height' for element 'input_mode2'
+          _view.input_mode2.linkProperty("Width",  function() { return w_Tfunction; }, function(_v) { w_Tfunction = _v; } ); // HtmlView Page linking property 'Width' for element 'input_mode2'
+          _view.input_mode2.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'input_mode2'
+          _view.mode_REAL2.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'mode_REAL2'
+          _view.mode_REAL2.linkProperty("Value",  function() { return controllerMode[state_REAL.controller.Tipo]; }, function(_v) { controllerMode[state_REAL.controller.Tipo] = _v; } ); // HtmlView Page linking property 'Value' for element 'mode_REAL2'
+          _view.mode_REAL2.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'mode_REAL2'
+          _view.mode_EJS2.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'mode_EJS2'
+          _view.mode_EJS2.linkProperty("Options",  function() { return controllerMode; }, function(_v) { controllerMode = _v; } ); // HtmlView Page linking property 'Options' for element 'mode_EJS2'
+          _view.mode_EJS2.linkProperty("Background",  function() { return color_update_controller ('Tipo'); }, function(_v) { color_update_controller ('Tipo') = _v; } ); // HtmlView Page linking property 'Background' for element 'mode_EJS2'
+          _view.mode_EJS2.linkProperty("SelectedOptions",  function() { return controllerSelect; }, function(_v) { controllerSelect = _v; } ); // HtmlView Page linking property 'SelectedOptions' for element 'mode_EJS2'
+          _view.mode_EJS2.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'mode_EJS2'
+          _view.controller_PID.linkProperty("Display",  function() {
+      if (controllerSelect=='PID')      return "inline";    else      return "none";  // > controller_PID.Display:1
+    }); // HtmlView Page linking property 'Display' for element 'controller_PID'
+          _view.kp_title.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title'
+          _view.kp_title.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title'
+          _view.kp_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title'
+          _view.kp_REAL.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_REAL'
+          _view.kp_REAL.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_REAL'
+          _view.kp_REAL.linkProperty("Value",  function() { return state_REAL.controller.PID[0]; }, function(_v) { state_REAL.controller.PID[0] = _v; } ); // HtmlView Page linking property 'Value' for element 'kp_REAL'
+          _view.kp_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_REAL'
+          _view.kp_EJS.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_EJS'
+          _view.kp_EJS.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_EJS'
+          _view.kp_EJS.linkProperty("Background",  function() { return color_update_controller ('PID',0); }, function(_v) { color_update_controller ('PID',0) = _v; } ); // HtmlView Page linking property 'Background' for element 'kp_EJS'
+          _view.kp_EJS.linkProperty("Value",  function() { return state_EJS.controller.PID[0]; }, function(_v) { state_EJS.controller.PID[0] = _v; } ); // HtmlView Page linking property 'Value' for element 'kp_EJS'
+          _view.kp_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_EJS'
+          _view.ki_title.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'ki_title'
+          _view.ki_title.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'ki_title'
+          _view.ki_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'ki_title'
+          _view.ki_REAL.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'ki_REAL'
+          _view.ki_REAL.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'ki_REAL'
+          _view.ki_REAL.linkProperty("Value",  function() { return state_REAL.controller.PID[1]; }, function(_v) { state_REAL.controller.PID[1] = _v; } ); // HtmlView Page linking property 'Value' for element 'ki_REAL'
+          _view.ki_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'ki_REAL'
+          _view.ki_EJS.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'ki_EJS'
+          _view.ki_EJS.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'ki_EJS'
+          _view.ki_EJS.linkProperty("Background",  function() { return color_update_controller ('PID',1); }, function(_v) { color_update_controller ('PID',1) = _v; } ); // HtmlView Page linking property 'Background' for element 'ki_EJS'
+          _view.ki_EJS.linkProperty("Value",  function() { return state_EJS.controller.PID[1]; }, function(_v) { state_EJS.controller.PID[1] = _v; } ); // HtmlView Page linking property 'Value' for element 'ki_EJS'
+          _view.ki_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'ki_EJS'
+          _view.kd_title.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kd_title'
+          _view.kd_title.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kd_title'
+          _view.kd_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kd_title'
+          _view.kd_REAL.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kd_REAL'
+          _view.kd_REAL.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'kd_REAL'
+          _view.kd_REAL.linkProperty("Value",  function() { return state_REAL.controller.PID[2]; }, function(_v) { state_REAL.controller.PID[2] = _v; } ); // HtmlView Page linking property 'Value' for element 'kd_REAL'
+          _view.kd_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kd_REAL'
+          _view.kd_EJS.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'kd_EJS'
+          _view.kd_EJS.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'kd_EJS'
+          _view.kd_EJS.linkProperty("Background",  function() { return color_update_controller ('PID',2); }, function(_v) { color_update_controller ('PID',2) = _v; } ); // HtmlView Page linking property 'Background' for element 'kd_EJS'
+          _view.kd_EJS.linkProperty("Value",  function() { return state_EJS.controller.PID[2]; }, function(_v) { state_EJS.controller.PID[2] = _v; } ); // HtmlView Page linking property 'Value' for element 'kd_EJS'
+          _view.kd_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kd_EJS'
+          _view.n_title.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'n_title'
+          _view.n_title.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'n_title'
+          _view.n_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'n_title'
+          _view.n_REAL.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'n_REAL'
+          _view.n_REAL.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'n_REAL'
+          _view.n_REAL.linkProperty("Value",  function() { return state_REAL.controller.PID[3]; }, function(_v) { state_REAL.controller.PID[3] = _v; } ); // HtmlView Page linking property 'Value' for element 'n_REAL'
+          _view.n_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'n_REAL'
+          _view.n_EJS.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'n_EJS'
+          _view.n_EJS.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'n_EJS'
+          _view.n_EJS.linkProperty("Background",  function() { return color_update_controller ('PID',4); }, function(_v) { color_update_controller ('PID',4) = _v; } ); // HtmlView Page linking property 'Background' for element 'n_EJS'
+          _view.n_EJS.linkProperty("Value",  function() { return state_EJS.controller.PID[3]; }, function(_v) { state_EJS.controller.PID[3] = _v; } ); // HtmlView Page linking property 'Value' for element 'n_EJS'
+          _view.n_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'n_EJS'
+          _view.controller_SS.linkProperty("Display",  function() {
+      if (controllerSelect=='SS')      return "inline";    else      return "none";  // > controller_SS.Display:1
+    }); // HtmlView Page linking property 'Display' for element 'controller_SS'
+          _view.kp_title2.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title2'
+          _view.kp_title2.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title2'
+          _view.kp_title2.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title2'
+          _view.F_REAL.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_REAL'
+          _view.F_REAL.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_REAL'
+          _view.F_REAL.linkProperty("Value",  function() { return state_REAL.controller.SS.F; }, function(_v) { state_REAL.controller.SS.F = _v; } ); // HtmlView Page linking property 'Value' for element 'F_REAL'
+          _view.F_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_REAL'
+          _view.F_EJS.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_EJS'
+          _view.F_EJS.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_EJS'
+          _view.F_EJS.linkProperty("Background",  function() { return color_update_controller ('SS','F'); }, function(_v) { color_update_controller ('SS','F') = _v; } ); // HtmlView Page linking property 'Background' for element 'F_EJS'
+          _view.F_EJS.linkProperty("Value",  function() { return state_EJS.controller.SS.F; }, function(_v) { state_EJS.controller.SS.F = _v; } ); // HtmlView Page linking property 'Value' for element 'F_EJS'
+          _view.F_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_EJS'
+          _view.G_title.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'G_title'
+          _view.G_title.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'G_title'
+          _view.G_title.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'G_title'
+          _view.G_REAL.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'G_REAL'
+          _view.G_REAL.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'G_REAL'
+          _view.G_REAL.linkProperty("Value",  function() { return state_REAL.controller.SS.G; }, function(_v) { state_REAL.controller.SS.G = _v; } ); // HtmlView Page linking property 'Value' for element 'G_REAL'
+          _view.G_REAL.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'G_REAL'
+          _view.G_EJS.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'G_EJS'
+          _view.G_EJS.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'G_EJS'
+          _view.G_EJS.linkProperty("Background",  function() { return color_update_controller ('SS','G'); }, function(_v) { color_update_controller ('SS','G') = _v; } ); // HtmlView Page linking property 'Background' for element 'G_EJS'
+          _view.G_EJS.linkProperty("Value",  function() { return state_EJS.controller.SS.G; }, function(_v) { state_EJS.controller.SS.G = _v; } ); // HtmlView Page linking property 'Value' for element 'G_EJS'
+          _view.G_EJS.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'G_EJS'
+          _view.kp_title22.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title22'
+          _view.kp_title22.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title22'
+          _view.kp_title22.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title22'
+          _view.F_REAL2.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_REAL2'
+          _view.F_REAL2.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_REAL2'
+          _view.F_REAL2.linkProperty("Value",  function() { return state_REAL.controller.SS.C; }, function(_v) { state_REAL.controller.SS.C = _v; } ); // HtmlView Page linking property 'Value' for element 'F_REAL2'
+          _view.F_REAL2.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_REAL2'
+          _view.F_EJS2.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_EJS2'
+          _view.F_EJS2.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_EJS2'
+          _view.F_EJS2.linkProperty("Background",  function() { return color_update_controller ('SS','C'); }, function(_v) { color_update_controller ('SS','C') = _v; } ); // HtmlView Page linking property 'Background' for element 'F_EJS2'
+          _view.F_EJS2.linkProperty("Value",  function() { return state_EJS.controller.SS.C; }, function(_v) { state_EJS.controller.SS.C = _v; } ); // HtmlView Page linking property 'Value' for element 'F_EJS2'
+          _view.F_EJS2.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_EJS2'
+          _view.kp_title23.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title23'
+          _view.kp_title23.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title23'
+          _view.kp_title23.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title23'
+          _view.F_REAL3.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_REAL3'
+          _view.F_REAL3.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_REAL3'
+          _view.F_REAL3.linkProperty("Value",  function() { return state_REAL.controller.SS.K; }, function(_v) { state_REAL.controller.SS.K = _v; } ); // HtmlView Page linking property 'Value' for element 'F_REAL3'
+          _view.F_REAL3.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_REAL3'
+          _view.F_EJS3.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_EJS3'
+          _view.F_EJS3.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_EJS3'
+          _view.F_EJS3.linkProperty("Background",  function() { return color_update_controller ('SS','K'); }, function(_v) { color_update_controller ('SS','K') = _v; } ); // HtmlView Page linking property 'Background' for element 'F_EJS3'
+          _view.F_EJS3.linkProperty("Value",  function() { return state_EJS.controller.SS.K; }, function(_v) { state_EJS.controller.SS.K = _v; } ); // HtmlView Page linking property 'Value' for element 'F_EJS3'
+          _view.F_EJS3.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_EJS3'
+          _view.kp_title24.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title24'
+          _view.kp_title24.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title24'
+          _view.kp_title24.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title24'
+          _view.F_REAL4.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_REAL4'
+          _view.F_REAL4.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_REAL4'
+          _view.F_REAL4.linkProperty("Value",  function() { return state_REAL.controller.SS.L; }, function(_v) { state_REAL.controller.SS.L = _v; } ); // HtmlView Page linking property 'Value' for element 'F_REAL4'
+          _view.F_REAL4.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_REAL4'
+          _view.F_EJS4.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_EJS4'
+          _view.F_EJS4.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_EJS4'
+          _view.F_EJS4.linkProperty("Background",  function() { return color_update_controller ('SS','L'); }, function(_v) { color_update_controller ('SS','L') = _v; } ); // HtmlView Page linking property 'Background' for element 'F_EJS4'
+          _view.F_EJS4.linkProperty("Value",  function() { return state_EJS.controller.SS.L; }, function(_v) { state_EJS.controller.SS.L = _v; } ); // HtmlView Page linking property 'Value' for element 'F_EJS4'
+          _view.F_EJS4.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_EJS4'
+          _view.kp_title25.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title25'
+          _view.kp_title25.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title25'
+          _view.kp_title25.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title25'
+          _view.F_REAL5.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_REAL5'
+          _view.F_REAL5.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_REAL5'
+          _view.F_REAL5.linkProperty("Value",  function() { return state_REAL.controller.SS.Ki; }, function(_v) { state_REAL.controller.SS.Ki = _v; } ); // HtmlView Page linking property 'Value' for element 'F_REAL5'
+          _view.F_REAL5.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_REAL5'
+          _view.F_EJS5.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_EJS5'
+          _view.F_EJS5.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_EJS5'
+          _view.F_EJS5.linkProperty("Background",  function() { return color_update_controller ('SS','Ki'); }, function(_v) { color_update_controller ('SS','Ki') = _v; } ); // HtmlView Page linking property 'Background' for element 'F_EJS5'
+          _view.F_EJS5.linkProperty("Value",  function() { return state_EJS.controller.SS.Ki; }, function(_v) { state_EJS.controller.SS.Ki = _v; } ); // HtmlView Page linking property 'Value' for element 'F_EJS5'
+          _view.F_EJS5.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_EJS5'
+          _view.kp_title26.linkProperty("Height",  function() { return h_TController; }, function(_v) { h_TController = _v; } ); // HtmlView Page linking property 'Height' for element 'kp_title26'
+          _view.kp_title26.linkProperty("Width",  function() { return w_TController; }, function(_v) { w_TController = _v; } ); // HtmlView Page linking property 'Width' for element 'kp_title26'
+          _view.kp_title26.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'kp_title26'
+          _view.F_REAL6.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_REAL6'
+          _view.F_REAL6.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_REAL6'
+          _view.F_REAL6.linkProperty("Value",  function() { return state_REAL.controller.SS.FF; }, function(_v) { state_REAL.controller.SS.FF = _v; } ); // HtmlView Page linking property 'Value' for element 'F_REAL6'
+          _view.F_REAL6.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_REAL6'
+          _view.F_EJS6.linkProperty("Height",  function() { return h_Ncontroller; }, function(_v) { h_Ncontroller = _v; } ); // HtmlView Page linking property 'Height' for element 'F_EJS6'
+          _view.F_EJS6.linkProperty("Width",  function() { return w_Ncontroller; }, function(_v) { w_Ncontroller = _v; } ); // HtmlView Page linking property 'Width' for element 'F_EJS6'
+          _view.F_EJS6.linkProperty("Background",  function() { return color_update_controller ('SS','FF'); }, function(_v) { color_update_controller ('SS','FF') = _v; } ); // HtmlView Page linking property 'Background' for element 'F_EJS6'
+          _view.F_EJS6.linkProperty("Value",  function() { return state_EJS.controller.SS.FF; }, function(_v) { state_EJS.controller.SS.FF = _v; } ); // HtmlView Page linking property 'Value' for element 'F_EJS6'
+          _view.F_EJS6.linkProperty("Font",  function() { return font_style; }, function(_v) { font_style = _v; } ); // HtmlView Page linking property 'Font' for element 'F_EJS6'
+          _view.play_state.linkProperty("Height",  function() { return h_buttons; }, function(_v) { h_buttons = _v; } ); // HtmlView Page linking property 'Height' for element 'play_state'
+          _view.play_state.linkProperty("Width",  function() { return w_buttons; }, function(_v) { w_buttons = _v; } ); // HtmlView Page linking property 'Width' for element 'play_state'
+          _view.play_state.setAction("OffClick", function() { send_connect(2); }); // HtmlView Page setting action 'OffClick' for element 'play_state'
+          _view.play_state.linkProperty("Disabled",  function() { return !button_state[1]; } ); // HtmlView Page linking property 'Disabled' for element 'play_state'
+          _view.play_state.setAction("OnClick", function() { send_connect(2); }); // HtmlView Page setting action 'OnClick' for element 'play_state'
+          _view.pause_button.linkProperty("Height",  function() { return h_buttons; }, function(_v) { h_buttons = _v; } ); // HtmlView Page linking property 'Height' for element 'pause_button'
+          _view.pause_button.linkProperty("Width",  function() { return w_buttons; }, function(_v) { w_buttons = _v; } ); // HtmlView Page linking property 'Width' for element 'pause_button'
+          _view.pause_button.setAction("OffClick", function() { send_connect(3); }); // HtmlView Page setting action 'OffClick' for element 'pause_button'
+          _view.pause_button.linkProperty("Disabled",  function() { return !button_state[2]; } ); // HtmlView Page linking property 'Disabled' for element 'pause_button'
+          _view.pause_button.setAction("OnClick", function() { send_connect(3); }); // HtmlView Page setting action 'OnClick' for element 'pause_button'
+          _view.reset_button.linkProperty("Height",  function() { return h_buttons; }, function(_v) { h_buttons = _v; } ); // HtmlView Page linking property 'Height' for element 'reset_button'
+          _view.reset_button.linkProperty("Width",  function() { return w_buttons; }, function(_v) { w_buttons = _v; } ); // HtmlView Page linking property 'Width' for element 'reset_button'
+          _view.reset_button.setAction("OffClick", function() { send_connect(4);
+_view._reset(); }); // HtmlView Page setting action 'OffClick' for element 'reset_button'
+          _view.reset_button.linkProperty("Disabled",  function() { return !button_state[3]; } ); // HtmlView Page linking property 'Disabled' for element 'reset_button'
+          _view.reset_button.setAction("OnClick", function() { send_connect(4);
+setTimeout(function() {
+  _view._reset();
+  }, 1000); }); // HtmlView Page setting action 'OnClick' for element 'reset_button'
+          _view.update_button.linkProperty("Height",  function() { return h_buttons; }, function(_v) { h_buttons = _v; } ); // HtmlView Page linking property 'Height' for element 'update_button'
+          _view.update_button.linkProperty("Width",  function() { return w_buttons; }, function(_v) { w_buttons = _v; } ); // HtmlView Page linking property 'Width' for element 'update_button'
+          _view.update_button.setAction("OffClick", update); // HtmlView Page setting action 'OffClick' for element 'update_button'
+          _view.update_button.setAction("OnClick", update); // HtmlView Page setting action 'OnClick' for element 'update_button'
+          _view.connect_button.linkProperty("Height",  function() { return h_buttons; }, function(_v) { h_buttons = _v; } ); // HtmlView Page linking property 'Height' for element 'connect_button'
+          _view.connect_button.linkProperty("Width",  function() { return w_buttons; }, function(_v) { w_buttons = _v; } ); // HtmlView Page linking property 'Width' for element 'connect_button'
+          _view.connect_button.setAction("OffClick", function() { send_connect(0); }); // HtmlView Page setting action 'OffClick' for element 'connect_button'
+          _view.connect_button.linkProperty("State",  function() { return !button_state[0]; } ); // HtmlView Page linking property 'State' for element 'connect_button'
+          _view.connect_button.setAction("OnClick", function() { send_connect(1);
+_view._reset(); }); // HtmlView Page setting action 'OnClick' for element 'connect_button'
+          break;
+      } // end of switch
+    }; // end of new reset
+
+    _model.setView(_view);
+    _model.reset();
+    _view._enableEPub();
+  } // end of _selectView
+
+  _model.setAutoplay(true);
+  _model.setFPS(20);
+  _model.setStepsPerDisplay(1);
+  _selectView(_model._autoSelectView(_getViews())); // this includes _model.reset()
+  return _model;
+}
+
+function motor_practice_15_View (_topFrame,_viewNumber,_libraryPath,_codebasePath) {
+  var _view;
+  switch(_viewNumber) {
+    case -10 : break; // make Lint happy
+    default :
+    case 0: _view = motor_practice_15_View_0 (_topFrame); break;
+  } // end of switch
+
+  if (_codebasePath) _view._setResourcePath(_codebasePath);
+  if (_libraryPath) _view._setLibraryPath(_libraryPath);
+  return _view;
+} // end of main function
+
+function motor_practice_15_View_0 (_topFrame) {
+  var _view = EJSS_CORE.createView(_topFrame);
+
+  _view._reset = function() {
+    _view._clearAll();
+    _view._addElement(EJSS_INTERFACE.panel,"visualization_panel", _view._topFrame) // EJsS HtmlView.HtmlView Page: declaration of element 'visualization_panel'
+      .setProperty("Visibility",true) // EJsS HtmlView.HtmlView Page: setting property 'Visibility' for element 'visualization_panel'
+      .setProperty("Display","inline") // EJsS HtmlView.HtmlView Page: setting property 'Display' for element 'visualization_panel'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.html,"htmlArea", _view.visualization_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'htmlArea'
+      .setProperty("Height",380) // EJsS HtmlView.HtmlView Page: setting property 'Height' for element 'htmlArea'
+      .setProperty("Width",380) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'htmlArea'
+      .setProperty("Html","<iframe src=\"http://147.96.67.251/video.cgi\" width=\"340\" height=\"260\" frameborder=0>") // EJsS HtmlView.HtmlView Page: setting property 'Html' for element 'htmlArea'
+      ;
+
+    _view._addElement(EJSS_DRAWING2D.plottingPanel,"evolution_graph", _view.visualization_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'evolution_graph'
+      .setProperty("Height",380) // EJsS HtmlView.HtmlView Page: setting property 'Height' for element 'evolution_graph'
+      .setProperty("Width",640) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'evolution_graph'
+      .setProperty("ShowAreaRectangle",false) // EJsS HtmlView.HtmlView Page: setting property 'ShowAreaRectangle' for element 'evolution_graph'
+      .setProperty("TitleY","Amplitude (V)") // EJsS HtmlView.HtmlView Page: setting property 'TitleY' for element 'evolution_graph'
+      .setProperty("TitleX","Time (s)") // EJsS HtmlView.HtmlView Page: setting property 'TitleX' for element 'evolution_graph'
+      .setProperty("AutoScaleY",true) // EJsS HtmlView.HtmlView Page: setting property 'AutoScaleY' for element 'evolution_graph'
+      .setProperty("AutoScaleX",true) // EJsS HtmlView.HtmlView Page: setting property 'AutoScaleX' for element 'evolution_graph'
+      .setProperty("Enabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Enabled' for element 'evolution_graph'
+      .setProperty("Title","Reference (blue), Control (Green), Output (red)") // EJsS HtmlView.HtmlView Page: setting property 'Title' for element 'evolution_graph'
+      .setProperty("StopGestures",false) // EJsS HtmlView.HtmlView Page: setting property 'StopGestures' for element 'evolution_graph'
+      ;
+
+    _view._addElement(EJSS_DRAWING2D.traceSet,"t_r", _view.evolution_graph) // EJsS HtmlView.HtmlView Page: declaration of element 't_r'
+      .setProperty("LineColor","Blue") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 't_r'
+      .setProperty("Visibility",true) // EJsS HtmlView.HtmlView Page: setting property 'Visibility' for element 't_r'
+      .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 't_r'
+      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 't_r'
+      ;
+
+    _view._addElement(EJSS_DRAWING2D.traceSet,"t_u", _view.evolution_graph) // EJsS HtmlView.HtmlView Page: declaration of element 't_u'
+      .setProperty("LineColor","Green") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 't_u'
+      .setProperty("Visibility",true) // EJsS HtmlView.HtmlView Page: setting property 'Visibility' for element 't_u'
+      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 't_u'
+      .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 't_u'
+      ;
+
+    _view._addElement(EJSS_DRAWING2D.traceSet,"t_y", _view.evolution_graph) // EJsS HtmlView.HtmlView Page: declaration of element 't_y'
+      .setProperty("LineColor","Red") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 't_y'
+      .setProperty("Visibility",true) // EJsS HtmlView.HtmlView Page: setting property 'Visibility' for element 't_y'
+      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 't_y'
+      .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 't_y'
+      ;
+
+    _view._addElement(EJSS_DRAWING2D.plottingPanel,"lissajous_graph", _view.visualization_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'lissajous_graph'
+      .setProperty("Height",380) // EJsS HtmlView.HtmlView Page: setting property 'Height' for element 'lissajous_graph'
+      .setProperty("Width",640) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'lissajous_graph'
+      .setProperty("ShowAreaRectangle",false) // EJsS HtmlView.HtmlView Page: setting property 'ShowAreaRectangle' for element 'lissajous_graph'
+      .setProperty("TitleY","Salida (V)") // EJsS HtmlView.HtmlView Page: setting property 'TitleY' for element 'lissajous_graph'
+      .setProperty("TitleX","Entrada (V)") // EJsS HtmlView.HtmlView Page: setting property 'TitleX' for element 'lissajous_graph'
+      .setProperty("AutoScaleY",true) // EJsS HtmlView.HtmlView Page: setting property 'AutoScaleY' for element 'lissajous_graph'
+      .setProperty("AutoScaleX",true) // EJsS HtmlView.HtmlView Page: setting property 'AutoScaleX' for element 'lissajous_graph'
+      .setProperty("Enabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Enabled' for element 'lissajous_graph'
+      .setProperty("Title","") // EJsS HtmlView.HtmlView Page: setting property 'Title' for element 'lissajous_graph'
+      .setProperty("StopGestures",false) // EJsS HtmlView.HtmlView Page: setting property 'StopGestures' for element 'lissajous_graph'
+      ;
+
+    _view._addElement(EJSS_DRAWING2D.traceSet,"y_u", _view.lissajous_graph) // EJsS HtmlView.HtmlView Page: declaration of element 'y_u'
+      .setProperty("LineColor","Red") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 'y_u'
+      .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 'y_u'
+      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 'y_u'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"select_graph", _view.visualization_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'select_graph'
+      .setProperty("Display","center") // EJsS HtmlView.HtmlView Page: setting property 'Display' for element 'select_graph'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.checkBox,"camera_button", _view.select_graph) // EJsS HtmlView.HtmlView Page: declaration of element 'camera_button'
+      .setProperty("Text","Camera") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'camera_button'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.checkBox,"evolution_button", _view.select_graph) // EJsS HtmlView.HtmlView Page: declaration of element 'evolution_button'
+      .setProperty("Text","Evolution") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'evolution_button'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.checkBox,"lissajous_button", _view.select_graph) // EJsS HtmlView.HtmlView Page: declaration of element 'lissajous_button'
+      .setProperty("Text","Lissajous") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'lissajous_button'
+      .setProperty("Display","none") // EJsS HtmlView.HtmlView Page: setting property 'Display' for element 'lissajous_button'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"window_", _view.select_graph) // EJsS HtmlView.HtmlView Page: declaration of element 'window_'
+      .setProperty("Text","window (samples):") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'window_'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"windowNumerico", _view.select_graph) // EJsS HtmlView.HtmlView Page: declaration of element 'windowNumerico'
+      .setProperty("Format","0") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'windowNumerico'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"parametrization_panel", _view._topFrame) // EJsS HtmlView.HtmlView Page: declaration of element 'parametrization_panel'
+      .setProperty("Display","inline-flex") // EJsS HtmlView.HtmlView Page: setting property 'Display' for element 'parametrization_panel'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_functions", _view.parametrization_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_functions'
+      .setProperty("Width",350) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'wave_functions'
+      .setProperty("BorderStyle","double") // EJsS HtmlView.HtmlView Page: setting property 'BorderStyle' for element 'wave_functions'
+      .setProperty("BorderColor","DarkGray") // EJsS HtmlView.HtmlView Page: setting property 'BorderColor' for element 'wave_functions'
+      .setProperty("BorderWidth",5) // EJsS HtmlView.HtmlView Page: setting property 'BorderWidth' for element 'wave_functions'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_labels", _view.wave_functions) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_labels'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"empty", _view.wave_labels) // EJsS HtmlView.HtmlView Page: declaration of element 'empty'
+      .setProperty("Text","") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'empty'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'empty'
+      .setProperty("Font","normal bold 16px ") // EJsS HtmlView.HtmlView Page: setting property 'Font' for element 'empty'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"REAL_label_input", _view.wave_labels) // EJsS HtmlView.HtmlView Page: declaration of element 'REAL_label_input'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'REAL_label_input'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'REAL_label_input'
+      .setProperty("Text","USING") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'REAL_label_input'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'REAL_label_input'
+      .setProperty("Font","normal bold 16px ") // EJsS HtmlView.HtmlView Page: setting property 'Font' for element 'REAL_label_input'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"EJS_label_intup", _view.wave_labels) // EJsS HtmlView.HtmlView Page: declaration of element 'EJS_label_intup'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'EJS_label_intup'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'EJS_label_intup'
+      .setProperty("Text","TO APPLY") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'EJS_label_intup'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'EJS_label_intup'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_mode", _view.wave_functions) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_mode'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"input_mode", _view.wave_mode) // EJsS HtmlView.HtmlView Page: declaration of element 'input_mode'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'input_mode'
+      .setProperty("Text","Type:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'input_mode'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'input_mode'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"mode_REAL", _view.wave_mode) // EJsS HtmlView.HtmlView Page: declaration of element 'mode_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'mode_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'mode_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.comboBox,"mode_EJS", _view.wave_mode) // EJsS HtmlView.HtmlView Page: declaration of element 'mode_EJS'
+      .setProperty("Display","inlide") // EJsS HtmlView.HtmlView Page: setting property 'Display' for element 'mode_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_amp", _view.wave_functions) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_amp'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"amp_title", _view.wave_amp) // EJsS HtmlView.HtmlView Page: declaration of element 'amp_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'amp_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'amp_title'
+      .setProperty("Text","Amplitude:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'amp_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'amp_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"amp_REAL", _view.wave_amp) // EJsS HtmlView.HtmlView Page: declaration of element 'amp_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'amp_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'amp_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'amp_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"amp_EJS", _view.wave_amp) // EJsS HtmlView.HtmlView Page: declaration of element 'amp_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'amp_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_period", _view.wave_functions) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_period'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"period_title", _view.wave_period) // EJsS HtmlView.HtmlView Page: declaration of element 'period_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'period_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'period_title'
+      .setProperty("Text","Period:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'period_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'period_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"period_REAL", _view.wave_period) // EJsS HtmlView.HtmlView Page: declaration of element 'period_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'period_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'period_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'period_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"period_EJS", _view.wave_period) // EJsS HtmlView.HtmlView Page: declaration of element 'period_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'period_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_offsetY", _view.wave_functions) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_offsetY'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"offsetY_title", _view.wave_offsetY) // EJsS HtmlView.HtmlView Page: declaration of element 'offsetY_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'offsetY_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'offsetY_title'
+      .setProperty("Text","Offset A:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'offsetY_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'offsetY_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"offsetY_REAL", _view.wave_offsetY) // EJsS HtmlView.HtmlView Page: declaration of element 'offsetY_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'offsetY_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'offsetY_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'offsetY_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"offsetY_EJS", _view.wave_offsetY) // EJsS HtmlView.HtmlView Page: declaration of element 'offsetY_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'offsetY_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"wave_offsetT", _view.wave_functions) // EJsS HtmlView.HtmlView Page: declaration of element 'wave_offsetT'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"offsetT_title", _view.wave_offsetT) // EJsS HtmlView.HtmlView Page: declaration of element 'offsetT_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'offsetT_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'offsetT_title'
+      .setProperty("Text","Offset T:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'offsetT_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'offsetT_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"offsetT_REAL", _view.wave_offsetT) // EJsS HtmlView.HtmlView Page: declaration of element 'offsetT_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'offsetT_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'offsetT_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'offsetT_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"offsetT_EJS", _view.wave_offsetT) // EJsS HtmlView.HtmlView Page: declaration of element 'offsetT_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'offsetT_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel", _view.parametrization_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel'
+      .setProperty("Width",450) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'controller_panel'
+      .setProperty("BorderStyle","double") // EJsS HtmlView.HtmlView Page: setting property 'BorderStyle' for element 'controller_panel'
+      .setProperty("BorderColor","DarkGray") // EJsS HtmlView.HtmlView Page: setting property 'BorderColor' for element 'controller_panel'
+      .setProperty("BorderWidth",5) // EJsS HtmlView.HtmlView Page: setting property 'BorderWidth' for element 'controller_panel'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_labels", _view.controller_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_labels'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"empty3", _view.controller_panel_labels) // EJsS HtmlView.HtmlView Page: declaration of element 'empty3'
+      .setProperty("Text","") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'empty3'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'empty3'
+      .setProperty("Font","normal bold 16px ") // EJsS HtmlView.HtmlView Page: setting property 'Font' for element 'empty3'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"REAL_label_controller", _view.controller_panel_labels) // EJsS HtmlView.HtmlView Page: declaration of element 'REAL_label_controller'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'REAL_label_controller'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'REAL_label_controller'
+      .setProperty("Text","USING") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'REAL_label_controller'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'REAL_label_controller'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"EJS_label_controller", _view.controller_panel_labels) // EJsS HtmlView.HtmlView Page: declaration of element 'EJS_label_controller'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'EJS_label_controller'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'EJS_label_controller'
+      .setProperty("Text","TO APPLY") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'EJS_label_controller'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'EJS_label_controller'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_mode", _view.controller_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_mode'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"input_mode2", _view.controller_mode) // EJsS HtmlView.HtmlView Page: declaration of element 'input_mode2'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'input_mode2'
+      .setProperty("Text","Type:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'input_mode2'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'input_mode2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"mode_REAL2", _view.controller_mode) // EJsS HtmlView.HtmlView Page: declaration of element 'mode_REAL2'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'mode_REAL2'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'mode_REAL2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.comboBox,"mode_EJS2", _view.controller_mode) // EJsS HtmlView.HtmlView Page: declaration of element 'mode_EJS2'
+      .setProperty("Display","inlime") // EJsS HtmlView.HtmlView Page: setting property 'Display' for element 'mode_EJS2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_PID", _view.controller_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_PID'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_kp", _view.controller_PID) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_kp'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title", _view.controller_panel_kp) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title'
+      .setProperty("Text","Kp:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"kp_REAL", _view.controller_panel_kp) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'kp_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'kp_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"kp_EJS", _view.controller_panel_kp) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'kp_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_ki", _view.controller_PID) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_ki'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"ki_title", _view.controller_panel_ki) // EJsS HtmlView.HtmlView Page: declaration of element 'ki_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'ki_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'ki_title'
+      .setProperty("Text","Ti:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'ki_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'ki_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"ki_REAL", _view.controller_panel_ki) // EJsS HtmlView.HtmlView Page: declaration of element 'ki_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'ki_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'ki_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'ki_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"ki_EJS", _view.controller_panel_ki) // EJsS HtmlView.HtmlView Page: declaration of element 'ki_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'ki_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_kd", _view.controller_PID) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_kd'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kd_title", _view.controller_panel_kd) // EJsS HtmlView.HtmlView Page: declaration of element 'kd_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kd_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kd_title'
+      .setProperty("Text","Td:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kd_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kd_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"kd_REAL", _view.controller_panel_kd) // EJsS HtmlView.HtmlView Page: declaration of element 'kd_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'kd_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'kd_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kd_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"kd_EJS", _view.controller_panel_kd) // EJsS HtmlView.HtmlView Page: declaration of element 'kd_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'kd_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_n", _view.controller_PID) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_n'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"n_title", _view.controller_panel_n) // EJsS HtmlView.HtmlView Page: declaration of element 'n_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'n_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'n_title'
+      .setProperty("Text","N:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'n_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'n_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"n_REAL", _view.controller_panel_n) // EJsS HtmlView.HtmlView Page: declaration of element 'n_REAL'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'n_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'n_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'n_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.numberField,"n_EJS", _view.controller_panel_n) // EJsS HtmlView.HtmlView Page: declaration of element 'n_EJS'
+      .setProperty("Format","0.00") // EJsS HtmlView.HtmlView Page: setting property 'Format' for element 'n_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_SS", _view.controller_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_SS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_F", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_F'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title2", _view.controller_panel_F) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title2'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title2'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title2'
+      .setProperty("Text","F:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title2'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_REAL", _view.controller_panel_F) // EJsS HtmlView.HtmlView Page: declaration of element 'F_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'F_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_EJS", _view.controller_panel_F) // EJsS HtmlView.HtmlView Page: declaration of element 'F_EJS'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_G", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_G'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"G_title", _view.controller_panel_G) // EJsS HtmlView.HtmlView Page: declaration of element 'G_title'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'G_title'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'G_title'
+      .setProperty("Text","G:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'G_title'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'G_title'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"G_REAL", _view.controller_panel_G) // EJsS HtmlView.HtmlView Page: declaration of element 'G_REAL'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'G_REAL'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'G_REAL'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"G_EJS", _view.controller_panel_G) // EJsS HtmlView.HtmlView Page: declaration of element 'G_EJS'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'G_EJS'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_C", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_C'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title22", _view.controller_panel_C) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title22'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title22'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title22'
+      .setProperty("Text","C:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title22'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title22'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_REAL2", _view.controller_panel_C) // EJsS HtmlView.HtmlView Page: declaration of element 'F_REAL2'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_REAL2'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'F_REAL2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_EJS2", _view.controller_panel_C) // EJsS HtmlView.HtmlView Page: declaration of element 'F_EJS2'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_EJS2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_K", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_K'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title23", _view.controller_panel_K) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title23'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title23'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title23'
+      .setProperty("Text","K:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title23'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title23'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_REAL3", _view.controller_panel_K) // EJsS HtmlView.HtmlView Page: declaration of element 'F_REAL3'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_REAL3'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'F_REAL3'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_EJS3", _view.controller_panel_K) // EJsS HtmlView.HtmlView Page: declaration of element 'F_EJS3'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_EJS3'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_L", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_L'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title24", _view.controller_panel_L) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title24'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title24'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title24'
+      .setProperty("Text","L:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title24'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title24'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_REAL4", _view.controller_panel_L) // EJsS HtmlView.HtmlView Page: declaration of element 'F_REAL4'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_REAL4'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'F_REAL4'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_EJS4", _view.controller_panel_L) // EJsS HtmlView.HtmlView Page: declaration of element 'F_EJS4'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_EJS4'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_Ki", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_Ki'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title25", _view.controller_panel_Ki) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title25'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title25'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title25'
+      .setProperty("Text","Ki:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title25'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title25'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_REAL5", _view.controller_panel_Ki) // EJsS HtmlView.HtmlView Page: declaration of element 'F_REAL5'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_REAL5'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'F_REAL5'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_EJS5", _view.controller_panel_Ki) // EJsS HtmlView.HtmlView Page: declaration of element 'F_EJS5'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_EJS5'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"controller_panel_FF", _view.controller_SS) // EJsS HtmlView.HtmlView Page: declaration of element 'controller_panel_FF'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"kp_title26", _view.controller_panel_FF) // EJsS HtmlView.HtmlView Page: declaration of element 'kp_title26'
+      .setProperty("TextAlign","center") // EJsS HtmlView.HtmlView Page: setting property 'TextAlign' for element 'kp_title26'
+      .setProperty("Foreground","Black") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'kp_title26'
+      .setProperty("Text","FF:") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'kp_title26'
+      .setProperty("Disabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Disabled' for element 'kp_title26'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_REAL6", _view.controller_panel_FF) // EJsS HtmlView.HtmlView Page: declaration of element 'F_REAL6'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_REAL6'
+      .setProperty("Editable",false) // EJsS HtmlView.HtmlView Page: setting property 'Editable' for element 'F_REAL6'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.textField,"F_EJS6", _view.controller_panel_FF) // EJsS HtmlView.HtmlView Page: declaration of element 'F_EJS6'
+      .setProperty("Foreground","Blue") // EJsS HtmlView.HtmlView Page: setting property 'Foreground' for element 'F_EJS6'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"control_panel", _view._topFrame) // EJsS HtmlView.HtmlView Page: declaration of element 'control_panel'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.separator,"separator", _view.control_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'separator'
+      .setProperty("Visibility",false) // EJsS HtmlView.HtmlView Page: setting property 'Visibility' for element 'separator'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.twoStateButton,"play_state", _view.control_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'play_state'
+      .setProperty("ImageOnUrl","/org/opensourcephysics/resources/controls/images/play.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOnUrl' for element 'play_state'
+      .setProperty("ImageOffUrl","/org/opensourcephysics/resources/controls/images/play.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOffUrl' for element 'play_state'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.twoStateButton,"pause_button", _view.control_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'pause_button'
+      .setProperty("ImageOnUrl","/org/opensourcephysics/resources/controls/images/pause.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOnUrl' for element 'pause_button'
+      .setProperty("ImageOffUrl","/org/opensourcephysics/resources/controls/images/pause.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOffUrl' for element 'pause_button'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.twoStateButton,"reset_button", _view.control_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'reset_button'
+      .setProperty("ImageOnUrl","/org/opensourcephysics/resources/controls/images/reset.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOnUrl' for element 'reset_button'
+      .setProperty("ImageOffUrl","/org/opensourcephysics/resources/controls/images/reset.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOffUrl' for element 'reset_button'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.twoStateButton,"update_button", _view.control_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'update_button'
+      .setProperty("State",true) // EJsS HtmlView.HtmlView Page: setting property 'State' for element 'update_button'
+      .setProperty("ImageOnUrl","/org/opensourcephysics/resources/controls/images/reset2.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOnUrl' for element 'update_button'
+      .setProperty("ImageOffUrl","/org/opensourcephysics/resources/controls/images/reset2.gif") // EJsS HtmlView.HtmlView Page: setting property 'ImageOffUrl' for element 'update_button'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.twoStateButton,"connect_button", _view.control_panel) // EJsS HtmlView.HtmlView Page: declaration of element 'connect_button'
+      .setProperty("ImageOnUrl","/org/opensourcephysics/resources/controls/images/power_on.png") // EJsS HtmlView.HtmlView Page: setting property 'ImageOnUrl' for element 'connect_button'
+      .setProperty("ImageOffUrl","/org/opensourcephysics/resources/controls/images/power_off.png") // EJsS HtmlView.HtmlView Page: setting property 'ImageOffUrl' for element 'connect_button'
+      ;
+
+  };
+
+  return _view;
+}
+
+
+//--><!]]></script>
+  </head>
+  <body>
+  
+      <div class="logout-block">
+	<a href="/select">
+		<img src="/images/user_icon.png" alt="REAL" height="35" width="35">
+	</a>
+	<span> <%= user.username %> </span>
+	<a href="/logout">
+   	<button>Loguot</button>
+    </a>
+  </div>
+  
+    <div role="button" id="_topFrame" style="text-align:center"></div>
+  <div id="metadata" class="metadata">
+    <br />
+    <div id="title_author">
+      <hr />
+      <b>Title and author:</b>
+      <p>
+      </p>
+      <p>
+ Author name
+      </p>
+    </div>
+    <hr />
+    <p></p>
+    <div id="copyright_message">
+      <div class="cc_left"  style="float:left">&#169; 2016, Author name.</div>
+      <div class="cc_right" style="float:right">    Released under a <a rel="license" target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/deed.en_US"> <img alt="Creative Commons Attribution-NonCommercial-ShareAlike" src="_ejs_library/images/cc_icon.png" /> </a> license.</div>
+    </div>
+  </div>
+    <script type="text/javascript"><!--//--><![CDATA[//><!--
+      var _model;
+      window.addEventListener('load',
+        function () { 
+          _model =  new motor_practice_15("_topFrame","_ejs_library/",null);
+          TextResizeDetector.TARGET_ELEMENT_ID = '_topFrame';
+          TextResizeDetector.USER_INIT_FUNC = function () {
+            var iBase = TextResizeDetector.addEventListener(function(e,args) {
+              _model._fontResized(args[0].iBase,args[0].iSize,args[0].iDelta);
+              },null);
+            _model._fontResized(iBase);
+          };
+        }, false);
+      window.addEventListener('resize', function () { _model._resized(window.innerWidth,window.innerHeight); }, false);
+      window.addEventListener('scroll', function () { _model._resized(window.innerWidth,window.innerHeight); }, false);
+    //--><!]]></script>
+  </body>
+</html>
