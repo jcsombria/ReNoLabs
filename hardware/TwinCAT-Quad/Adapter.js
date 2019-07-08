@@ -1,5 +1,5 @@
 var ads = require('ads');
-var config_default = require('./config/TwinCAT-quad');
+var config_default = require('./Config');
 
 // TwinCAT variables
 var handles = {
@@ -183,10 +183,6 @@ class TwinCATAdapter {
 
   ondata(ev) {
     this.state.update(ev);
-		// Write evolution to log file
-		// TO DO: move to another place?
-		// stream = state.evolution +  " ";
-		// data_stream.write(stream.replace(/,/g, " ") + "\n");
 		for(var i=0; i<this.toNotify.length; i++) {
       var name = this.toNotify[i], value = this.state[name];
 			var data = {'variable': name, 'value': value};
@@ -254,6 +250,13 @@ class State {
   addListener(l) {
     if(!(l in this.listeners)) {
       this.listeners.push(l);
+    }
+  }
+
+  removeListener(l) {
+    var i = this.listeners.indexOf(l);
+    if(i != -1) {
+      this.listeners.splice(i, 1);
     }
   }
 

@@ -1,3 +1,6 @@
+// Application Configuration
+var Config = require('./AppConfig');
+
 /*
  * Módulos necesarios guardados package.json.
  */
@@ -8,27 +11,15 @@ var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var db = require('./db');
 var login = require('connect-ensure-login');
-var dateFormat = require('dateformat');
-var TwinCAT = require('./hardware/TwinCATAdapter');
-
-
-// Web Server configuration
-var SERV = "127.0.0.1";
-var PORT = 80;
 
 /*
  * variables utilizadas.
  */
 var user_connected = {};
-var data_stream = fs.createWriteStream('./data/start_server.txt');
-var clients = [];
-var flag = true;
 var flag_timeout = true;
-
 var cryp_socket = Math.floor((Math.random() * 1000000) + 1);
 var files = {name: 0, date: [], size: []};
-var timeout = 15;
-var timer1, timer2;
+var sessionTimer, disconnectTimer;
 
 /*
  * Protocolo de autentificación (passport module).
@@ -86,7 +77,7 @@ app.use(passport.session());
 /*
  * Seleción del servidor (ip + puerto).
  */
-var server = app.listen(PORT, SERV, function () {
+var server = app.listen(Config.WebServer.port, Config.WebServer.ip, function () {
 	var host = server.address().address;
 	var port = server.address().port;
 	console.info('[INFO] Server started on http://%s:%s', host, port);
@@ -154,17 +145,27 @@ app.get('/real',
 		 * guarda el nombre del usuario conectado para permitirle conectarse desde otro dispositivo
 		 * encripta el socket para que sólo pueda acceder el usuario conectado.
 		 */
+		var clients = Object.keys(io.sockets.sockets);
 		if (clients.length == 0 && flag_timeout) {
 			user_connected = req.user;
 			cryp_socket = Math.floor((Math.random() * 1000000) + 1);
-			res.render('motor_practice', { user: req.user, key: cryp_socket, ip: SERV, port: PORT });
+			res.render('motor_practice', {
+				user: req.user,
+				key: cryp_socket,
+				ip: Config.WebServer.ip,
+				port: Config.WebServer.port,
+			});
 		/*
 		 * Cuando el usuario que hay conectado intenta acceder desde otro dispositivo
 		 * permite su entrada, de esta forma lo puede hacer sumultaneamente desde el
-		 * ordenador y la tables o smartphone.
+		 * ordenador y la tablets o smartphone.
 		 */
 		} else if (req.user.username == user_connected.username) {
-			res.render('motor_practice', { user: req.user, key: cryp_socket, ip: SERV, port: PORT });
+			res.render('motor_practice', {
+				user: req.user, key: cryp_socket,
+				ip: Config.WebServer.ip,
+				port: Config.WebServer.port
+			});
 		/*
 		 * En el caso de que la práctica está ocupada muestra una alerta
 		 * y devuelve al usuario a la página principal.
@@ -172,30 +173,24 @@ app.get('/real',
 		} else {
 			res.render('select', { user: req.user, state: true });
 		}
-});
+	}
+);
 
 app.get('/logout',
-		function(req, res) {
-			req.logOut();
-			res.redirect('/');
-});
-
-/*
- * Función encargada de escribir el nombre del archivo
- * El formato es: nombre de usuario + fecha + hora.
- */
-function file_name(name) {
-	var d = new Date();
-	var date = dateFormat(d, "yyyymmdd_HHMMss");
-	return name + '_' + date + '.txt';
-};
+	function(req, res) {
+		req.logOut();
+		res.redirect('/');
+	}
+);
 
 /*
  * Inicialización del módulo socket empleado para la comunicación entre cliente y servidor.
  */
 var io = require('socket.io').listen(server);
-var adapter = new TwinCAT.Adapter();
+var adapter = new Config.Hardware.Adapter();
+var logger = new Config.Hardware.Logger('start_server');
 adapter.addListener(io);
+adapter.addListener(logger);
 
 io.sockets.on('connection', function(socket) {
 	/*
@@ -211,7 +206,7 @@ io.sockets.on('connection', function(socket) {
 	/*
 	 * Comprueba el número de conexiones socket entre cliente y servidor
 	 */
-	clients = Object.keys(io.sockets.sockets); //JULIAN PONER
+	var clients = Object.keys(io.sockets.sockets); //JULIAN PONER
 
 	/*
 	 * En caso de ser la primera conexión y que el timeout no haya terminado
@@ -228,7 +223,7 @@ io.sockets.on('connection', function(socket) {
 		 */
  	 	connectionTimeout = function() {
  			io.emit('disconnect_timeout', { text: 'Timeout: Sesión terminada!' });
-      clients = Object.keys(io.sockets.sockets); //JULI
+      var clients = Object.keys(io.sockets.sockets); //JULI
  			for (i = 0; i < clients.length; i++) {
  				io.sockets.sockets[clients[i]].disconnect(); //JULI: poner
  			}
@@ -241,7 +236,7 @@ io.sockets.on('connection', function(socket) {
  			console.info('[INFO] ' + new Date());
  		};
 
-		timer1 = setTimeout(connectionTimeout, timeout*60*1000);
+		sessionTimer = setTimeout(connectionTimeout, Config.Session.timeout*60*1000);
 	}
 
 	console.log('[DEBUG] ' + socket.handshake.headers['user-agent']);
@@ -254,20 +249,20 @@ io.sockets.on('connection', function(socket) {
 			if (adapter.connected) {
 				adapter.write(data.variable, data.value);
 			} else if (data.variable == 'config' && data.value == 1) {
+				logger.end();
+				logger.start(user_connected.username);
 				adapter.start();
-				data_stream.end();
-				data_stream = fs.createWriteStream('./data/' + file_name(user_connected.username));
 			}
 	});
 
 	socket.on('disconnect', function () {
-		clearTimeout(timer2);
-    clients = Object.keys(io.sockets.sockets); //JULI
+		clearTimeout(disconnectTimer);
+    var clients = Object.keys(io.sockets.sockets); //JULI
 		if (clients.length == 0) {
-			timer2 = setTimeout(function() {
-				clients = Object.keys(io.sockets.sockets); //JULI
+			disconnectTimer = setTimeout(function() {
+				var clients = Object.keys(io.sockets.sockets); //JULI
 				if (clients.length == 0 && !flag_timeout) {
-					clearTimeout(timer1);
+					clearTimeout(sessionTimer);
 					flag_timeout = true;
           adapter.stop();
 					console.info('[INFO] PRÁCTICA FINALIZADA POR DESCONEXIÓN');
