@@ -1,2 +1,2 @@
 # ReNoLabs
-# A framework to create and deploy automatically remote laboratories.
+## A framework to create remote laboratories and deploy them automatically.
