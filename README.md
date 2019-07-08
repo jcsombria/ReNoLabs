@@ -1,2 +1,2 @@
 # ReNoLabs
-# A remote practice server based on Node.js.
+# A framework to create and deploy automatically remote laboratories.
