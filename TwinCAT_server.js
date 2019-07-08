@@ -9,7 +9,7 @@ var Strategy = require('passport-local').Strategy;
 var db = require('./db');
 var login = require('connect-ensure-login');
 var dateFormat = require('dateformat');
-var TwinCAT = require('./TwinCATAdapter');
+var TwinCAT = require('./hardware/TwinCATAdapter');
 
 
 // Web Server configuration
