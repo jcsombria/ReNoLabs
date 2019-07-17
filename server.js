@@ -183,6 +183,79 @@ app.get('/logout',
 	}
 );
 
+// JCS: -- This section enables communications using RIP --
+var SSE = require('express-sse');
+var RIP = require('./rip/RIPGeneric');
+// JCS: - Init Lab Metadata. TO DO: Load from config file -
+labIp = '127.0.0.1:3030';
+var e = {
+  'name': 'ReNoLabs',
+  'description': 'RIP-ReNoLabs implementation',
+  'readables': [
+    new RIP.Variable('Vup'),
+    new RIP.Variable('Vdown'),
+    new RIP.Variable('Delay'),
+    new RIP.Variable('Threshold'),
+    new RIP.Variable('Min'),
+    new RIP.Variable('Max'),
+  ],
+  'writables': [
+    new RIP.Variable('Vup'),
+    new RIP.Variable('Vdown'),
+    new RIP.Variable('Delay'),
+    new RIP.Variable('Threshold'),
+    new RIP.Variable('Min'),
+    new RIP.Variable('Max'),
+  ]
+};
+var labInfo = new RIP.LabInfo(labIp, [e.name]);
+var expInfo = new RIP.ExperienceInfo(labInfo, e.name, e.description, e.readables, e.writables);
+// JCS: - start metadata server -
+app.get('/RIP', login.ensureLoggedIn('/'), function(req, res) {
+  try {
+    var expId = req.query.expId;
+  } catch(e) {
+    expId = null;
+  }
+  if(expId == expInfo.metadata.info.name) {
+    res.json(expInfo.metadata);
+  } else {
+    res.json(labInfo.metadata);
+  };
+});
+// JCS: - start data server -
+var SSEperiod = 100;
+var sse = new SSE([]);
+var session = {
+  'users': 0,
+  'state': 'stopped',
+}
+
+app.get('/RIP/SSE', login.ensureLoggedIn('/'), (req, res) => {
+  var username = req.user.username;
+  if(session.state == 'stopped') {
+    adapter.start();
+  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  sse.init(req, res);
+});
+
+function periodic_update() {
+  // var names = [], values = [];
+  // for (var s in signals.o) {
+  //   names.push(s);
+  //   values.push(signals.o[s]);
+  // }
+  // eventdata = { 'result': [names, values] };
+  // eventname = 'periodiclabdata';
+  // sse.send(eventdata, eventname);
+}
+setInterval(periodic_update, 1000);
+
+
+
+
+
 /*
  * Inicialización del módulo socket empleado para la comunicación entre cliente y servidor.
  */
