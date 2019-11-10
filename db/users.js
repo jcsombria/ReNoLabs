@@ -1,15 +1,14 @@
-var records = [
-    { id: 1, username: 'admin', password: 'admin', displayName: 'Admin', emails: [ { value: 'root@localhost' } ] },
-];
+var records = require('./records');
 
 exports.findById = function(id, cb) {
   process.nextTick(function() {
-    var idx = id - 1;
-    if (records[idx]) {
-      cb(null, records[idx]);
-    } else {
-      cb(new Error('User ' + id + ' does not exist'));
+    for (var i = 0, len = records.length; i < len; i++) {
+      var record = records[i];
+      if (record.id === id) {
+        return cb(null, record);
+      }
     }
+    cb(new Error('User ' + id + ' does not exist'));
   });
 }
 
@@ -23,4 +22,34 @@ exports.findByUsername = function(username, cb) {
     }
     return cb(null, null);
   });
+}
+
+exports.getUser = function(username) {
+  for (var i = 0, len = records.length; i < len; i++) {
+    var record = records[i];
+    if (record.username === username) {
+      return record;
+    }
+  }
+  return null;
+}
+
+exports.isAdministrator = function(user) {
+  if (user && user.permissions) {
+      for (i = 0; i < user.permissions.length; i++) {
+          if (user.permissions[i] === "ADMIN")
+              return true;
+      }
+  }
+  return false;
+}
+
+exports.isSupervisor = function(user) {
+  if (user && user.permissions) {
+    for (i = 0; i < user.permissions.length; i++) {
+      if (user.permissions[i] === "RO")
+      return true;
+    }
+  }
+  return false;
 }

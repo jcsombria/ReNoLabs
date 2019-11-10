@@ -4,6 +4,7 @@ var Config = require('./AppConfig');
 /*
  * Módulos necesarios guardados package.json.
  */
+var behavior = require('./behavior');
 var fs = require('fs');
 var express = require('express');
 var path = require('path');
@@ -15,38 +16,34 @@ var login = require('connect-ensure-login');
 /*
  * variables utilizadas.
  */
-var user_connected = {};
-var flag_timeout = true;
-var cryp_socket = Math.floor((Math.random() * 1000000) + 1);
 var files = {name: 0, date: [], size: []};
-var sessionTimer, disconnectTimer;
 
 /*
  * Protocolo de autentificación (passport module).
  */
 passport.use(new Strategy(
-		function(username, password, cb) {
-			db.users.findByUsername(username, function(err, user) {
-		      if (err) { return cb(err); }
-		      if (!user) { return cb(null, false); }
-		      if (user.password != password) { return cb(null, false); }
-		      return cb(null, user);
-		 });
+  function(username, password, cb) {
+    db.users.findByUsername(username, function(err, user) {
+      if (err) { return cb(err); }
+      if (!user) { return cb(null, false); }
+      if (user.password != password) { return cb(null, false); }
+      return cb(null, user);
+    });
 }));
 
 passport.serializeUser(function(user, cb) {
-	  cb(null, user.id);
+  cb(null, user.id);
 });
 
 passport.deserializeUser(function(id, cb) {
-	  db.users.findById(id, function (err, user) {
-	    if (err) { return cb(err); }
-	    cb(null, user);
-	  });
+  db.users.findById(id, function (err, user) {
+    if (err) { return cb(err); }
+    cb(null, user);
+  });
 });
 
 /*
- * Inicialización de la aplicación express empleaso para las rutas del servidor.
+ * Inicialización de la aplicación express empleado para las rutas del servidor.
  */
 var app = express();
 
@@ -78,272 +75,258 @@ app.use(passport.session());
  * Seleción del servidor (ip + puerto).
  */
 var server = app.listen(Config.WebServer.port, Config.WebServer.ip, function () {
-	var host = server.address().address;
-	var port = server.address().port;
-	console.info('[INFO] Server started on http://%s:%s', host, port);
+  var host = server.address().address;
+  var port = server.address().port;
+  console.info('[INFO] Server started on http://%s:%s', host, port);
 });
 
 /*
  * Configuracion de rutas.
  */
 app.get('/', function (req, res) {
-	if (req.isAuthenticated()) {
-		res.redirect('/select');
-	} else {
-		res.render('login');
-	}
+  if (req.isAuthenticated()) {
+    res.redirect('/select');
+  } else {
+    res.render('login');
+  }
 });
 
 app.post('/', passport.authenticate('local', { failureRedirect: '/' }),
-	function(req, res) {
-		res.redirect('/select');
+  function(req, res) {
+    res.redirect('/select');
 });
 
 app.get('/select',
-	login.ensureLoggedIn('/'),
-	function (req, res) {
-		res.render('select', { user: req.user, state: false });
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    res.render('select', { user: req.user, state: false });
 });
 
 app.get('/help',
-	login.ensureLoggedIn('/'),
-	function (req, res) {
-		res.render('help', {user: req.user});
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    res.render('help', {user: req.user});
 });
 
 app.get('/data',
-	login.ensureLoggedIn('/'),
-	function (req, res) {
-		/*
-		 * Filtra los ficheros de cada usuario
-		 */
-		files.name = fs.readdirSync('./data/').filter(function(element) {
-			if (element.split('_')[0] == req.user.username)
-				return element;
-		});
-		/*
-		 * Devuelve la hora de creación y el tamaño de cada fichero
-		 */
-		for (i = 0; i < files.name.length; i++) {
-			files.date[i] = fs.statSync('./data/'+files.name[i]).atime;
-			files.size[i] = fs.statSync('./data/'+files.name[i]).size;
-		}
-		res.render('experiments', {user: req.user, names: files.name, dates: files.date, sizes: files.size});
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    /*
+     * Filtra los ficheros de cada usuario
+     */
+    files.name = fs.readdirSync('./data/').filter(function(element) {
+      if (element.split('_')[0] == req.user.username) {
+        return element;
+      }
+    });
+  /*
+   * Devuelve la hora de creación y el tamaño de cada fichero
+   */
+    for (i = 0; i < files.name.length; i++) {
+      files.date[i] = fs.statSync('./data/'+files.name[i]).atime;
+      files.size[i] = fs.statSync('./data/'+files.name[i]).size;
+    }
+    res.render('experiments', {
+      user: req.user,
+      names: files.name,
+      dates: files.date,
+      sizes: files.size
+    });
 });
 
 app.get('/download/*',
-	login.ensureLoggedIn('/'),
-	function (req, res) {
-		res.download('./data/' + req.params[0]);
-});
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    res.download('./data/' + req.params[0]);
+  }
+);
 
+// TO DO: Find another place more appropriate for token
+var token = 0;
 app.get('/real',
-	login.ensureLoggedIn('/'),
-	function (req, res) {
-		/*
-		 * Si no hay nadie conectado toma guarda el usuario que se conecta
-		 * guarda el nombre del usuario conectado para permitirle conectarse desde otro dispositivo
-		 * encripta el socket para que sólo pueda acceder el usuario conectado.
-		 */
-		var clients = Object.keys(io.sockets.sockets);
-		if (clients.length == 0 && flag_timeout) {
-			user_connected = req.user;
-			cryp_socket = Math.floor((Math.random() * 1000000) + 1);
-			res.render('motor_practice', {
-				user: req.user,
-				key: cryp_socket,
-				ip: Config.WebServer.ip,
-				port: Config.WebServer.port,
-			});
-		/*
-		 * Cuando el usuario que hay conectado intenta acceder desde otro dispositivo
-		 * permite su entrada, de esta forma lo puede hacer sumultaneamente desde el
-		 * ordenador y la tablets o smartphone.
-		 */
-		} else if (req.user.username == user_connected.username) {
-			res.render('motor_practice', {
-				user: req.user, key: cryp_socket,
-				ip: Config.WebServer.ip,
-				port: Config.WebServer.port
-			});
-		/*
-		 * En el caso de que la práctica está ocupada muestra una alerta
-		 * y devuelve al usuario a la página principal.
-		 */
-		} else {
-			res.render('select', { user: req.user, state: true });
-		}
-	}
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    // If idle, start a new session
+    if(session.idle) {
+      token = Math.floor((Math.random() * 1000000) + 1);
+      session.start(req.user.username, token);
+    }
+    if(session.isActiveUser(req.user.username)) {
+      res.render(Config.Lab.GUI, {
+        user: req.user,
+        key: token,
+        ip: Config.WebServer.ip,
+        port: Config.WebServer.port
+      });
+    } else {
+      res.render('select', {
+        user: req.user,
+        state: true
+      });
+    }
+  }
+);
+
+app.get('/signals/:signalName',
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    // Permitir Cross-Origin-Resource-Sharing (CORS)
+    res.header('Access-Control-Allow-Credentials', "true");
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+    console.log('[DEBUG]' + req.params);
+    // if (signals.o[req.params["signalName"]] != null) {
+    //   res.json(signals.o[req.params["signalName"]]);
+    // } else {
+    //   res.json({ });
+    // }
+  }
+);
+
+app.get('/signals/:signalName/:signalValue',
+  login.ensureLoggedIn('/'),
+  function (req, res) {
+    // Permitir Cross-Origin-Resource-Sharing (CORS)
+    res.header('Access-Control-Allow-Credentials', "true");
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+    console.log('[DEBUG]' + req.params);
+    // if (signals.i[req.params["signalName"]] != null) {
+    //   signals.i[req.params["signalName"]] = parseFloat(req.params["signalValue"]);
+    //
+    //   // Establecer la referencia externa en el controlador si está disponible
+    //   // [TODO] Si el controlador no está arrancado no tendrá el valor establecido
+    //   // [TODO] Siempre se pasa la variable SetPoint, modificar para cualquier variable que se quiera establecer
+    //   if (child.stdin.writable) {
+    //       // External reference
+    //       child.stdin.write('extern' + ":" + signals.i.SetPoint);
+    //   }
+    //   res.json(signals.i[req.params["signalName"]]);
+    // }
+    // else {
+    //   res.json({});
+    // }
+  }
 );
 
 app.get('/logout',
-	function(req, res) {
-		req.logOut();
-		res.redirect('/');
-	}
+  function(req, res) {
+    req.logOut();
+    res.redirect('/');
+  }
 );
 
 // JCS: -- This section enables communications using RIP --
+var Session = require('./Session');
 var SSE = require('express-sse');
-var RIP = require('./rip/RIPGeneric');
-// JCS: - Init Lab Metadata. TO DO: Load from config file -
-labIp = '127.0.0.1:3030';
-var e = {
-  'name': 'ReNoLabs',
-  'description': 'RIP-ReNoLabs implementation',
-  'readables': [
-    new RIP.Variable('Vup'),
-    new RIP.Variable('Vdown'),
-    new RIP.Variable('Delay'),
-    new RIP.Variable('Threshold'),
-    new RIP.Variable('Min'),
-    new RIP.Variable('Max'),
-  ],
-  'writables': [
-    new RIP.Variable('Vup'),
-    new RIP.Variable('Vdown'),
-    new RIP.Variable('Delay'),
-    new RIP.Variable('Threshold'),
-    new RIP.Variable('Min'),
-    new RIP.Variable('Max'),
-  ]
-};
-var labInfo = new RIP.LabInfo(labIp, [e.name]);
-var expInfo = new RIP.ExperienceInfo(labInfo, e.name, e.description, e.readables, e.writables);
-// JCS: - start metadata server -
-app.get('/RIP', login.ensureLoggedIn('/'), function(req, res) {
+var RIPBroker = require('./rip/RIPBroker');
+var ripBroker = new RIPBroker(Config.RIP);
+
+app.get('/RIP', (req, res) => {
   try {
     var expId = req.query.expId;
   } catch(e) {
     expId = null;
   }
-  if(expId == expInfo.metadata.info.name) {
-    res.json(expInfo.metadata);
-  } else {
-    res.json(labInfo.metadata);
-  };
+  var info = ripBroker.info(expId);
+  res.json(info);
 });
-// JCS: - start data server -
-var SSEperiod = 100;
-var sse = new SSE([]);
-var session = {
-  'users': 0,
-  'state': 'stopped',
-}
 
-app.get('/RIP/SSE', login.ensureLoggedIn('/'), (req, res) => {
-  var username = req.user.username;
-  if(session.state == 'stopped') {
-    adapter.start();
-  }
+app.get('/RIP/SSE', (req, res) => {
+  session.start();
   res.setHeader('Access-Control-Allow-Origin', '*');
-  sse.init(req, res);
+  ripBroker.open_channel(req, res);
 });
 
-function periodic_update() {
-  // var names = [], values = [];
-  // for (var s in signals.o) {
-  //   names.push(s);
-  //   values.push(signals.o[s]);
-  // }
-  // eventdata = { 'result': [names, values] };
-  // eventname = 'periodiclabdata';
-  // sse.send(eventdata, eventname);
-}
-setInterval(periodic_update, 1000);
-
-
-
-
+app.post('/RIP/POST', (req, res) => {
+  ripBroker.send();
+});
 
 /*
  * Inicialización del módulo socket empleado para la comunicación entre cliente y servidor.
  */
 var io = require('socket.io').listen(server);
-var adapter = new Config.Hardware.Adapter();
 var logger = new Config.Hardware.Logger('start_server');
-adapter.addListener(io);
-adapter.addListener(logger);
+var session = new Session(Config);
+session.hw.addListener(io);
+session.hw.addListener(logger);
 
 io.sockets.on('connection', function(socket) {
-	/*
-	 * Comprueba si el usuario que se intenta conectar es el correcto
-	 * Aplicación de la encriptación.
-	 */
-	if (socket.handshake.query.key != cryp_socket) {
-		socket.emit('disconnect_timeout', {text: 'Conexión fallida!'});
-		socket.disconnect();
-		return;
-	}
+  //   /*
+  //    * Comprueba si el usuario que se intenta conectar es el correcto
+  //    * Aplicación de la encriptación.
+  //    */
+  //   if (socket.handshake.query.key) {
+    //     /*Autenticación a través de la página de login*/
+    //     if (socket.handshake.query.key != cryp_socket && socket.handshake.query.key != cryp_socket_supervisor) {
+      //       socket.emit('disconnect_timeout', {text: 'Conexión fallida!'});
+      //       socket.disconnect();
+      //       return;
+      //     }
+      //     if (socket.handshake.query.key == cryp_socket_supervisor)
+      //       isSupervisor = true;
+      // console.log("OK -> User: " + JSON.stringify(socket.handshake.query));
+      //   }
+  // is the user allowed?
+  var credentials = {
+    'key': socket.handshake.query.key,
+    'user': socket.handshake.query.user,
+    'password': socket.handshake.query.password,
+  }
+  if (!session.validate(credentials)) {
+    var ev = {};
+    if(credentials['key']) {
+      ev = {'id': 'disconnect_timeout', 'text': 'Connection failed!'};
+    } else {
+      var text;
+      if(!credentials['user'] || !credentials['password']) {
+        text = 'User not specified!';
+      } else {
+        text = 'Invalid username or password!';
+      }
+      ev = {'id': 'login_error', 'text': text};
+    }
+    socket.emit(ev.id, {text: ev.text});
+    socket.disconnect();
+    return;
+  }
+  var user = db.users.getUser(credentials['user']);
+  var isSupervisor = db.users.isSupervisor(user);
+  var isAdministrator = db.users.isAdministrator(user);
 
-	/*
-	 * Comprueba el número de conexiones socket entre cliente y servidor
-	 */
-	var clients = Object.keys(io.sockets.sockets); //JULIAN PONER
+  session.connect('socket_' + socket.id, socket);
 
-	/*
-	 * En caso de ser la primera conexión y que el timeout no haya terminado
-	 * Lanza una nueva sesión de la práctica con un nuevo Timeout.
-	 */
-	if (clients.length == 1 && flag_timeout) {
-		console.info('[INFO] PRÁCTICA INICIADA');
-		console.info('[INFO] Usuario: ' + user_connected.username);
-		console.info('[INFO] ' + new Date());
-		flag_timeout = false;
-		/*
-		 * El Timeout desconecta todos los clientes sockets
-		 * y cierra el controlador.
-		 */
- 	 	connectionTimeout = function() {
- 			io.emit('disconnect_timeout', { text: 'Timeout: Sesión terminada!' });
-      var clients = Object.keys(io.sockets.sockets); //JULI
- 			for (i = 0; i < clients.length; i++) {
- 				io.sockets.sockets[clients[i]].disconnect(); //JULI: poner
- 			}
- 			flag_timeout = true;
- 			if (adapter.connected) {
-        adapter.stop();
- 			}
- 			clients = Object.keys(io.sockets.sockets); //JULI pongo
- 			console.info('[INFO] PRÁCTICA FINALIZADA POR TIMEOUT');
- 			console.info('[INFO] ' + new Date());
- 		};
-
-		sessionTimer = setTimeout(connectionTimeout, Config.Session.timeout*60*1000);
-	}
-
-	console.log('[DEBUG] ' + socket.handshake.headers['user-agent']);
-
-	/*
-	 * Rutina de recepción de sockets por parte del cliente
-	 */
-	socket.on('clientOut_serverIn', function(data) {
-			console.log('[DEBUG] ' + data.variable + ' = ' + data.value);
-			if (adapter.connected) {
-				adapter.write(data.variable, data.value);
-			} else if (data.variable == 'config' && data.value == 1) {
-				logger.end();
-				logger.start(user_connected.username);
-				adapter.start();
-			}
-	});
-
-	socket.on('disconnect', function () {
-		clearTimeout(disconnectTimer);
-    var clients = Object.keys(io.sockets.sockets); //JULI
-		if (clients.length == 0) {
-			disconnectTimer = setTimeout(function() {
-				var clients = Object.keys(io.sockets.sockets); //JULI
-				if (clients.length == 0 && !flag_timeout) {
-					clearTimeout(sessionTimer);
-					flag_timeout = true;
-          adapter.stop();
-					console.info('[INFO] PRÁCTICA FINALIZADA POR DESCONEXIÓN');
-					console.info('[INFO] ' + new Date());
-				}
-			}, 5000);
-		}
-	});
+  // Maintenance mode
+  switch (socket.handshake.query.mode) {
+    case 'maintenance':
+      if(!isSupervisor) {
+        console.info('[INFO] Entering maintenance mode...');
+        if(isAdministrator) {
+          console.info("[INFO] Registering admin maintenance services...");
+          new behavior.AdminMaintenance(session).register(socket);
+        } else {
+          console.info("[INFO] Registering user maintenance services...");
+          new behavior.UserMaintenance(session).register(socket);
+        }
+      }
+      break;
+    case 'client':
+      console.info("[INFO] Entering client mode...");
+      console.info("[INFO] Registering client services...");
+      new behavior.Client(session).register(socket);
+    default:
+    // Configuration
+      console.info("[INFO] Registering config services...");
+      new behavior.Config(session).register(socket);
+      // Behave as a normal user
+      if(!isSupervisor) {
+        console.info("[INFO] Entering user mode...");
+        console.info("[INFO] Registering config services...");
+        new behavior.Normal(session).register(socket);
+      }
+  }
 
   socket.on('error', function(err) {
     console.error('[ERROR] Socket: ' + err);

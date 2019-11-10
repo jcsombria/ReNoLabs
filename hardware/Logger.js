@@ -10,6 +10,7 @@ class Logger extends EventEmitter {
 	}
 
 	log(data) {
+		console.log(data);
 		this.stream.write(data);
 	}
 
