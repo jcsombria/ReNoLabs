@@ -290,8 +290,8 @@ io.sockets.on('connection', function(socket) {
     'username': socket.handshake.query.user,
     'password': socket.handshake.query.password,
   }
-  logger.debug(`socket.io: ${socket.handshake.query.key}`);
-  logger.debug(`${socket.handshake.query.user}:${socket.handshake.query.password}`);
+  // logger.debug(`socket.io: ${socket.handshake.query.key}`);
+  // logger.debug(`${socket.handshake.query.user}:${socket.handshake.query.password}`);
   var session = SessionManager.connect(id, socket, credentials);
   if(!session) {
     socket.emit('login_error', {'text':'Invalid credentials'});

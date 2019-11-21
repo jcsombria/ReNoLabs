@@ -52,7 +52,7 @@ class SessionManager {
 
   connect(id, socket, credentials) {
     var user = this.validate(credentials);
-    if(user.username == this.active_user) {
+    if (user && (this.active_user == user.username || !this.active_user)) {
       this.clients[id] = socket;
       var session = new Session(user, id, this);
       session.hw = this.hw;
@@ -97,9 +97,8 @@ class SessionManager {
       } else {
         var user = db.users.getUser(credentials['username']);
         // if(user && user.password == credentials['password']) {
-        if (user.username == this.active_user) {
           return user;
-        }
+        // }
       }
     } catch(e) {}
   }
