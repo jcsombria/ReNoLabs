@@ -10,7 +10,7 @@ class Logger extends EventEmitter {
 	}
 
 	log(data) {
-		console.log(data);
+		logger.debug(data);
 		this.stream.write(data);
 	}
 
@@ -18,7 +18,7 @@ class Logger extends EventEmitter {
 		try {
 			this.log(data);
 		} catch(error) {
-			console.error('[ERROR] Can\'t write log.');
+			console.error('Can\'t write log.');
 		}
 	}
 

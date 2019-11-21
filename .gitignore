@@ -62,6 +62,8 @@ typings/
 
 # Experiment logs
 data/
+log/
 
 # User database
 db/records.js
+controllers/C/users/

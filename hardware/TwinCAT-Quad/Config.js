@@ -1,7 +1,7 @@
 // TwinCAT Config
 var options = {
     //The IP or hostname of the target machine
-    host: "127.0.0.1",
+    host: "192.168.56.101",
     //The NetId of the target machine
     amsNetIdTarget: "10.255.2.15.1.1",
     //The NetId of the source machine.

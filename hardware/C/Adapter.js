@@ -1,4 +1,5 @@
-var config_default = require('./Config');
+const logger = require('winston');
+const HWConfig = require('./Config');
 var State = require('../State');
 var spawn = require('child_process').spawn;
 
@@ -9,9 +10,8 @@ class CAdapter {
     this.connected = false;
     this.conn = null;
     this.toNotify = ['config', 'evolution'];
-    // this.toRequest = ['UserUpdate'];
     this.state = new CState();
-    this.options = (options !== undefined) ? options : config_default;
+    this.options = (options !== undefined) ? options : HWConfig;
   }
 
   addListener(o) {
@@ -26,11 +26,11 @@ class CAdapter {
      * Ejecuta el controlador e inicia una comunicación síncrona.
      */
     if (!username) {
-      console.info('[INFO] Starting main controller...');
+      logger.info('Starting default controller...');
       this.conn = spawn('sudo', ['./controllers/C/default/c_controller']);
     } else {
-      console.info('[INFO] Starting user controller (' + username + ')...');
-      this.conn = spawn('sudo',['./controllers/C/users/' + username + '/c_controller']);
+      logger.info('Starting user controller (' + username + ')...');
+      this.conn = spawn('sudo', ['./controllers/C/users/' + username + '/c_controller']);
     }
 
     /*
@@ -49,7 +49,8 @@ class CAdapter {
       if (code == null) {
         // io.emit('disconnect_timeout', {text: 'Error: fallo en el controlador! \n' + 'Reinicie la práctica'});
         this.state.config = 0;
-        this.state.evolution = [0, 0, 0, 0];
+        var a = new Array(15); for (var i = 0; i < 18; i++) { a[i] = 0; }
+        this.state.evolution = a;
       }
     });
 
@@ -59,7 +60,7 @@ class CAdapter {
      * nohup node app_....js > output.log &
      */
     this.conn.stderr.on('data', function(data) {
-        console.log('Error:', data);
+      logger.debug('Error:'+data);
     });
   }
 
@@ -84,31 +85,32 @@ class CAdapter {
   }
 
   onerror(error) {
-    console.error('[DEBUG] User error handle is not defined.');
+    logger.error(error);
   }
 
-  read(handle) {
-    console.error('[ERROR] Method read not implemented.');
+  read(variable) {
+    try {
+      return this.state[variable];
+    } catch(e) {
+      logger.error(`Cannot read ${variable}`)
+    }
   }
 
   write(variable, value, callback) {
     try {
-//      this.state[variable] = value;
-      this.stdin.write(variable + ':' + value);
+      this.state[variable] = value;
+      this.conn.stdin.write(variable + ':' + value);
     } catch(e) {
-      console.error(`[ERROR] Cannot write ${variable}`);
+      logger.error(`Cannot write ${variable}`)
     }
   }
 
   stop(callback) {
-    console.info('[INFO] C controller stopped.');
-    this.state['config'] = 0;
-    // this.handles.config.value = 5;
-    // this.conn.write(this.handles.config, ()=>{
-    //   this.conn.end();
-    //   this.state.removeListener(this.conn);
-    //   this.connected = false;
-    // });
+    logger.info('C controller stopped.');
+    this.state['config'] = 5;
+    this.conn.end();
+    this.connected = false;
+    this.state.removeListener(this.conn);
   }
 }
 
@@ -135,31 +137,33 @@ class CState extends State {
            this.listeners[i].write(variables[j], ()=>{});
          }
        } catch(error) {
-         console.log(`[WARNING] Cannot notify listener.`);
+         logger.warn(`Cannot notify listener.`);
        }
      }
   }
 
   set config(value) {
-    console.log('[DEBUG] set config');
     this._config = value;
     this.notify(['config:' + value]);
   }
-  //
-  // get config() {
-  //   return this._config;
-  // }
-  //
-  // set evolution(value) {
-  //   this._evolution = value;
-  //   this.notify('evolution:' + value);
-  // }
-  //
-  // get evolution() {
-  //   return this._evolution;
-  // }
+  
+  get config() {
+    return this._config;
+  }
+  
+  set evolution(value) {
+    this._evolution = value;
+    for(var i=5; i<18; i++) {
+      this._evolution[i] = 0;
+    }
+    this.notify('evolution:' + value);
+  }
+  
+  get evolution() {
+    return this._evolution;
+  }
 }
 
 module.exports.Adapter = CAdapter;
 module.exports.State = CState;
-module.exports.DefaultConfig = config_default;
+module.exports.DefaultConfig = HWConfig;

@@ -1,1 +1,1 @@
-module.exports.CodeManager = require('./CodeManager');
+module.exports.Updater = require('./Updater');

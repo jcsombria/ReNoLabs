@@ -25,7 +25,7 @@ class State {
            this.listeners[i].write(variables[j], ()=>{});
          }
        } catch(error) {
-         console.log(`[WARNING] Cannot notify listener.`);
+         logger.warn(`Cannot notify listener.`);
        }
      }
   }

@@ -153,7 +153,7 @@ class TwinCATAdapter {
 		let that = this;
 
     this.conn = ads.connect(this.options, function() {
-			console.info('[INFO] TwinCAT channel started.');
+      logger.info('TwinCAT channel started.');
       for(var i=0; i<that.toRequest.length; i++) {
         var v = that.toRequest[i];
         this.notify(that.handles[v]);
@@ -213,7 +213,7 @@ class TwinCATAdapter {
 	}
 
 	stop(callback) {
-		console.info('[INFO] TwinCAT channel stopped.');
+    logger.info('TwinCAT channel stopped.');
     this.handles.config.value = 5;
     this.conn.write(this.handles.config, ()=>{
       this.conn.end();
@@ -268,13 +268,13 @@ class State {
            this.listeners[i].write(variables[j], ()=>{});
          }
        } catch(error) {
-         console.log(`[WARNING] Cannot notify listener.`);
+         logger.warn(`Cannot notify listener.`);
        }
      }
   }
 
   set config(value) {
-    console.log('[DEBUG] set config');
+    logger.debug('set config');
     handles.config.value = value;
     this.notify([
       handles.config,
@@ -286,7 +286,7 @@ class State {
   }
 
   set reference(value) {
-    console.log('[DEBUG] set reference');
+    logger.debug('set reference');
     handles.referenceR.Tipo = [value.Roll.Tipo];
     handles.referenceR.param = value.Roll.param;
     handles.referenceP.Tipo = [value.Pitch.Tipo];
@@ -305,7 +305,7 @@ class State {
   }
 
   set controller(value) {
-    console.log('[DEBUG] set controller');
+    logger.debug('set controller');
     handles.controller.Tipo = [value.Tipo];
     handles.controller.Continuous = [1];
     handles.controller.RealSys = [value.RealSys];

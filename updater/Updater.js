@@ -1,8 +1,9 @@
-var Config = require('../AppConfig');
-var fs = require('fs');
-var spawn = require('child_process').spawn;
+const Config = require('../config/AppConfig');
+const logger = require('winston');
+const fs = require('fs');
+const spawn = require('child_process').spawn;
 
-class CodeManager {
+class Updater {
   upload_view(data) {
     /*  Upload the code */
     var fileName = Config.Lab.GUI_JS;
@@ -57,11 +58,11 @@ class CodeManager {
     try {
       var stats = fs.statSync('./controllers/'+ lang + '/users/' + username);
     } catch (e) {
-      console.info('[INFO] Folder not found!');
+      logger.debug('Folder not found!');
       var fromFolder = './controllers/' + lang + '/default/';
-      console.log(fromFolder);
+      logger.debug(fromFolder);
       var toFolder = './controllers/' + lang + '/users/' + username + '/';
-      console.log(toFolder);
+      logger.debug(toFolder);
       var fileNames = fs.readdirSync(fromFolder);
       var files = [];
       fs.mkdirSync(toFolder);
@@ -93,7 +94,7 @@ class CodeManager {
      */
     p.stdout.setEncoding('utf8');
     p.stdout.on('data', function(data) {
-//        console.log(data);
+      logger.debug(data);
     });
 
     /*
@@ -101,18 +102,17 @@ class CodeManager {
      * Si hay algún usuario conectado en ese momento lo redirige a la página principal.
      */
     p.on('exit', function(code, string) {
-        if (code == null) {
-            console.log('Process ended due to signal: ' + string);
-            if (socket != null) {
-                socket.emit('compilation_result', { signal: string });
-            }
+      if (code == null) {
+        logger.error('Process ended due to signal: '+string);
+        if (socket != null) {
+          socket.emit('compilation_result', { signal:string});
         }
-        else {
-            console.log('Process ended with code: ' + code);
-            if (socket != null) {
-                socket.emit('compilation_result', { code: code });
-            }
+      } else {
+        logger.error('Process ended with code: ' + code);
+        if (socket != null) {
+          socket.emit('compilation_result', {code:code});
         }
+      }
     });
 
     /*
@@ -122,12 +122,12 @@ class CodeManager {
      */
     p.stderr.setEncoding('utf8');
     p.stderr.on('data', function(data) {
-        console.log('Error: ' + data);
-        if (socket != null) {
-            socket.emit('compilation_error', { error: data });
-        }
+      logger.error('Error: '+data);
+      if (socket != null) {
+        socket.emit('compilation_error', {error: data });
+      }
     });
   }
 }
 
-module.exports = CodeManager;
+module.exports = Updater;
