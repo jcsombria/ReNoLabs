@@ -1,5 +1,5 @@
 const Config = require('../config/AppConfig');
-const logger = require('winston');
+const logger = require('winston').loggers.get('log');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 
@@ -58,11 +58,11 @@ class Updater {
     try {
       var stats = fs.statSync('./controllers/'+ lang + '/users/' + username);
     } catch (e) {
-      logger.debug('Folder not found!');
+      logger.debug('Updater: Folder not found!');
       var fromFolder = './controllers/' + lang + '/default/';
-      logger.debug(fromFolder);
+      logger.debug(`Updater: ${fromFolder}`);
       var toFolder = './controllers/' + lang + '/users/' + username + '/';
-      logger.debug(toFolder);
+      logger.debug(`Updater: ${toFolder}`);
       var fileNames = fs.readdirSync(fromFolder);
       var files = [];
       fs.mkdirSync(toFolder);
@@ -94,7 +94,7 @@ class Updater {
      */
     p.stdout.setEncoding('utf8');
     p.stdout.on('data', function(data) {
-      logger.debug(data);
+      logger.debug(`Updater: ${data}`);
     });
 
     /*
@@ -103,14 +103,14 @@ class Updater {
      */
     p.on('exit', function(code, string) {
       if (code == null) {
-        logger.error('Process ended due to signal: '+string);
+        logger.error('Updater: Process ended due to signal: '+string);
         if (socket != null) {
-          socket.emit('compilation_result', { signal:string});
+          socket.emit('Updater: compilation_result', { signal:string});
         }
       } else {
         logger.error('Process ended with code: ' + code);
         if (socket != null) {
-          socket.emit('compilation_result', {code:code});
+          socket.emit('Updater: compilation_result', {code:code});
         }
       }
     });
@@ -122,7 +122,7 @@ class Updater {
      */
     p.stderr.setEncoding('utf8');
     p.stderr.on('data', function(data) {
-      logger.error('Error: '+data);
+      logger.error(`Updater: Error ${data}`);
       if (socket != null) {
         socket.emit('compilation_error', {error: data });
       }

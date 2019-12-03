@@ -98,7 +98,6 @@ JsonRpcServer.prototype.on = function(method, info, handler) {
     } else if(info.params != undefined) {
       for(var param in info.params) nparams ++;
     };
-
   } catch(error) {
     console.log(error);
   }

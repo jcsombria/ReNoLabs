@@ -1,30 +1,38 @@
 var EventEmitter = require('events');
 var DateFormat = require('dateformat');
-var fs = require('fs');
+const winston = require('winston');
+const { format, transports } = winston;
+const datalogger = winston.loggers.get('data');
 
 class Logger extends EventEmitter {
-	constructor(stream) {
+	constructor() {
 		super();
-		this.start(stream);
 		this.on('serverOut_clientIn', this._log);
 	}
 
 	log(data) {
-		logger.debug(data);
-		this.stream.write(data);
+		datalogger.info(data);
 	}
 
 	_log(data) {
 		try {
 			this.log(data);
 		} catch(error) {
-			console.error('Can\'t write log.');
+			logger.error('Logger: Can\'t write log.');
 		}
 	}
 
-	start(prefix) {
-		var logfile = this._getFolder() + this._getFilename(prefix);
-		this.stream = fs.createWriteStream(logfile);
+	start(username) {
+		var logfile = this._getFolder() + this._getFilename(username);
+		datalogger.clear()
+			.add(new transports.File({
+			format: format.printf((info) => { return `${info.message}`; }),
+			filename: logfile,
+			level: 'silly',
+		}));
+		datalogger.info('% User: ');
+		datalogger.info('% Cols: time y0 y1 ...');
+		datalogger.info('data = [');
 	}
 
 	_getFolder() {
@@ -32,13 +40,12 @@ class Logger extends EventEmitter {
 	}
 
 	_getFilename(name) {
-		var d = new Date();
-		var date = DateFormat(d, "yyyymmdd_HHMMss");
+		var date = DateFormat(new Date(), "yyyymmdd_HHMMss");
 		return name + '_' + date + '.txt';
 	}
 
 	end() {
-		this.stream.end();
+		datalogger.info(']');
 	}
 }
 

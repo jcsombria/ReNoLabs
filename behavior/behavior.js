@@ -1,6 +1,6 @@
 const Config = require('../config/AppConfig');
 const Updater = require('../updater').Updater;
-const logger = require('winston');
+const logger = require('winston').loggers.get('log');
 
 class Behavior {
   constructor(session) {
@@ -29,7 +29,7 @@ class Behavior {
   }
 
   error(msg) {
-    logger.error('Socket: ' + msg);
+    logger.error('Behavior: ' + msg);
   }
 }
 

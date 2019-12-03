@@ -1,4 +1,4 @@
-var Logger = require('../Logger');
+const Logger = require('../Logger');
 
 class TwinCATLogger extends Logger {
 	constructor(stream) {
@@ -8,7 +8,8 @@ class TwinCATLogger extends Logger {
 	log(data) {
 		if(data.variable == 'evolution') {
 			var message = data.value +  " ";
-			this.stream.write(message.replace(/,/g, " ") + "\n");
+			var msg = message.replace(/,/g, " ");
+			super.log(msg);
 		}
 	}
 }

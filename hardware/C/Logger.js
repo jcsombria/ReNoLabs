@@ -1,4 +1,4 @@
-var Logger = require('../Logger');
+const Logger = require('../Logger');
 
 class CLogger extends Logger {
 	constructor(stream) {

@@ -1,6 +1,7 @@
-var ads = require('ads');
-var config_default = require('./Config');
-var logger = require('winston');
+const ads = require('ads');
+const config_default = require('./Config');
+const winston = require('winston');
+const logger = winston.loggers.get('log');
 
 // TwinCAT variables
 var handles = {
@@ -152,9 +153,10 @@ class TwinCATAdapter {
 	start() {
 		// Store the reference to this in that, we will need it inside the callbacks
 		let that = this;
+    logger.silly('TwinCAT Adapter: Starting PLC Channel');
 
     this.conn = ads.connect(this.options, function() {
-      logger.info('TwinCAT channel started.');
+      logger.info('TwinCAT Adapter: TwinCAT channel started.');
       for(var i=0; i<that.toRequest.length; i++) {
         var v = that.toRequest[i];
         this.notify(that.handles[v]);
@@ -164,16 +166,15 @@ class TwinCATAdapter {
 
 		this.conn.on('notification', function(handle) {
       try {
-        logger.debug('TwinCAT notification');
+        logger.silly('TwinCAT Adapter: TwinCAT notification');
         that.ondata(handle);
       } catch(e) {
-        logger.error('User data handler throws an error.');
-        logger.error(e);
+        logger.error(`TwinCAT Adapter: User data handler throws an error: ${e.message}`);
       }
 		});
 
     this.conn.on('error', function(error) {
-			logger.error('[ERROR] ' + error);
+      logger.error(`TwinCAT Adapter: ${error}`);
 			that.onerror(error);
 		});
   }
@@ -199,23 +200,23 @@ class TwinCATAdapter {
   }
 
   onerror(error) {
-		logger.debug('User error handle is not defined.');
+    logger.debug('TwinCAT Adapter: User error handle is not defined.');
   }
 
 	read(handle) {
-    logger.error('Method read not implemented.');
+    logger.error('TwinCAT Adapter: Method read not implemented.');
 	}
 
 	write(variable, value, callback) {
     try {
       this.state[variable] = value;
     } catch(e) {
-      logger.error(`Cannot write ${variable}`);
+      logger.error(`TwinCAT Adapter: Cannot write ${variable}`);
     }
 	}
 
 	stop(callback) {
-    logger.info('TwinCAT channel stopped.');
+    logger.info('TwinCAT Adapter: TwinCAT channel stopped.');
     this.handles.config.value = 5;
     this.conn.write(this.handles.config, ()=>{
       this.conn.end();
@@ -270,7 +271,7 @@ class State {
            this.listeners[i].write(variables[j], ()=>{});
          }
        } catch(error) {
-         logger.warn(`Cannot notify listener.`);
+         logger.warn(`TwinCAT Adapter: Cannot notify listener.`);
        }
      }
   }
@@ -278,7 +279,7 @@ class State {
   set config(value) {
     handles.config.value = value;
     this.notify([handles.config]);
-    logger.debug('set config='+value);
+    logger.debug(`TwinCAT Adapter: Set config=${value}`);
   }
 
   get config() {
@@ -286,7 +287,7 @@ class State {
   }
 
   set reference(value) {
-    logger.debug('set reference');
+    logger.debug(`TwinCAT Adapter: Set reference=${value}`);
     handles.referenceR.Tipo = [value.Roll.Tipo];
     handles.referenceR.param = value.Roll.param;
     handles.referenceP.Tipo = [value.Pitch.Tipo];
@@ -305,7 +306,7 @@ class State {
   }
 
   set controller(value) {
-    logger.debug('set controller');
+    logger.debug(`TwinCAT Adapter: set controller=${value}`);
     handles.controller.Tipo = [value.Tipo];
     handles.controller.Continuous = [1];
     handles.controller.RealSys = [value.RealSys];
@@ -334,7 +335,7 @@ class State {
 
   // Parse PLC notification and update state
   update(o) {
-    logger.debug('Incoming PLC data');
+    logger.silly('TwinCAT Adapter: Incoming PLC data');
 		this._config = o.ControlState[0];
 		this._evolution = this._buffer2array(o.EvolutionData, 4, 14);
 		this._reference = {

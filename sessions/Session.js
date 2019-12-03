@@ -1,6 +1,8 @@
+// Sessions Management
+
 const Config = require('../config/AppConfig');
 const db = require('../db');
-const logger = require('winston');
+const logger = require('winston').loggers.get('log');
 
 class Session {
   constructor (user, id, manager) {
@@ -34,7 +36,8 @@ class SessionManager {
     this.active_user = null;
     this.timeout = Config.Session.timeout*60*1000;
     this.hw = new Config.Hardware.Adapter();
-    this.hwlogger = new Config.Hardware.Logger('start_server');
+    this.hwlogger = new Config.Hardware.Logger();
+    this.hw.addListener(this.hwlogger);
     this.running = false;
   }
 
@@ -76,7 +79,7 @@ class SessionManager {
         logger.info(`${new Date()} - PRÁCTICA INICIADA: Usuario ${this.active_user}`);
       }
     } catch(e) {
-      logger.error(e);
+      logger.error(`Session: ${e}`);
     }
   }
 
@@ -117,9 +120,12 @@ class SessionManager {
   }
 
   _disconnectAll() {
-    var clients = this.clients.values();
-    for (var c in clients) {
-      c.disconnect();
+    for (var c in this.clients) {
+      try {
+        this.clients[c].disconnect();
+      } catch(e) {
+        logger.debug(`Cannot notify disconnection to client ${c}`);
+      }
     }
   }
 
@@ -131,7 +137,6 @@ class SessionManager {
   }
 
   _sessionTimeout() {
-    // io.emit('disconnect_timeout', { text: 'Timeout: Sesión terminada!' });
     this._disconnectAll();
     this._stopHardware();
     logger.info(`PRÁCTICA FINALIZADA POR TIMEOUT - ${new Date()}`);

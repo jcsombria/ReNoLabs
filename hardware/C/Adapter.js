@@ -1,4 +1,4 @@
-const logger = require('winston');
+const logger = require('winston').loggers.get('log');
 const HWConfig = require('./Config');
 var State = require('../State');
 var spawn = require('child_process').spawn;
@@ -26,10 +26,10 @@ class CAdapter {
      * Ejecuta el controlador e inicia una comunicación síncrona.
      */
     if (!username) {
-      logger.info('Starting default controller...');
+      logger.info('C Adapter: Starting default controller...');
       this.conn = spawn('sudo', ['./controllers/C/default/c_controller']);
     } else {
-      logger.info('Starting user controller (' + username + ')...');
+      logger.info(`C Adapter: Starting user controller (${username})...`);
       this.conn = spawn('sudo', ['./controllers/C/users/' + username + '/c_controller']);
     }
 
@@ -60,7 +60,7 @@ class CAdapter {
      * nohup node app_....js > output.log &
      */
     this.conn.stderr.on('data', function(data) {
-      logger.debug('Error:'+data);
+      logger.debug(`C Adapter: Error ${data}`);
     });
   }
 
@@ -85,14 +85,14 @@ class CAdapter {
   }
 
   onerror(error) {
-    logger.error(error);
+    logger.error(`C Adapter: ${error}`);
   }
 
   read(variable) {
     try {
       return this.state[variable];
     } catch(e) {
-      logger.error(`Cannot read ${variable}`)
+      logger.error(`C Adapter: Cannot read ${variable}`)
     }
   }
 
@@ -101,12 +101,12 @@ class CAdapter {
       this.state[variable] = value;
       this.conn.stdin.write(variable + ':' + value);
     } catch(e) {
-      logger.error(`Cannot write ${variable}`)
+      logger.error(`C Adapter: Cannot write ${variable}`)
     }
   }
 
   stop(callback) {
-    logger.info('C controller stopped.');
+    logger.info('C Adapter: C controller stopped.');
     this.state['config'] = 5;
     this.conn.end();
     this.connected = false;
@@ -137,7 +137,7 @@ class CState extends State {
            this.listeners[i].write(variables[j], ()=>{});
          }
        } catch(error) {
-         logger.warn(`Cannot notify listener.`);
+         logger.warn(`C Adapter: Cannot notify listener.`);
        }
      }
   }
