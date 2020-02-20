@@ -10,7 +10,7 @@ const errors = new transports.File({
   format: fileformat, filename: 'log/error.log', level: 'error',
 });
 const console_ = new transports.Console({
-  format: consoleformat
+  format: consoleformat,
 });
 // System Events Logger
 winston.loggers.add('log', { transports: [errors, console_] });
@@ -30,6 +30,7 @@ const express = require('express');
 const fs = require('fs');
 const login = require('connect-ensure-login');
 const logger = require('winston').loggers.get('log');
+logger.level = 'debug';
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 
@@ -164,7 +165,10 @@ app.get('/download/*',
 app.get('/real',
   login.ensureLoggedIn('/'),
   function (req, res) {
-    var credentials = { 'username': req.user.username };
+    var credentials = {
+      'username': req.user.username,
+      'password': req.user.password
+    };
     if(SessionManager.idle) {
       logger.debug(`User ${req.user.username} starts session.`);
       SessionManager.start(credentials);
@@ -191,16 +195,17 @@ app.get('/real',
 app.get('/signals/:signalName',
   login.ensureLoggedIn('/'),
   function (req, res) {
-    // Allow Cross-Origin-Resource-Sharing (CORS)
     res.header('Access-Control-Allow-Credentials', "true");
     res.header('Access-Control-Allow-Origin', req.headers.origin);
     res.header('Access-Control-Allow-Methods', 'GET');
     res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+    logger.debug(`Conexion recibida`);
     var credentials = { 'key': token };
     var session = SessionManager.connect('http_', req.socket, credentials);
     var signal = req.params['signalName'];
     try {
       var value = session.hw.get(signal);
+      logger.debug(`${value}`);
       res.json(value);
     } catch(e) {
       res.json({});
@@ -308,12 +313,13 @@ io.sockets.on('connection', function(socket) {
     'username': socket.handshake.query.user,
     'password': socket.handshake.query.password,
   }
-  // logger.debug(`socket.io: ${socket.handshake.query.key}`);
-  // logger.debug(`${socket.handshake.query.user}:${socket.handshake.query.password}`);
-  var session = SessionManager.connect(id, socket, credentials);
-  if(!session) {
-    socket.emit('login_error', {'text':'Invalid credentials'});
-    return;
+  logger.debug(`Request from user: ${credentials['username']}`);
+  if(socket.handshake.query.mode != 'client') {
+    var session = SessionManager.connect(id, socket, credentials);
+    if(!session) {
+      socket.emit('login_error', {'text':'Invalid credentials'});
+      return;
+    }
   }
   // Maintenance mode
   switch (socket.handshake.query.mode) {

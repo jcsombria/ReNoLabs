@@ -1,6 +1,7 @@
+const db = require('../db');
+const logger = require('winston').loggers.get('log');
 const Config = require('../config/AppConfig');
 const Updater = require('../updater').Updater;
-const logger = require('winston').loggers.get('log');
 
 class Behavior {
   constructor(session) {
@@ -24,7 +25,11 @@ class Behavior {
   disconnect() {
     if(this.sender) {
       logger.info('Disconnecting client: ' + this.sender.id);
-      this.session.end();
+      try {
+        this.session.end();
+      } catch(e) {
+        logger.debug(`Cannot end session: ${e.message}`)
+      }
     }
   }
 
@@ -37,7 +42,7 @@ class Behavior {
 class BehaviorMaintenance extends Behavior {
   constructor(session) {
     super(session);
-    this.cm = new Updater();
+    this.updater = new Updater();
     this.addAction('upload_chunk', this.upload_chunk);
     this.addAction('finish_upload', this.finish_upload);
     this.addAction('download_controller', this.download_controller);
@@ -55,13 +60,13 @@ class BehaviorMaintenance extends Behavior {
 
   upload_controller(data) {
     logger.info('Maintenance - Receiving code...');
-    this.cm.upload_code(data);
+    this.updater.upload_code(data);
     this.sender.emit('controller_upload_complete', {});
   }
 
   download_controller(data) {
     logger.info('Maintenance - Sending code...');
-    var files = this.cm.download_code(data);
+    var files = this.updater.download_code(data);
     this.sender.emit('controller_code', files);
     logger.info('Maintenance - Code transferred.');
   }
@@ -69,6 +74,14 @@ class BehaviorMaintenance extends Behavior {
 
 // Maintenance actions only allowed as Admin
 class BehaviorAdminMaintenance extends BehaviorMaintenance {
+  constructor(session) {
+    super(session);
+    this.GET_USERS = 'users.get';
+    this.SET_USERS = 'users.set';
+    this.addAction(this.GET_USERS, this.get_users);
+    this.addAction(this.SET_USERS, this.set_users);
+  }
+
   upload_chunk(data) {
     logger.info('Uploading chunk...');
     if(!this.labCode) {
@@ -80,9 +93,30 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
 
   finish_upload(data) {
     logger.info('Upload completed! Updating view...');
-    this.cm.upload_view(this.labCode);
+    this.updater.upload_view(this.labCode);
     logger.info('View updated.');
     this.sender.emit('codeCompleted', {});
+  }
+
+  get_users() {
+    logger.info('Sending list of users...A great power comes with a great responsibility!');
+    this.sender.emit(this.GET_USERS, db.users.getUsers());
+  }
+
+  set_users(data) {
+    this.updater.updateUsers(data);
+    logger.info('Updating list of users...A great power comes with a great responsibility!');
+    db.users.reload();
+    this.sender.emit(this.SET_USERS, db.users.getUsers());
+  }
+
+  get_signals() {
+    logger.info('Sending signals.');
+  }
+
+  set_signals() {
+    logger.info('Updating signals...A great power comes with a great responsibility!');
+
   }
 }
 
@@ -109,20 +143,24 @@ class BehaviorUserMaintenance extends BehaviorMaintenance {
 
 // Client mode
 class BehaviorClient extends Behavior {
-  constructor(session) {
-    super(session);
-    // TO DO: Load from config file
-    this.signalDef = {
-      i:[{name: "SetPoint", type: "double", value: 0.0}],
-      o:[{name: "Time", type: "double", value: 0.0},{name: "Output", type: "double", value: 0.0}]
-    };
-    this.addAction('SignalRequest', this.SignalRequest);
+  constructor() {
+    super();
+    this.GET_USERS = 'users.get';
+    this.GET_SIGNALS = 'SignalRequest';
+    this.SET_SIGNALS = 'signals.set';
     this.addAction('disconnect', this.disconnect);
+    this.addAction(this.GET_SIGNALS, this.get_signals);
+//    this.addAction(this.GET_SIGNALS, this.set_signals);
   }
 
-  SignalRequest(data) {
+  get_signals() {
     logger.info('Client - Signal information requested...');
-    this.sender.emit('SignalInfoToClient', this.signalDef);
+    this.sender.emit('SignalInfoToClient', Config.Lab.signals);
+  }
+
+  set_signals(data) {
+    logger.info('Client - Signal information updated...');
+    this.sender.emit('SignalInfoToClient', Config.Lab.signals);
   }
 }
 
@@ -136,7 +174,8 @@ class BehaviorConfig extends Behavior {
 
   clientOut_request(data) {
     if (data.request == 'config') {
-      var response = {request: 'config', response: this.config};
+      var response = { request: 'config', response: Config.Lab.parameters };
+      logger.debug(`${JSON.stringify(response)}`);
       this.sender.emit('serverOut_response', response);
     }
   }

@@ -3,7 +3,7 @@ var RIP = require('../rip/RIPGeneric');
 // Application Configuration
 var config = {
   'ip': '127.0.0.1',
-  'port': 8080,
+  'port': 8081,
   'name': 'ReNoLabs',
   'description': 'RIP-ReNoLabs implementation',
   'readables': [

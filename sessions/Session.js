@@ -99,9 +99,9 @@ class SessionManager {
         }
       } else {
         var user = db.users.getUser(credentials['username']);
-        // if(user && user.password == credentials['password']) {
+        if(user && user.password == credentials['password']) {
           return user;
-        // }
+        }
       }
     } catch(e) {}
   }

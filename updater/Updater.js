@@ -1,11 +1,15 @@
 const Config = require('../config/AppConfig');
 const logger = require('winston').loggers.get('log');
+const DateFormat = require('dateformat');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 
+const USERSDB_PATH = "db/";
+const USERSDB_BACKUP_PATH = "db/backup/";
+const USERSDB_FILE = "records.js";
+
 class Updater {
   upload_view(data) {
-    /*  Upload the code */
     var fileName = Config.Lab.GUI_JS;
     var code_stream = fs.createWriteStream('./views/' + fileName);
     code_stream.write(data);
@@ -13,7 +17,6 @@ class Updater {
   }
 
   upload_code(data) {
-    /*  Upload the controller code */
     var username = data.name;
     var lang = data.languaje; // Me duelen los ojos!!!
     this.prepare_dev_folder(lang, username);
@@ -33,7 +36,6 @@ class Updater {
   }
 
   download_code(data) {
-    /*  Download the code */
     var folder = 'controllers/' + data.languaje;
     if (data.version && data.version === 'private') {
       folder = folder  + '/users/' + data.name + '/';
@@ -128,6 +130,41 @@ class Updater {
       }
     });
   }
+
+  updateUsers(users) {
+    var date = DateFormat(new Date(), "_yyyymmdd_HHMMss");
+    var src = USERSDB_PATH + USERSDB_FILE;
+    var dst = USERSDB_BACKUP_PATH + USERSDB_FILE + date;
+    try {
+      fs.accessSync(USERSDB_BACKUP_PATH);
+      console.log('can read/write');
+    } catch (err) {
+      fs.mkdirSync(USERSDB_BACKUP_PATH);
+      console.error('no access!');
+    }
+    fs.copyFileSync(src, dst);
+    fs.writeFileSync(src, "module.exports = " + users + ";");
+  }
+
+  setView() {
+  }
+
+  getView() {
+    try {
+      var filename = './views/' + Config.Lab.GUI;
+      var view = fs.readFileSync(filename);
+      return view;
+    } catch (e) {
+      logger.debug('Updater: views folder not found!');
+    }
+  }
+
+  getDescription() {
+  }
+
+  setDescription() {
+  }
+
 }
 
 module.exports = Updater;
