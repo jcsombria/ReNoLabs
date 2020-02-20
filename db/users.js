@@ -1,4 +1,5 @@
 var records = require('./records');
+const fs = require('fs');
 
 exports.findById = function(id, cb) {
   process.nextTick(function() {
@@ -52,4 +53,14 @@ exports.isSupervisor = function(user) {
     }
   }
   return false;
+}
+
+exports.getUsers = function() {
+  return records;
+}
+
+exports.reload = function() {
+  var path = require.resolve('./records');
+  delete require.cache[path];
+  records = require('./records');
 }
