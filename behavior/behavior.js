@@ -175,7 +175,6 @@ class BehaviorConfig extends Behavior {
   clientOut_request(data) {
     if (data.request == 'config') {
       var response = { request: 'config', response: Config.Lab.parameters };
-      logger.debug(`${JSON.stringify(response)}`);
       this.sender.emit('serverOut_response', response);
     }
   }

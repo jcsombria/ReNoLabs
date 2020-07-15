@@ -3,23 +3,35 @@ var DateFormat = require('dateformat');
 const winston = require('winston');
 const { format, transports } = winston;
 const datalogger = winston.loggers.get('data');
+const logger = require('winston').loggers.get('log');
 
 class Logger extends EventEmitter {
 	constructor() {
 		super();
-		this.on('serverOut_clientIn', this._log);
+		this.on('serverOut_clientIn', this._ondata.bind(this));
 	}
 
 	log(data) {
-		datalogger.info(data);
+		try {
+			datalogger.info(data);
+		} catch {
+			logger.debug('Logger: Can\'t write log.');
+		}
 	}
 
-	_log(data) {
+	_ondata(data) {
 		try {
-			this.log(data);
+			var logData = this.format(data);
+			if(logData) {
+				this.log(logData);
+			}
 		} catch(error) {
-			logger.error('Logger: Can\'t write log.');
+			logger.debug('Logger: Can\'t format data.');
 		}
+	}
+
+	format(data) {
+		return data;
 	}
 
 	start(username) {

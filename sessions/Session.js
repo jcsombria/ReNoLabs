@@ -42,7 +42,7 @@ class SessionManager {
   }
 
   get idle() {
-    return !this.hasClients();
+    return !this.hasClients() || !this.active_user;
   }
 
   isActiveUser(username) {

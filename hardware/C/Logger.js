@@ -2,13 +2,14 @@ const Logger = require('../Logger');
 
 class CLogger extends Logger {
 	constructor(stream) {
-		super(stream);
+		super();
 	}
 
-	log(data) {
+	format(data) {
 		if(data.variable == 'evolution') {
 			var message = data.value +  " ";
-			this.stream.write(message.replace(/,/g, " ") + "\n");
+			var toLog = message.replace(/,/g, " ");
+			return toLog;
 		}
 	}
 }

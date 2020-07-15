@@ -28,9 +28,11 @@ class Updater {
       folder = folder  + '/default/';
     }
     for (var f in data.files) {
-      var code_stream = fs.createWriteStream(folder + data.files[f].fileName);
-      code_stream.write(data.files[f].code);
-      code_stream.end();
+      if(f.endsWith('.c') | f == "Makefile") {
+        var code_stream = fs.createWriteStream(folder + data.files[f].fileName);
+        code_stream.write(data.files[f].code);
+        code_stream.end();
+      }
     }
     this.compile_code(data.languaje, username, null);
   }
@@ -67,7 +69,7 @@ class Updater {
       logger.debug(`Updater: ${toFolder}`);
       var fileNames = fs.readdirSync(fromFolder);
       var files = [];
-      fs.mkdirSync(toFolder);
+      fs.mkdirSync(toFolder, {recursive:true});
       for (var i = 0; i < fileNames.length; i++) {
         var name = fileNames[i];
         var content = fs.readFileSync(fromFolder + name);

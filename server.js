@@ -349,6 +349,10 @@ io.sockets.on('connection', function(socket) {
         logger.info('Entering user mode...');
         logger.debug('Registering common services...');
         new behavior.Normal(session).register(socket);
+        if(SessionManager.idle) {
+          logger.debug(`User ${credentials['username']} starts session.`);
+          SessionManager.start(credentials);
+        }
       }
-  }
+    }
 });
