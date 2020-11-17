@@ -1,5 +1,4 @@
 // Sessions Management
-
 const Config = require('../config/AppConfig');
 const db = require('../db');
 const logger = require('winston').loggers.get('log');

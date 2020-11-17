@@ -35,11 +35,6 @@ const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 
 /*
-* variables utilizadas.
-*/
-var files = {name: 0, date: [], size: []};
-
-/*
 * Protocolo de autentificación (passport module).
 */
 passport.use(new Strategy(
@@ -82,6 +77,7 @@ app.use(express.static('public'));
  */
 const cookie_parser = require('cookie-parser')();
 const body_parser = require('body-parser');
+const { Updater } = require('./updater');
 const express_session = require('express-session')({
   secret: 'keyboard cat',
   resave: false,
@@ -120,7 +116,7 @@ app.post('/', passport.authenticate('local', { failureRedirect: '/' }),
 app.get('/select',
   login.ensureLoggedIn('/'),
   function (req, res) {
-    res.render('select', { user: req.user, state: false });
+    res.render('select', {user: req.user, state: false});
 });
 
 app.get('/help',
@@ -135,6 +131,7 @@ app.get('/data',
     /*
      * Filtra los ficheros de cada usuario
      */
+    var files = {name: 0, date: [], size: []};
     files.name = fs.readdirSync('./data/').filter(function(element) {
       if (element.split('_')[0] == req.user.username) {
         return element;
@@ -192,47 +189,47 @@ app.get('/real',
   }
 );
 
-app.get('/signals/:signalName',
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    res.header('Access-Control-Allow-Credentials', "true");
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Methods', 'GET');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
-    logger.debug(`Conexion recibida`);
-    var credentials = { 'key': token };
-    var session = SessionManager.connect('http_', req.socket, credentials);
-    var signal = req.params['signalName'];
-    try {
-      var value = session.hw.get(signal);
-      logger.debug(`${value}`);
-      res.json(value);
-    } catch(e) {
-      res.json({});
-    }
-  }
-);
+// app.get('/signals/:signalName',
+//   login.ensureLoggedIn('/'),
+//   function (req, res) {
+//     res.header('Access-Control-Allow-Credentials', "true");
+//     res.header('Access-Control-Allow-Origin', req.headers.origin);
+//     res.header('Access-Control-Allow-Methods', 'GET');
+//     res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+//     logger.debug(`Conexion recibida`);
+//     var credentials = { 'key': token };
+//     var session = SessionManager.connect('http_', req.socket, credentials);
+//     var signal = req.params['signalName'];
+//     try {
+//       var value = session.hw.get(signal);
+//       logger.debug(`${value}`);
+//       res.json(value);
+//     } catch(e) {
+//       res.json({});
+//     }
+//   }
+// );
 
-app.get('/signals/:signalName/:signalValue',
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    // Allow Cross-Origin-Resource-Sharing (CORS)
-    res.header('Access-Control-Allow-Credentials', "true");
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    res.header('Access-Control-Allow-Methods', 'GET');
-    res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
-    var credentials = { 'key': token };
-    var session = SessionManager.connect('http_', req.socket, credentials);
-    var name = req.params['signalName'];
-    try {
-      var value = session.hw.set(signal);
-      session.hw.write(name, value);
-      res.json(value);
-    } catch (e) {
-      res.json({});
-    }
-  }
-);
+// app.get('/signals/:signalName/:signalValue',
+//   login.ensureLoggedIn('/'),
+//   function (req, res) {
+//     // Allow Cross-Origin-Resource-Sharing (CORS)
+//     res.header('Access-Control-Allow-Credentials', "true");
+//     res.header('Access-Control-Allow-Origin', req.headers.origin);
+//     res.header('Access-Control-Allow-Methods', 'GET');
+//     res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+//     var credentials = { 'key': token };
+//     var session = SessionManager.connect('http_', req.socket, credentials);
+//     var name = req.params['signalName'];
+//     try {
+//       var value = session.hw.set(signal);
+//       session.hw.write(name, value);
+//       res.json(value);
+//     } catch (e) {
+//       res.json({});
+//     }
+//   }
+// );
 
 app.get('/logout',
   function(req, res) {
@@ -241,6 +238,35 @@ app.get('/logout',
   }
 );
 
+app.get('/admin',
+  function(req, res) {
+    res.render('editor/code');
+  }
+)
+
+// app.get('/signals/info',
+//  // login.ensureLoggedIn('/'),
+//   function (req, res) {
+//     // Allow Cross-Origin-Resource-Sharing (CORS)
+//     // res.header('Access-Control-Allow-Credentials', "true");
+//     // res.header('Access-Control-Allow-Origin', req.headers.origin);
+//     // res.header('Access-Control-Allow-Methods', 'GET');
+//     // res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+//     // var credentials = { 'key': token };
+//     // var session = SessionManager.connect('http_', req.socket, credentials);
+//     // var name = req.params['signalName'];
+//     // try {
+//     //   var value = session.hw.set(signal);
+//     //   session.hw.write(name, value);
+//     //   res.json(value);
+//     // } catch (e) {
+//     //   res.json({});
+//     // }
+//     res.json(Updater.getSignals());
+//   }
+// );
+
+// This section add RIP support (if enabled in AppConfig.js)
 var ripapp = app;
 if(Config.RIP.port != Config.WebServer.port) {
   ripapp = express();
@@ -248,12 +274,11 @@ if(Config.RIP.port != Config.WebServer.port) {
     var host = ripserver.address().address;
     var port = ripserver.address().port;
     logger.info(`RIP Server started on http://${host}:${port}`);
-  });
+  });  
 } else {
   logger.info(`RIP Server started on http://${Config.RIP.ip}:${Config.RIP.port}`);
-}
+}  
 
-// This section enables RIP communications
 ripapp.get('/RIP',
   function(req, res) {
     try {
@@ -321,7 +346,6 @@ io.sockets.on('connection', function(socket) {
       return;
     }
   }
-  // Maintenance mode
   switch (socket.handshake.query.mode) {
     case 'maintenance':
       if(!session.isSupervisor()) {

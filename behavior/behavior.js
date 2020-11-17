@@ -1,12 +1,14 @@
 const db = require('../db');
 const logger = require('winston').loggers.get('log');
 const Config = require('../config/AppConfig');
-const Updater = require('../updater').Updater;
+const { Updater } = require('../updater');
 
 class Behavior {
   constructor(session) {
     this.actions = {};
+    this.GET_INFO = 'info.get';
     this.session = session;
+    this.addAction(this.GET_INFO, this.info);
     this.addAction('disconnect', this.disconnect);
     this.addAction('error', this.error);
   }
@@ -20,6 +22,11 @@ class Behavior {
 
   addAction(id, action) {
     this.actions[id] = action;
+  }
+
+  info() {
+    logger.info('Sending Lab Info.');
+    return this.sender.emit(this.GET_INFO, Config.Lab.info);
   }
 
   disconnect() {
@@ -42,7 +49,6 @@ class Behavior {
 class BehaviorMaintenance extends Behavior {
   constructor(session) {
     super(session);
-    this.updater = new Updater();
     this.addAction('upload_chunk', this.upload_chunk);
     this.addAction('finish_upload', this.finish_upload);
     this.addAction('download_controller', this.download_controller);
@@ -60,13 +66,14 @@ class BehaviorMaintenance extends Behavior {
 
   upload_controller(data) {
     logger.info('Maintenance - Receiving code...');
-    this.updater.upload_code(data);
+    Updater.upload_code(data);
     this.sender.emit('controller_upload_complete', {});
   }
 
   download_controller(data) {
     logger.info('Maintenance - Sending code...');
-    var files = this.updater.download_code(data);
+    logger.debug(data);
+    var files = Updater.download_code(data);
     this.sender.emit('controller_code', files);
     logger.info('Maintenance - Code transferred.');
   }
@@ -78,8 +85,12 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
     super(session);
     this.GET_USERS = 'users.get';
     this.SET_USERS = 'users.set';
+    this.GET_CONFIG = 'config.get';
+    this.SET_CONFIG = 'config.set';
     this.addAction(this.GET_USERS, this.get_users);
     this.addAction(this.SET_USERS, this.set_users);
+    this.addAction(this.GET_CONFIG, this.get_signals);
+    this.addAction(this.SET_CONFIG, this.set_signals);
   }
 
   upload_chunk(data) {
@@ -93,7 +104,7 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
 
   finish_upload(data) {
     logger.info('Upload completed! Updating view...');
-    this.updater.upload_view(this.labCode);
+    Updater.upload_view(this.labCode);
     logger.info('View updated.');
     this.sender.emit('codeCompleted', {});
   }
@@ -104,19 +115,21 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
   }
 
   set_users(data) {
-    this.updater.updateUsers(data);
+    Updater.updateUsers(data);
     logger.info('Updating list of users...A great power comes with a great responsibility!');
     db.users.reload();
     this.sender.emit(this.SET_USERS, db.users.getUsers());
   }
 
   get_signals() {
-    logger.info('Sending signals.');
+    logger.info('Sending config.');
+    this.sender.emit(this.GET_CONFIG, {'DefaultConfig': Config});
   }
 
-  set_signals() {
-    logger.info('Updating signals...A great power comes with a great responsibility!');
-
+  set_signals(data) {
+    logger.info('Updating config...A great power comes with a great responsibility!');
+    console.log(data);
+    this.sender.emit(this.SET_CONFIG, {'DefaultConfig': Config});
   }
 }
 

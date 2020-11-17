@@ -1,7 +1,10 @@
 // Lab configuration
 module.exports = {
   GUI: 'motor_practice.ejs',
-  GUI_JS: 'real.js',
+  info: {
+    name: 'DummyLab',
+    description: '<h1>DummyLab</h1><p>This is a very chuli lab description</p>',
+  },
   parameters: {
     simulation: {
       parameter_names: ['Vup1', 'Vdown', 'Delay'],

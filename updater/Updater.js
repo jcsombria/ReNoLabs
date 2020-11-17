@@ -1,7 +1,9 @@
+const LabConfig = require('../config/LabConfig');
 const Config = require('../config/AppConfig');
 const logger = require('winston').loggers.get('log');
 const DateFormat = require('dateformat');
 const fs = require('fs');
+const { ensureLoggedIn } = require('connect-ensure-login');
 const spawn = require('child_process').spawn;
 
 const USERSDB_PATH = "db/";
@@ -18,9 +20,9 @@ class Updater {
 
   upload_code(data) {
     var username = data.name;
-    var lang = data.languaje; // Me duelen los ojos!!!
+    var lang = data.language;
     this.prepare_dev_folder(lang, username);
-    var folder = 'controllers/' + data.languaje;
+    var folder = 'controllers/' + data.language;
     if (data.version && data.version === 'private') {
       folder = folder  + '/users/' + data.name + '/';
       username = data.name;
@@ -34,24 +36,27 @@ class Updater {
         code_stream.end();
       }
     }
-    this.compile_code(data.languaje, username, null);
+    this.compile_code(data.language, username, null);
   }
 
   download_code(data) {
-    var folder = 'controllers/' + data.languaje;
+    let basepath = 'controllers/' + data.language;
+    const defaultpath = basepath + '/default/';
+    let path = defaultpath;
     if (data.version && data.version === 'private') {
-      folder = folder  + '/users/' + data.name + '/';
-    } else {
-      folder = folder  + '/default/';
-    }
-    var fileNames = fs.readdirSync(folder);
+      let userpath = basepath + '/users/' + data.name + '/';
+      if(fs.existsSync(userpath)) {
+        path = userpath; 
+      }
+    } 
+    var fileNames = fs.readdirSync(path);
     var files = [];
     for (var i = 0; i < fileNames.length; i++) {
       var name = fileNames[i];
       if (name.length - name.lastIndexOf(".c") == 2) {
         var fileInfo = {};
         fileInfo.fileName = name;
-        fileInfo.code = fs.readFileSync(folder + name, {encoding: 'utf8'});
+        fileInfo.code = fs.readFileSync(path + name, {encoding: 'utf8'});
         files.push(fileInfo);
       }
     }
@@ -69,7 +74,7 @@ class Updater {
       logger.debug(`Updater: ${toFolder}`);
       var fileNames = fs.readdirSync(fromFolder);
       var files = [];
-      fs.mkdirSync(toFolder, {recursive:true});
+      fs.mkdirSync(toFolder,  {recursive: true});
       for (var i = 0; i < fileNames.length; i++) {
         var name = fileNames[i];
         var content = fs.readFileSync(fromFolder + name);
@@ -167,6 +172,9 @@ class Updater {
   setDescription() {
   }
 
+  getSignals() {
+    return LabConfig;
+  }
 }
 
-module.exports = Updater;
+module.exports = new Updater();
