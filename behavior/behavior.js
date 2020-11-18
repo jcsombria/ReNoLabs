@@ -72,7 +72,6 @@ class BehaviorMaintenance extends Behavior {
 
   download_controller(data) {
     logger.info('Maintenance - Sending code...');
-    logger.debug(data);
     var files = Updater.download_code(data);
     this.sender.emit('controller_code', files);
     logger.info('Maintenance - Code transferred.');

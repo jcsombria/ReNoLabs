@@ -10,6 +10,9 @@ const USERSDB_PATH = "db/";
 const USERSDB_BACKUP_PATH = "db/backup/";
 const USERSDB_FILE = "records.js";
 
+const CONTROLLER_PATH = "controllers/";
+const CONTROLLER_USER_PATH = "user/";
+
 class Updater {
   upload_view(data) {
     var fileName = Config.Lab.GUI_JS;
@@ -19,83 +22,91 @@ class Updater {
   }
 
   upload_code(data) {
-    var username = data.name;
-    var lang = data.language;
-    this.prepare_dev_folder(lang, username);
-    var folder = 'controllers/' + data.language;
+    let path = '';
     if (data.version && data.version === 'private') {
-      folder = folder  + '/users/' + data.name + '/';
-      username = data.name;
+      path = this._get_user_folder(data.username, data.language);
     } else {
-      folder = folder  + '/default/';
+      path = this._get_default_folder(data.username, data.language);
     }
-    for (var f in data.files) {
-      if(f.endsWith('.c') | f == "Makefile") {
-        var code_stream = fs.createWriteStream(folder + data.files[f].fileName);
-        code_stream.write(data.files[f].code);
-        code_stream.end();
-      }
-    }
-    this.compile_code(data.language, username, null);
+    logger.debug(path);
+    this._prepare_dev_folder(path);
+    this._copy_files(data.files, path);
+    this._compile_code(path);
   }
 
-  download_code(data) {
-    let basepath = 'controllers/' + data.language;
-    const defaultpath = basepath + '/default/';
-    let path = defaultpath;
-    if (data.version && data.version === 'private') {
-      let userpath = basepath + '/users/' + data.name + '/';
-      if(fs.existsSync(userpath)) {
-        path = userpath; 
+  _get_user_folder(username, language) {
+    return `./${CONTROLLER_PATH}${language}/${CONTROLLER_USER_PATH}${username}/`;
+  }
+
+  _get_default_folder(language) {
+    return `./${CONTROLLER_PATH}${language}/default/`;
+  }
+
+  _prepare_dev_folder(user_path) {
+    try {
+      var stats = fs.statSync(user_path);
+    } catch (e) {
+      logger.debug('Updater: Folder not found!');
+      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
+      let default_path = this._get_default_folder(language);
+      var fileNames = fs.readdirSync(default_path);
+      fs.mkdirSync(user_path,  {recursive: true});
+      for (var i = 0; i < fileNames.length; i++) {
+        var name = fileNames[i];
+        var content = fs.readFileSync(default_path + name);
+        var stats = fs.statSync(default_path + name);
+        logger.debug(name);
+        fs.writeFileSync(user_path + name, content, {mode: stats.mode});
+      }    
+    }    
+  }    
+  
+  _copy_files(files, user_path) {
+    logger.debug('Updater: Copying files!');
+    for (var f in files) {
+      var filename = files[f].filename;
+      var content = files[f].code;
+      logger.debug(`\tfile: ${filename}`);
+      if(this._is_selectable(filename)) {
+        var code_stream = fs.createWriteStream(user_path + filename);
+        code_stream.write(content);
+        code_stream.end();
       }
-    } 
+    }  
+  }  
+  
+  download_code(data) {
+    let path = '';
+    if (data.version && data.version === 'private') {
+      path = this._get_user_folder(data.username, data.language);
+    } else {
+      path = this._get_default_folder(data.username, data.language);
+    }
     var fileNames = fs.readdirSync(path);
     var files = [];
     for (var i = 0; i < fileNames.length; i++) {
       var name = fileNames[i];
-      if (name.length - name.lastIndexOf(".c") == 2) {
+      if(this._is_selectable(name)) {
         var fileInfo = {};
-        fileInfo.fileName = name;
+        fileInfo.filename = name;
         fileInfo.code = fs.readFileSync(path + name, {encoding: 'utf8'});
+        logger.debug(name);
         files.push(fileInfo);
       }
     }
     return files;
   }
 
-  prepare_dev_folder(lang, username) {
-    try {
-      var stats = fs.statSync('./controllers/'+ lang + '/users/' + username);
-    } catch (e) {
-      logger.debug('Updater: Folder not found!');
-      var fromFolder = './controllers/' + lang + '/default/';
-      logger.debug(`Updater: ${fromFolder}`);
-      var toFolder = './controllers/' + lang + '/users/' + username + '/';
-      logger.debug(`Updater: ${toFolder}`);
-      var fileNames = fs.readdirSync(fromFolder);
-      var files = [];
-      fs.mkdirSync(toFolder,  {recursive: true});
-      for (var i = 0; i < fileNames.length; i++) {
-        var name = fileNames[i];
-        var content = fs.readFileSync(fromFolder + name);
-        var stats = fs.statSync(fromFolder + name);
-        fs.writeFileSync(toFolder + name, content, {mode: stats.mode});
-      }
-    }
+  _is_selectable(filename) {
+    return filename.endsWith('.c') || filename == "Makefile";
   }
 
-  compile_code(lang, user, socket) {
+  _compile_code(user_path, socket) {
     /*
      * Ejecuta el controlador e inicia una comunicación síncrona.
      */
     var p;
-    if (user == null) {
-      p = spawn('make',['-C', './controllers/'+ lang + '/default', '-f', 'Makefile', 'c_controller']);
-    }
-    else {
-      p = spawn('make',['-C', './controllers/'+ lang + '/users/' + user, '-f', 'Makefile', 'c_controller']);
-    }
-
+    p = spawn('make', ['-C', user_path, '-f', 'Makefile', 'c_controller']);
     /*
      * Recibe la información del compilador canalizandola al usuario.
      * Además guarda el estado en el servidor para escribir en el fichero
@@ -112,16 +123,17 @@ class Updater {
      */
     p.on('exit', function(code, string) {
       if (code == null) {
-        logger.error('Updater: Process ended due to signal: '+string);
-        if (socket != null) {
-          socket.emit('Updater: compilation_result', { signal:string});
-        }
+        logger.error(`Updater: Process ended due to signal: ${string}`);
+        let result = {code:code};
       } else {
-        logger.error('Process ended with code: ' + code);
-        if (socket != null) {
-          socket.emit('Updater: compilation_result', {code:code});
-        }
+        logger.error(`Process ended with code: ${code}`);
+        let result = {string:string};
       }
+
+      if (socket != null) {
+        socket.emit('Updater: compilation_result', result);
+      }
+
     });
 
     /*
