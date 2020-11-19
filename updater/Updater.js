@@ -21,17 +21,18 @@ class Updater {
     code_stream.end();
   }
 
-  upload_code(data) {
+  upload_code(data, callback) {
+    let username = data.username, language = data.language;
     let path = '';
     if (data.version && data.version === 'private') {
-      path = this._get_user_folder(data.username, data.language);
+      path = this._get_user_folder(username, language);
     } else {
-      path = this._get_default_folder(data.username, data.language);
+      path = this._get_default_folder(username, language);
     }
     logger.debug(path);
-    this._prepare_dev_folder(path);
+    this._prepare_dev_folder(username, language);
     this._copy_files(data.files, path);
-    this._compile_code(path);
+    this._compile_code(path, callback);
   }
 
   _get_user_folder(username, language) {
@@ -42,25 +43,26 @@ class Updater {
     return `./${CONTROLLER_PATH}${language}/default/`;
   }
 
-  _prepare_dev_folder(user_path) {
+  _prepare_dev_folder(username, language) {
+    let user_path = this._get_user_folder(username, language);
     try {
       var stats = fs.statSync(user_path);
     } catch (e) {
       logger.debug('Updater: Folder not found!');
-      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
       let default_path = this._get_default_folder(language);
+      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
       var fileNames = fs.readdirSync(default_path);
-      fs.mkdirSync(user_path,  {recursive: true});
+      fs.mkdirSync(user_path, {recursive: true});
       for (var i = 0; i < fileNames.length; i++) {
         var name = fileNames[i];
         var content = fs.readFileSync(default_path + name);
         var stats = fs.statSync(default_path + name);
         logger.debug(name);
         fs.writeFileSync(user_path + name, content, {mode: stats.mode});
-      }    
-    }    
-  }    
-  
+      }
+    }
+  }
+ 
   _copy_files(files, user_path) {
     logger.debug('Updater: Copying files!');
     for (var f in files) {
@@ -82,6 +84,7 @@ class Updater {
     } else {
       path = this._get_default_folder(data.username, data.language);
     }
+    this._prepare_dev_folder(data.username, data.language);
     var fileNames = fs.readdirSync(path);
     var files = [];
     for (var i = 0; i < fileNames.length; i++) {
@@ -101,53 +104,43 @@ class Updater {
     return filename.endsWith('.c') || filename == "Makefile";
   }
 
-  _compile_code(user_path, socket) {
+  _compile_code(user_path, callback) {
     /*
      * Ejecuta el controlador e inicia una comunicación síncrona.
      */
-    var p;
-    p = spawn('make', ['-C', user_path, '-f', 'Makefile', 'c_controller']);
-    /*
-     * Recibe la información del compilador canalizandola al usuario.
-     * Además guarda el estado en el servidor para escribir en el fichero
-     * toda la información que necesita el cliente (señal + controller).
-     */
+    var p = spawn('make', ['-C', user_path, '-f', 'Makefile', 'c_controller'], {shell:true});
+    
+    // Stores the compiler output & errors
+    let compiler_stdout = '';
     p.stdout.setEncoding('utf8');
     p.stdout.on('data', function(data) {
-      logger.debug(`Updater: ${data}`);
+      compiler_stdout += data;
     });
-
-    /*
-     * En caso de fallo del controlador resetea las variables config y evolucion.
-     * Si hay algún usuario conectado en ese momento lo redirige a la página principal.
-     */
-    p.on('exit', function(code, string) {
-      if (code == null) {
-        logger.error(`Updater: Process ended due to signal: ${string}`);
-        let result = {code:code};
-      } else {
-        logger.error(`Process ended with code: ${code}`);
-        let result = {string:string};
-      }
-
-      if (socket != null) {
-        socket.emit('Updater: compilation_result', result);
-      }
-
-    });
-
-    /*
-     * En caso de error se escribe en la terminal o en su defecto en un
-     * fichero de salida (output.log) si se ejecuta el servidor como:
-     * nohup node app_....js > output.log &
-     */
+    
+    let compiler_stderr = '';
     p.stderr.setEncoding('utf8');
     p.stderr.on('data', function(data) {
-      logger.error(`Updater: Error ${data}`);
-      if (socket != null) {
-        socket.emit('compilation_error', {error: data });
+      compiler_stderr += data;
+    });
+
+    // En caso de fallo del controlador resetea las variables config y evolucion.
+    p.on('exit', function(code, signal) {
+      if (code == null) {
+        logger.error(`Updater: Process ended due to signal: ${signal}`);
+      } else {
+        logger.error(`Process ended with code: ${code}`);
+      }
+      if (callback != null) {
+        let result = {
+          status: code,
+          message: signal,
+          stdout: compiler_stdout,
+          stderr: compiler_stderr,
+        };
+        callback(result);
       }
     });
+
   }
 
   updateUsers(users) {

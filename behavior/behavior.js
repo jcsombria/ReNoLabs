@@ -51,8 +51,8 @@ class BehaviorMaintenance extends Behavior {
     super(session);
     this.addAction('upload_chunk', this.upload_chunk);
     this.addAction('finish_upload', this.finish_upload);
-    this.addAction('download_controller', this.download_controller);
-    this.addAction('upload_controller', this.upload_controller);
+    this.addAction('controller.get', this.download_controller);
+    this.addAction('controller.set', this.upload_controller);
     this.addAction('disconnect', this.disconnect);
   }
 
@@ -66,14 +66,16 @@ class BehaviorMaintenance extends Behavior {
 
   upload_controller(data) {
     logger.info('Maintenance - Receiving code...');
-    Updater.upload_code(data);
-    this.sender.emit('controller_upload_complete', {});
+    let sender = this.sender;
+    Updater.upload_code(data, (result)=>{
+      sender.emit('controller.set', result);
+    });
   }
 
   download_controller(data) {
     logger.info('Maintenance - Sending code...');
     var files = Updater.download_code(data);
-    this.sender.emit('controller_code', files);
+    this.sender.emit('controller.get', files);
     logger.info('Maintenance - Code transferred.');
   }
 }
