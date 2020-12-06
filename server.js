@@ -14,23 +14,21 @@ const console_ = new transports.Console({
 });
 // System Events Logger
 winston.loggers.add('log', { transports: [errors, console_] });
-// Data Logger
-//winston.loggers.add('data', {});
 
 const behavior = require('./behavior');
 const Config = require('./config/AppConfig');
 const db = require('./db');
 const SessionManager = require('./sessions').SessionManager;
-const RIPBroker = require('./rip/RIPBroker');
-var ripBroker = new RIPBroker(Config.RIP);
-SessionManager.hw.addListener(ripBroker);
+// const RIPBroker = require('./rip/RIPBroker');
+// var ripBroker = new RIPBroker(Config.RIP);
+// SessionManager.hardware.adapter.addListener(ripBroker);
 
 // Express modules.
 const express = require('express');
 const fs = require('fs');
 const login = require('connect-ensure-login');
 const logger = require('winston').loggers.get('log');
-logger.level = 'debug';
+logger.level = 'silly';
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 
@@ -46,7 +44,7 @@ passport.use(new Strategy(
       return cb(null, user);
     });
   }));
-  
+
   passport.serializeUser(function(user, cb) {
   cb(null, user.id);
 });
@@ -174,7 +172,7 @@ app.get('/real',
     logger.debug(`Session: ${session}`);
     if(session != undefined && session.isActive()) {
       logger.debug(`Key: ${session.token}`);
-      res.render(Config.Lab.GUI, {
+      res.render('real.ejs', {
         user: req.user,
         key: session.token,
         ip: Config.WebServer.ip,
@@ -267,70 +265,72 @@ app.get('/admin',
 // );
 
 // This section add RIP support (if enabled in AppConfig.js)
-var ripapp = app;
-if(Config.RIP.port != Config.WebServer.port) {
-  ripapp = express();
-  var ripserver = ripapp.listen(Config.RIP.port, Config.RIP.ip, function () {
-    var host = ripserver.address().address;
-    var port = ripserver.address().port;
-    logger.info(`RIP Server started on http://${host}:${port}`);
-  });  
-} else {
-  logger.info(`RIP Server started on http://${Config.RIP.ip}:${Config.RIP.port}`);
-}  
+if (Config.RIP !== undefined) {
+  var ripapp = app;
+  if(Config.RIP.port != Config.WebServer.port) {
+    ripapp = express();
+    var ripserver = ripapp.listen(Config.RIP.port, Config.RIP.ip, function () {
+      var host = ripserver.address().address;
+      var port = ripserver.address().port;
+      logger.info(`RIP Server started on http://${host}:${port}`);
+    });
+  } else {
+    logger.info(`RIP Server started on http://${Config.RIP.ip}:${Config.RIP.port}`);
+  }  
 
-ripapp.get('/RIP',
-  function(req, res) {
-    try {
-      var expId = req.query['expId'];
-      logger.debug(expId);
-      var info = ripBroker.info(expId);
-    } catch(e) {
-      expId = undefined;
-      var info = ripBroker.info();
-    }
-    logger.debug('info:' +info);
-    res.json(info);
-  }
-);
-
-ripapp.post('/RIP/POST',
-  function(req, res) {
-    res.header('Access-Control-Allow-Origin', req.headers.origin);
-    ripBroker.process(req.body);
-    res.json({'result':'ok'});
-  }
-);
-
-ripapp.get('/RIP/SSE',
-  function (req, res) {
-    // TO DO: The RIP username should not be hardcoded
-    var username = 'rip';
-    var credentials = { 'username': username };
-    var id = 'sse_' + req.socket.id;
-    if(SessionManager.idle) {
-      SessionManager.start(credentials);
-    } 
-    var session = SessionManager.connect(id, ripBroker, credentials);
-    var expId = req.query['expId'];
-    if(session != undefined){
-      logger.info('new connection to SSE, user:' + username);
-      res.header('Access-Control-Allow-Origin', req.headers.origin);
-      if(ripBroker.connect(expId)) {
-        logger.debug(`RIP Broker: connected to ${expId}`);
-      } else {
-        logger.debug(`RIP Connection: User ${username} disconnected ${expId}`);
-        SessionManager.disconnect(id);
+  ripapp.get('/RIP',
+    function(req, res) {
+      try {
+        var expId = req.query['expId'];
+        logger.debug(expId);
+        var info = ripBroker.info(expId);
+      } catch(e) {
+        expId = undefined;
+        var info = ripBroker.info();
       }
-      ripBroker.handle(req, res);
-      logger.debug(`RIP Connection: User ${username} connected to ${expId}`);
-    } 
-  }
-);
+      logger.debug('info:' +info);
+      res.json(info);
+    }
+  );
+
+  ripapp.post('/RIP/POST',
+    function(req, res) {
+      res.header('Access-Control-Allow-Origin', req.headers.origin);
+      ripBroker.process(req.body);
+      res.json({'result':'ok'});
+    }
+  );
+
+  ripapp.get('/RIP/SSE',
+    function (req, res) {
+      // TO DO: The RIP username should not be hardcoded
+      var username = 'rip';
+      var credentials = { 'username': username };
+      var id = 'sse_' + req.socket.id;
+      if(SessionManager.idle) {
+        SessionManager.start(credentials);
+      } 
+      var session = SessionManager.connect(id, ripBroker, credentials);
+      var expId = req.query['expId'];
+      if(session != undefined){
+        logger.info('new connection to SSE, user:' + username);
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        if(ripBroker.connect(expId)) {
+          logger.debug(`RIP Broker: connected to ${expId}`);
+        } else {
+          logger.debug(`RIP Connection: User ${username} disconnected ${expId}`);
+          SessionManager.disconnect(id);
+        }
+        ripBroker.handle(req, res);
+        logger.debug(`RIP Connection: User ${username} connected to ${expId}`);
+      } 
+    }
+  );
+}
 
 // This section enables socket.io communications
 var io = require('socket.io').listen(server);
-SessionManager.hw.addListener(io);
+SessionManager.hardware.addListener(io);
 io.sockets.on('connection', function(socket) {
   var id = 'socket_' + socket.id;
   var credentials = {
@@ -343,40 +343,38 @@ io.sockets.on('connection', function(socket) {
     var session = SessionManager.connect(id, socket, credentials);
     if(!session) {
       socket.emit('login_error', {'text':'Invalid credentials'});
+      socket.disconnect();
       return;
     }
   }
+  logger.debug(`User ${credentials['username']} authenticated`);
+  logger.debug(`Mode: ${socket.handshake.query.mode}`);
   switch (socket.handshake.query.mode) {
     case 'maintenance':
-      if(!session.isSupervisor()) {
-        logger.info('Entering maintenance mode...');
-        if (session.isAdministrator()) {
-          logger.debug('Registering admin maintenance services...');
-          new behavior.AdminMaintenance(session).register(socket);
-        } else {
-          logger.debug('Registering user maintenance services...');
-          new behavior.UserMaintenance(session).register(socket);
-        }
+      logger.info('Entering maintenance mode...');
+      if (session.isAdministrator()) {
+        logger.debug('Registering admin maintenance services...');
+        new behavior.AdminMaintenance(session).register(socket);
+      } else {
+        logger.debug('Registering user maintenance services...');
+        new behavior.UserMaintenance(session).register(socket);
       }
       break;
-    case 'client':
+    case 'client': // TO DO: is this necessary?
       logger.info('Entering client mode...');
       logger.debug('Registering client services...');
       new behavior.Client(session).register(socket);
       break;
     default:
-      // Configuration services
-      logger.debug('Registering config services...');
-      new behavior.Config(session).register(socket);
       // Behave as a normal user
-      if(!session.isSupervisor()) {
+      if(SessionManager.idle) {
+        logger.debug(`User ${credentials['username']} starts session.`);
+        SessionManager.start(credentials);
+      }
+      if (session.isActive()) {
         logger.info('Entering user mode...');
         logger.debug('Registering common services...');
         new behavior.Normal(session).register(socket);
-        if(SessionManager.idle) {
-          logger.debug(`User ${credentials['username']} starts session.`);
-          SessionManager.start(credentials);
-        }
       }
     }
 });

@@ -5,12 +5,12 @@ var config = {
     port: 8080,
   },
   Session: {
-    timeout: 15, // minutes
+    timeout: 60, // minutes
   },
   // Hardware specific configuration (C, TwinCAT-Quad)
   Hardware: require('../hardware/C'),
   Lab: require('./LabConfig'),
-  RIP: require('./RIPConfig'),
+  //RIP: require('./RIPConfig'),
 }
 
 module.exports = config;

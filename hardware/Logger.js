@@ -8,10 +8,11 @@ const logger = require('winston').loggers.get('log');
 class Logger extends EventEmitter {
 	constructor() {
 		super();
-		this.on('serverOut_clientIn', this._ondata.bind(this));
+		this.on('signals.get', this._ondata.bind(this));
 	}
 
 	log(data) {
+		logger.silly('Logging hardware data.');
 		try {
 			datalogger.info(data);
 		} catch {
@@ -42,9 +43,8 @@ class Logger extends EventEmitter {
 			filename: logfile,
 			level: 'silly',
 		}));
-		datalogger.info('% User: ');
+		datalogger.info(`% User: ${username}`);
 		datalogger.info('% Cols: time y0 y1 ...');
-		datalogger.info('data = [');
 	}
 
 	_getFolder() {
@@ -54,10 +54,6 @@ class Logger extends EventEmitter {
 	_getFilename(name) {
 		var date = DateFormat(new Date(), "yyyymmdd_HHMMss");
 		return name + '_' + date + '.txt';
-	}
-
-	end() {
-		datalogger.info(']');
 	}
 }
 

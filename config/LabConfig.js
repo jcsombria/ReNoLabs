@@ -1,26 +1,33 @@
 // Lab configuration
 module.exports = {
-  GUI: 'motor_practice.ejs',
+  GUI: 'circuit_practice_11.ejs',
+  GUI_JS: 'real.js',
+  controller: 'circuit_practice_controller_10',
   info: {
-    name: 'DummyLab',
-    description: '<h1>DummyLab</h1><p>This is a very chuli lab description</p>',
+    name: 'Circuitos',
+    description: '<h1>Práctica de Circuitos</h1><p>Lab description</p>',
   },
   parameters: {
-    simulation: {
-      parameter_names: ['Vup1', 'Vdown', 'Delay'],
+    reference: {
+      parameter_names: ['Amplitud', 'Periodo', 'Offset Y', 'Offset T', 'Tipo'],
       options: [{
-        name: 'Config',
-        parameter_indexes: [0, 1, 2]
-      }],
-    },
-    controller: {
-      parameter_names: ['Threshold', 'Min', 'Max'],
-      options: [{
-        name: 'Single',
-        parameter_indexes: [0]
+        name: 'Sin',
+        parameter_indexes: [0, 1, 2, 3]
       }, {
-        name: 'Double',
-        parameter_indexes: [1, 2]
+        name: 'Cos',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Triangular',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Impulse',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Step',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Extern',
+        parameter_indexes: [0, 1, 2, 3]
       }]
     },
   },

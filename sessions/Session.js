@@ -3,13 +3,36 @@ const Config = require('../config/AppConfig');
 const db = require('../db');
 const logger = require('winston').loggers.get('log');
 
+// Session model
 class Session {
   constructor (user, id, manager) {
     this.id = id;
     this.user = user;
     this.manager = manager;
-    this.hw = manager.hw;
-    this.logger = manager.logger;
+    this.hardware = manager.hardware;
+    logger.debug(`Session is ${user.username}`);
+  }
+
+  process(data) {
+    try {
+      let isCommand = (data.variable == 'config');
+      if(isCommand) {
+        let action = Number(data.value);
+        logger.debug(`Command ${action} received.`);
+        switch(action) {
+          case 0: this.hardware.end(); break;
+          case 1: this.hardware.start(this.user.username); break;
+          case 2: this.hardware.play(); break;
+          case 3: this.hardware.pause(); break;
+          case 4: this.hardware.reset(); break;
+        }
+      } else {
+        logger.debug('Forwarding message to hardware.');
+        this.hardware.write(data.variable, data.value);
+      }
+    } catch(e) {
+      logger.error('');
+    }
   }
 
   end() {
@@ -29,14 +52,15 @@ class Session {
   }
 }
 
+// Controla los inicios y fin de sesión y coordina el funcionamiento conjunto de hardware, logger y autenticación
 class SessionManager {
   constructor() {
     this.clients = {};
     this.active_user = null;
     this.timeout = Config.Session.timeout*60*1000;
-    this.hw = new Config.Hardware.Adapter();
     this.hwlogger = new Config.Hardware.Logger();
-    this.hw.addListener(this.hwlogger);
+    this.hardware = new Config.Hardware.Adapter();
+    this.hardware.addListener(this.hwlogger);
     this.running = false;
   }
 
@@ -52,13 +76,18 @@ class SessionManager {
     return (Object.keys(this.clients).length > 0);
   }
 
+  // Connects a client to an opened session, if and only if is supervisor or the active user (owns the previous session).
   connect(id, socket, credentials) {
     var user = this.validate(credentials);
-    if (user && (this.active_user == user.username || !this.active_user)) {
+    if (!user) return;
+    let isActive = (this.active_user == user.username);
+    let isSupervisor = db.users.isSupervisor(user);
+    logger.debug(user.permissions);
+    if (isActive || isSupervisor || !this.active_user) {
+      logger.debug(`User ${user.username} connected to session ${id}.`);
       this.clients[id] = socket;
       var session = new Session(user, id, this);
-      session.hw = this.hw;
-      session.logger = this.hwlogger;
+      this._clearDisconnectTimeout();
       session.token = this.token;
       return session;
     }
@@ -67,12 +96,12 @@ class SessionManager {
   start(credentials) {
     try {
       var username = credentials['username'];
+      logger.debug(`Starting session for user: ${username}`);
       if(this.active_user == null) {
         this.active_user = username;
         this.token = Math.floor((Math.random() * 1000000) + 1);
         this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.timeout);
-        this.hw.start(username);
-        this.hwlogger.end();
+        this.hardware.start(username);
         this.hwlogger.start(this.active_user);
         this.running = true;
         logger.info(`${new Date()} - PRÁCTICA INICIADA: Usuario ${this.active_user}`);
@@ -80,13 +109,6 @@ class SessionManager {
     } catch(e) {
       logger.error(`Session: ${e}`);
     }
-  }
-
-  stop() {
-    if (this.hw.connected) {
-      this.hw.stop();
-    }
-    this.hwlogger.end();
   }
 
   validate(credentials) {
@@ -107,7 +129,7 @@ class SessionManager {
 
   disconnect(id) {
     delete this.clients[id];
-    if(!this.hasClients() && !this._disconnectTimer) {
+    if(!this.hasClients() && !this.disconnectTimer) {
       if(this.running) {
         this.disconnectTimer = setTimeout(this._disconnectTimeout.bind(this), 5000);
       }
@@ -118,37 +140,48 @@ class SessionManager {
     return this.token;
   }
 
+  _sessionTimeout() {
+    this.end();
+    logger.info(`PRÁCTICA FINALIZADA POR TIMEOUT - ${new Date()}`);
+  };
+
+  _disconnectTimeout() {
+    this.end();
+//    this.hardware.removeListener(this.hwlogger);
+    logger.info(`PRÁCTICA FINALIZADA POR DESCONEXIÓN- ${new Date()}`);
+  }
+
+  end() {
+    this._clearSessionTimeout();
+    this._clearDisconnectTimeout();
+    this.running = false;
+    this._disconnectAll();
+    setTimeout(this.hardware.end.bind(this.hardware), 1000);
+    this.hardware.end();
+//    this.hwlogger.end();
+//    this.hardware.removeListener(this.hwlogger);
+    this.active_user = null;
+  }
+  
+  _clearSessionTimeout() {
+    clearTimeout(this.sessionTimer);
+    this.sessionTimer = undefined;
+  }
+
+  _clearDisconnectTimeout() {
+    clearTimeout(this.disconnectTimer);
+    this.disconnectTimer = undefined;
+  }
+
   _disconnectAll() {
     for (var c in this.clients) {
       try {
+        logger.debug(`Disconnecting client ${c}`);
         this.clients[c].disconnect();
       } catch(e) {
         logger.debug(`Cannot notify disconnection to client ${c}`);
       }
     }
-  }
-
-  _stopHardware() {
-    if (this.hw.connected) {
-      this.hw.stop();
-      this.hwlogger.end();
-    }
-  }
-
-  _sessionTimeout() {
-    this._disconnectAll();
-    this._stopHardware();
-    logger.info(`PRÁCTICA FINALIZADA POR TIMEOUT - ${new Date()}`);
-    this.sessionTimer = undefined;
-  };
-
-  _disconnectTimeout() {
-    clearTimeout(this.sessionTimer);
-    this._stopHardware();
-    this._disconnectTimer = undefined;
-    this.active_user = null;
-    this.running = false;
-    logger.info(`PRÁCTICA FINALIZADA POR DESCONEXIÓN- ${new Date()}`);
   }
 
   _logged(credentials, args, action) {

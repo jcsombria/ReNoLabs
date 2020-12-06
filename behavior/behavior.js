@@ -3,14 +3,24 @@ const logger = require('winston').loggers.get('log');
 const Config = require('../config/AppConfig');
 const { Updater } = require('../updater');
 
+const INFO_GET = 'info.get';
+const DISCONNECT = 'disconnect';
+const ERROR = 'error';
+const USERS_GET = 'users.get';
+const USERS_SET = 'users.set';
+const CONFIG_GET = 'config.get';
+const CONFIG_SET = 'config.set';
+const SIGNALS_INFO = 'signals.info';
+const SIGNALS_SET = 'signals.set';
+const SIGNALS_GET = 'signals.get';
+
 class Behavior {
   constructor(session) {
     this.actions = {};
-    this.GET_INFO = 'info.get';
     this.session = session;
-    this.addAction(this.GET_INFO, this.info);
-    this.addAction('disconnect', this.disconnect);
-    this.addAction('error', this.error);
+    this.addAction(INFO_GET, this.info);
+    this.addAction(DISCONNECT, this.disconnect);
+    this.addAction(ERROR, this.error);
   }
 
   register(o) {
@@ -26,7 +36,7 @@ class Behavior {
 
   info() {
     logger.info('Sending Lab Info.');
-    return this.sender.emit(this.GET_INFO, Config.Lab.info);
+    return this.sender.emit(this.INFO_GET, Config.Lab.info);
   }
 
   disconnect() {
@@ -53,7 +63,7 @@ class BehaviorMaintenance extends Behavior {
     this.addAction('finish_upload', this.finish_upload);
     this.addAction('controller.get', this.download_controller);
     this.addAction('controller.set', this.upload_controller);
-    this.addAction('disconnect', this.disconnect);
+    this.addAction(DISCONNECT, this.disconnect);
   }
 
   upload_chunk() {
@@ -68,6 +78,7 @@ class BehaviorMaintenance extends Behavior {
     logger.info('Maintenance - Receiving code...');
     let sender = this.sender;
     Updater.upload_code(data, (result)=>{
+      logger.debug(result.stderr);
       sender.emit('controller.set', result);
     });
   }
@@ -84,14 +95,10 @@ class BehaviorMaintenance extends Behavior {
 class BehaviorAdminMaintenance extends BehaviorMaintenance {
   constructor(session) {
     super(session);
-    this.GET_USERS = 'users.get';
-    this.SET_USERS = 'users.set';
-    this.GET_CONFIG = 'config.get';
-    this.SET_CONFIG = 'config.set';
-    this.addAction(this.GET_USERS, this.get_users);
-    this.addAction(this.SET_USERS, this.set_users);
-    this.addAction(this.GET_CONFIG, this.get_signals);
-    this.addAction(this.SET_CONFIG, this.set_signals);
+    this.addAction(USERS_GET, this.get_users);
+    this.addAction(USERS_SET, this.set_users);
+    this.addAction(CONFIG_GET, this.get_signals);
+    this.addAction(CONFIG_SET, this.set_signals);
   }
 
   upload_chunk(data) {
@@ -112,25 +119,25 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
 
   get_users() {
     logger.info('Sending list of users...A great power comes with a great responsibility!');
-    this.sender.emit(this.GET_USERS, db.users.getUsers());
+    this.sender.emit(USERS_GET, db.users.getUsers());
   }
 
   set_users(data) {
     Updater.updateUsers(data);
     logger.info('Updating list of users...A great power comes with a great responsibility!');
     db.users.reload();
-    this.sender.emit(this.SET_USERS, db.users.getUsers());
+    this.sender.emit(USERS_SET, db.users.getUsers());
   }
 
   get_signals() {
-    logger.info('Sending config.');
-    this.sender.emit(this.GET_CONFIG, {'DefaultConfig': Config});
+    logger.info('Sending config...A great power comes with a great responsibility!');
+    this.sender.emit(CONFIG_GET, Updater.getConfig());
   }
 
   set_signals(data) {
     logger.info('Updating config...A great power comes with a great responsibility!');
-    console.log(data);
-    this.sender.emit(this.SET_CONFIG, {'DefaultConfig': Config});
+    Updater.setConfig(data);
+    this.sender.emit(CONFIG_SET, {'DefaultConfig': Config});
   }
 }
 
@@ -159,12 +166,7 @@ class BehaviorUserMaintenance extends BehaviorMaintenance {
 class BehaviorClient extends Behavior {
   constructor() {
     super();
-    this.GET_USERS = 'users.get';
-    this.GET_SIGNALS = 'SignalRequest';
-    this.SET_SIGNALS = 'signals.set';
-    this.addAction('disconnect', this.disconnect);
-    this.addAction(this.GET_SIGNALS, this.get_signals);
-//    this.addAction(this.GET_SIGNALS, this.set_signals);
+    this.addAction('SignalRequest', this.get_signals);
   }
 
   get_signals() {
@@ -172,42 +174,32 @@ class BehaviorClient extends Behavior {
     this.sender.emit('SignalInfoToClient', Config.Lab.signals);
   }
 
-  set_signals(data) {
-    logger.info('Client - Signal information updated...');
-    this.sender.emit('SignalInfoToClient', Config.Lab.signals);
-  }
 }
 
-// Common events
-class BehaviorConfig extends Behavior {
-  constructor(session) {
-    super(session);
-    this.addAction('clientOut_request', this.clientOut_request);
-    this.config = Config.Lab.config;
-  }
-
-  clientOut_request(data) {
-    if (data.request == 'config') {
-      var response = { request: 'config', response: Config.Lab.parameters };
-      this.sender.emit('serverOut_response', response);
-    }
-  }
-}
-
+// User Mode
 class BehaviorUser extends Behavior {
   constructor (session) {
     super(session);
-    this.addAction('clientOut_serverIn', this.clientOut_serverIn);
+    this.config = Config.Lab.config;
+    this.addAction(SIGNALS_INFO, this.getSignalsInfo);
+    this.addAction(SIGNALS_SET, this.setSignals);
   }
 
-  clientOut_serverIn(data) {
-    logger.debug(data.variable + ' = ' + data.value);
-    this.session.hw.write(data.variable, data.value);
+  setSignals(data) {
+    logger.info(`User sends signal ${data.variable}.`);
+    this.session.process(data);
+  }
+
+  getSignalsInfo(data) {
+    if (data.request == 'config') {
+      logger.info(`User requests signals info.`);
+      var response = { request: 'config', response: Config.Lab.parameters };
+      this.sender.emit(SIGNALS_INFO, response);
+    }
   }
 }
 
 module.exports.AdminMaintenance = BehaviorAdminMaintenance
 module.exports.UserMaintenance = BehaviorUserMaintenance
 module.exports.Client = BehaviorClient
-module.exports.Config = BehaviorConfig
 module.exports.Normal = BehaviorUser

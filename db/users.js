@@ -48,8 +48,9 @@ exports.isAdministrator = function(user) {
 exports.isSupervisor = function(user) {
   if (user && user.permissions) {
     for (i = 0; i < user.permissions.length; i++) {
-      if (user.permissions[i] === "RO")
-      return true;
+      if (user.permissions[i] === "RO") {
+        return true;
+      }
     }
   }
   return false;
