@@ -17,8 +17,9 @@ const VIEWS_PATH = "./views/";
 
 class Updater {
   upload_view(data) {
+    logger.debug(data.length);
     var fileName = LabConfig.GUI_JS;
-    var code_stream = fs.createWriteStream(VIEWS_PATH + fileName);    
+    var code_stream = fs.createWriteStream(VIEWS_PATH + fileName);
     code_stream.write(data);
     code_stream.end();
   }

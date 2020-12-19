@@ -11,17 +11,17 @@ module.exports = {
     reference: {
       parameter_names: ['Amplitud', 'Periodo', 'Offset Y', 'Offset T', 'Tipo'],
       options: [{
-        name: 'Sin',
+        name: 'Senoidal',
         parameter_indexes: [0, 1, 2, 3]
       }, {
-        name: 'Cos',
+        name: 'Cuadrada',
         parameter_indexes: [0, 1, 2, 3]
       }, {
         name: 'Triangular',
         parameter_indexes: [0, 1, 2, 3]
       }, {
         name: 'Impulse',
-        parameter_indexes: [0, 1, 2, 3]
+        parameter_indexes: [0, 1, 2]
       }, {
         name: 'Step',
         parameter_indexes: [0, 1, 2, 3]

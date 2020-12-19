@@ -112,7 +112,7 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
 
   finish_upload(data) {
     logger.info('Upload completed! Updating view...');
-    Updater.upload_view(this.labCode);
+    Updater.upload_view(new Buffer(this.labCode, 'base64'));
     logger.info('View updated.');
     this.sender.emit('codeCompleted', {});
   }
@@ -193,7 +193,11 @@ class BehaviorUser extends Behavior {
   getSignalsInfo(data) {
     if (data.request == 'config') {
       logger.info(`User requests signals info.`);
-      var response = { request: 'config', response: Config.Lab.parameters };
+      var response = {
+         request: 'config',
+         response: Config.Lab.parameters,
+         session: this.session.info()
+      };
       this.sender.emit(SIGNALS_INFO, response);
     }
   }

@@ -9,15 +9,19 @@
 
 <body>
 
-<div class="logout-block">
-	<a href="/select">
-		<img src="/images/user_icon.png" alt="REAL" height="35" width="35">
-	</a>
-	<span> <%= user.username %> </span>
-	<a href="/logout">
-   	<button>Logout</button>
-    </a>
-</div>
+	<div class="menu">
+		<ul>
+			<li><a href="help">Descripción</a></li>
+			<li><a href="real">Experimento</a></li>
+			<li><a href="data">Datos</a></li>
+			<li style="float:right">
+				<a href="logout" style="float:right">Cerrar Sesión</a>
+				<span> <%= user.username %> </span>
+				<img class="logout" src="/images/user_icon.png" alt="REAL" width="40" height="36"/>
+			</li>
+		</ul>
+	</div>
+
 
 <div id="cabeceraDiv">
 

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
+  <head>
+
+    <!-- stylesheets EJsS -->
+    <!-- <link rel="stylesheet"  type="text/css" href="_ejs_library/css/ejss.css" /> -->
+    <script src="_ejs_library/scripts/common_script.js"></script>
+    <script src="_ejs_library/scripts/textresizedetector.js"></script>
+    <script src="_ejs_library/ejsS.v1.min.js"></script>
+
+    <!-- stylesheets ReNoLabs -->
+    <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+    <link href='/stylesheets/template_routes.css' rel='stylesheet'>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="_renolabs_library/ReNoLabsJSScript.js"></script>
+    <script src="_renolabs_library/LabControl.js"></script>
+
+    <!-- metas -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- title-->
+    <title>LAB</title>
+    
+    <script type="text/javascript"><!--//--><![CDATA[//><!--
+      const LAB_KEY = <%- JSON.stringify(key) %>;
+      const LAB_ADDRESS = "http://<%- ip %>:<%- port -%>";
+      <%- include real.js %>
+    //--><!]]></script>
+
+  </head>
+  <body>
+    <div class="menu">
+      <ul>
+        <li><a href="help">Descripción</a></li>
+        <li><a href="real">Experimento</a></li>
+        <li><a href="data">Datos</a></li>
+        <li style="float:right">
+          <a href="logout" style="float:right">Cerrar Sesión</a>
+          <span> <%= user.username %> </span>
+          <img class="logout" src="/images/user_icon.png" alt="REAL" width="40" height="36"/>
+        </li>
+      </ul>
+    </div>
+  
+<!--    <div class="logout-block">
+        <a href="/select">
+          <img src="/images/user_icon.png" alt="REAL" height="35" width="35">
+        </a>
+        <img src="/images/user_icon.png" alt="REAL" height="35" width="35">
+        <span> <%= user.username %> </span>
+        <a href="/logout"><button>Logout</button></a>
+    </div>-->
+
+    <div role="button" id="_topFrame" style="text-align:center"></div>
+
+    <div id="metadata" class="metadata">
+      <br />
+      <div id="title_author">
+        <hr />
+        <b>Title and author:</b>
+        <p>
+        </p>
+        <p>Eva Besada Portas; Jesús Chacón Sombría</p>
+      </div>
+      <hr />
+      <p></p>
+      <div id="copyright_message">
+        <div class="cc_left"  style="float:left">&#169; 2018, Author name.</div>
+        <div class="cc_right" style="float:right">    Released under a <a rel="license" target="_blank" href="http://creativecommons.org/licenses/by-nc-sa/4.0/deed.en_US"> <img alt="Creative Commons Attribution-NonCommercial-ShareAlike" src="_ejs_library/images/cc_icon.png" /> </a> license.</div>
+      </div>
+    </div>
+  </body>
+
+</html>

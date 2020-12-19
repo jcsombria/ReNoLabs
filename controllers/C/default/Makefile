@@ -35,22 +35,34 @@ LDLIBS    = -lwiringPi -lwiringPiDev -lpthread -lm
 # Should not alter anything below this line
 ###############################################################################
 
-SRC	=	$(wildcard *.c)
+SRC	=	i2c_test.c	circuit_practice_controller.c  circuit_practice_controller_10.c 
 
 OBJ	=	$(SRC:.c=.o)
 
 BINS	=	$(SRC:.c=)
 
 all:	
-#	@cat README.TXT
+	@cat README.TXT
 	@echo "    $(BINS)" | fmt
 	@echo ""
 
 really-all:	$(BINS)
 
-c_controller:	$(OBJ)
+i2c_test:	i2c_test.o
 	@echo [link]
-	@$(CC) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	@$(CC) -o $@ i2c_test.o $(LDFLAGS) $(LDLIBS)
+
+circuit_practice_controller:	circuit_practice_controller.o gertboardISA.o
+	@echo [link]
+	@$(CC) -o $@  gertboardISA.o circuit_practice_controller.o $(LDFLAGS) $(LDLIBS)
+	
+circuit_practice_controller_10:	circuit_practice_controller_10.o gertboardISA.o
+	@echo [link]
+	@$(CC) -o $@  gertboardISA.o circuit_practice_controller_10.o $(LDFLAGS) $(LDLIBS)
+
+circuit_practice_controller_9:	circuit_practice_controller_9.o gertboardISA.o
+	@echo [link]
+	@$(CC) -o $@  gertboardISA.o circuit_practice_controller_9.o $(LDFLAGS) $(LDLIBS)
 
 .c.o:
 	@echo [CC] $<
@@ -60,11 +72,11 @@ clean:
 	@echo "[Clean]"
 	@rm -f $(OBJ) *~ core tags $(BINS)
 
-tags:	@$(SRC)
+tags:	$(SRC)
 	@echo [ctags]
 	@ctags $(SRC)
 
 depend:
-	@makedepend -Y $(SRC)
+	makedepend -Y $(SRC)
 
 # DO NOT DELETE

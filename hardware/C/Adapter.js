@@ -5,9 +5,9 @@ const LabConfig = require('../../config/LabConfig');
 var State = require('../State');
 var spawn = require('child_process').spawn;
 
-/** 
- * Encapsulates the interaction with the C Server 
- * 
+/**
+ * Encapsulates the interaction with the C Server
+ *
  * Provides an interface to control the hardware:
  * - start
  * - play
@@ -25,7 +25,7 @@ class CAdapter {
     this.options = (options !== undefined) ? options : HWConfig;
   }
 
-  // TO DO: extract the interface listener? 
+  // TO DO: extract the interface listener?
   // {
   addListener(o) {
     if(!(o in this.listeners)) {
@@ -43,7 +43,7 @@ class CAdapter {
 
   /**
    * Start the controller for user: 'username'.
-   * 
+   *
    * If username is valid, then its controller is started.
    * If invalid or no username, the default controller is started.
    */
@@ -60,7 +60,8 @@ class CAdapter {
       //Updater._prepare_dev_folder(username, 'C');
       this.conn = spawn('sudo', ['./controllers/C/users/' + username + '/' + LabConfig.controller]);
     }
-    // JCS: I commented this code and the method definition below because it was never reached
+    // I commented this code and the method definition below because it was never reached
+    // I have to check why the event 'spawn' is not being notified
     //this.conn.on('spawn', this.onstart.bind(this));
     this.conn.on('error', this.onerror.bind(this));
     this.conn.on('close', function() {this.connected = false;}.bind(this));
@@ -79,7 +80,8 @@ class CAdapter {
     this.conn.stderr.on('data', this.onerrordata.bind(this));
   }
 
-// JCS: I commented this code because it was never reached
+// I commented this code because it was never reached
+// I have to check why the event 'spawn' is not being notified
 //  onstart() {
 //    logger.debug('Controller spawned.');
 //    this.connected = true;
@@ -97,7 +99,7 @@ class CAdapter {
       logger.silly(`${name}->${value}`);
     }
   }
-  
+
   /* Send data to the registered listeners. */
   notify(ev, data) {
     for(var i=0; i<this.listeners.length; i++) {
@@ -132,7 +134,7 @@ class CAdapter {
       this.conn.stdin.write(variable + ':' + value);
       logger.debug(`${variable}->${value}`);
     } catch(e) {
-      logger.error(`C Adapter: Cannot write ${variable}`)
+      logger.error(`C Adapter: Cannot write ${variable}. Ignore this message if appears immediately after disconnection.`)
     }
   }
 
@@ -147,13 +149,13 @@ class CAdapter {
     logger.info('C Adapter: Sending pause to C controller.');
     this.write('config', 3);
   }
-  
+
   /* Send 'reset' command to C controller */
   reset() {
     logger.info('C Adapter: Sending reset to C controller.');
     this.write('config', 4);
   }
- 
+
   /* Send 'end' command to C controller */
   end() {
     logger.info('C Adapter: Sending stop to C controller.');
@@ -235,7 +237,6 @@ class CState extends State {
 
   set reference(value) {
     this._reference = value;
-    logger.debug(`reference:${value}`);
     this.notify(['reference:' + value]);
   }
 

@@ -3,8 +3,15 @@ const Config = require('../config/AppConfig');
 const db = require('../db');
 const logger = require('winston').loggers.get('log');
 
-// Session model
+/* Session model.
+ */
 class Session {
+
+  /*
+   * @param {User}           user    The user that opened the session.
+   * @param {id}   	     id      The id of the channel (socket) associated to the session.
+   * @param {SessionManager} manager The session manager.
+   */
   constructor (user, id, manager) {
     this.id = id;
     this.user = user;
@@ -13,6 +20,10 @@ class Session {
     logger.debug(`Session is ${user.username}`);
   }
 
+  /*
+   * Process user data. If data contains action command, executte. Otherwise, forward to hardware.
+   * @param {object} data The received data.
+   */
   process(data) {
     try {
       let isCommand = (data.variable == 'config');
@@ -35,24 +46,46 @@ class Session {
     }
   }
 
+  /*
+   * Finish the session.
+   */
   end() {
     this.manager.disconnect(this.id);
   }
 
+  /*
+   * @return {boolean} True if the user has supervisor permissions, False otherwise.
+   */
   isSupervisor() {
     return db.users.isSupervisor(this.user);
   }
 
+  /*
+   * @return {boolean} True if the user has administrator permissions, False otherwise.
+   */
   isAdministrator() {
     return db.users.isAdministrator(this.user);
   }
 
+  /*
+   * @return {boolean} True if the user is owner of the hardware, False otherwise.
+   */
   isActive() {
     return this.manager.isActiveUser(this.user.username);
   }
+
+  /*
+   * @return {object} Information about the current session.
+   */
+  info() {
+    return {
+      user: this.user.username,
+      timeout: this.manager.getEndTime(),
+    }
+  }
 }
 
-// Controla los inicios y fin de sesión y coordina el funcionamiento conjunto de hardware, logger y autenticación
+// Coordina el inicios y fin de sesión entre hardware, logger y autenticación
 class SessionManager {
   constructor() {
     this.clients = {};
@@ -82,7 +115,6 @@ class SessionManager {
     if (!user) return;
     let isActive = (this.active_user == user.username);
     let isSupervisor = db.users.isSupervisor(user);
-    logger.debug(user.permissions);
     if (isActive || isSupervisor || !this.active_user) {
       logger.debug(`User ${user.username} connected to session ${id}.`);
       this.clients[id] = socket;
@@ -92,7 +124,7 @@ class SessionManager {
       return session;
     }
   }
-  
+
   start(credentials) {
     try {
       var username = credentials['username'];
@@ -101,6 +133,8 @@ class SessionManager {
         this.active_user = username;
         this.token = Math.floor((Math.random() * 1000000) + 1);
         this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.timeout);
+        this.sessionStartTime = new Date();
+        this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.timeout);
         this.hardware.start(username);
         this.hwlogger.start(this.active_user);
         this.running = true;
@@ -128,16 +162,26 @@ class SessionManager {
   }
 
   disconnect(id) {
+    logger.debug(`Disconnecting client ${id}`);
+    this.clients[id].disconnect();
     delete this.clients[id];
+    logger.debug("clients:" + Object.keys(this.clients));
     if(!this.hasClients() && !this.disconnectTimer) {
+    logger.debug(`No clients left, starting disconnection timeout`)
       if(this.running) {
-        this.disconnectTimer = setTimeout(this._disconnectTimeout.bind(this), 5000);
+        this.disconnectTimer = setTimeout(this._disconnectTimeout.bind(this), Config.Session.disconnectTimeout*1000);
       }
     };
   }
 
-  getToken() {
-    return this.token;
+  getToken(credentials) {
+    var user = this.validate(credentials);
+    if (!user) return;
+    let isActive = (this.active_user == user.username);
+    let isSupervisor = db.users.isSupervisor(user);
+    if (isActive || isSupervisor || !this.active_user) {
+       return this.token;
+    }
   }
 
   _sessionTimeout() {
@@ -162,7 +206,7 @@ class SessionManager {
 //    this.hardware.removeListener(this.hwlogger);
     this.active_user = null;
   }
-  
+
   _clearSessionTimeout() {
     clearTimeout(this.sessionTimer);
     this.sessionTimer = undefined;
@@ -189,6 +233,10 @@ class SessionManager {
       var a = action.bind(this);
       return action.call(this, args);
     }
+  }
+
+  getEndTime() {
+    return this.sessionEndTime;
   }
 }
 

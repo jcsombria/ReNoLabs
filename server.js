@@ -1,3 +1,39 @@
+/**
+ * Summary. (use period)
+ *
+ * Description. (use period)
+ *
+ * @since      x.x.x
+ * @deprecated x.x.x Use new_function_name() instead.
+ * @access     private
+ *
+ * @class
+ * @augments parent
+ * @mixes    mixin
+ *
+ * @alias    realName
+ * @memberof namespace
+ *
+ * @see  Function/class relied on
+ * @link URL
+ * @global
+ *
+ * @fires   eventName
+ * @fires   className#eventName
+ * @listens event:eventName
+ * @listens className~event:eventName
+ *
+ * @param {type}   var           Description.
+ * @param {type}   [var]         Description of optional variable.
+ * @param {type}   [var=default] Description of optional variable with default variable.
+ * @param {Object} objectVar     Description.
+ * @param {type}   objectVar.key Description of a key in the objectVar parameter.
+ *
+ * @yield {type} Yielded value description.
+ *
+ * @return {type} Return value description.
+ */
+
 // Logs Configuration
 const winston = require('winston');
 const { format, transports } = winston;
@@ -28,7 +64,7 @@ const express = require('express');
 const fs = require('fs');
 const login = require('connect-ensure-login');
 const logger = require('winston').loggers.get('log');
-logger.level = 'silly';
+logger.level = 'debug';
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
 
@@ -102,7 +138,8 @@ app.get('/', function (req, res) {
   if (req.isAuthenticated()) {
     res.redirect('/select');
   } else {
-    res.render('login');
+    context = { lab_title: Config.Lab['info']['name']};
+    res.render('login', context);
   }
 });
 
@@ -130,11 +167,10 @@ app.get('/data',
      * Filtra los ficheros de cada usuario
      */
     var files = {name: 0, date: [], size: []};
-    files.name = fs.readdirSync('./data/').filter(function(element) {
-      if (element.split('_')[0] == req.user.username) {
-        return element;
-      }
-    });
+    var dir = './data/';
+    files.name = fs.readdirSync(dir)
+      .filter((e) => { if (e.split('_')[0] == req.user.username) { return e; } })
+      .sort((a, b) => { return fs.statSync(dir + b).mtime.getTime() - fs.statSync(dir + a).mtime.getTime(); });
     /*
      * Devuelve la hora de creación y el tamaño de cada fichero
      */
@@ -150,7 +186,7 @@ app.get('/data',
     });
 });
 
-app.get('/download/*',
+app.get('/download/*', /**/
   login.ensureLoggedIn('/'),
   function (req, res) {
     res.download('./data/' + req.params[0]);
@@ -160,23 +196,28 @@ app.get('/download/*',
 app.get('/real',
   login.ensureLoggedIn('/'),
   function (req, res) {
-    var credentials = {
-      'username': req.user.username,
-      'password': req.user.password
-    };
+    var credentials = { 'username': req.user.username, 'password': req.user.password };
+    logger.debug("User: " + req.user.username + ":" + req.user.password);
+    logger.debug(SessionManager.idle);
     if(SessionManager.idle) {
       logger.debug(`User ${req.user.username} starts session.`);
       SessionManager.start(credentials);
     }
-    var session = SessionManager.connect('http_'+req.socket.id, req.socket, credentials);
-    logger.debug(`Session: ${session}`);
-    if(session != undefined && session.isActive()) {
-      logger.debug(`Key: ${session.token}`);
+    try {
+      var token = SessionManager.getToken(credentials);
+      session['token'] = token;
+    } catch(e) {
+      logger.debug("TOKEN: " + token);
+      session = { token:token };
+    }
+    if(token) {
+      logger.debug(`Key: ${token}`);
+      logger.debug(`Si recargo el usuario: ${req.user}`)
       res.render('real.ejs', {
         user: req.user,
-        key: session.token,
+        key: token,
         ip: Config.WebServer.ip,
-        port: Config.WebServer.port
+        port: Config.WebServer.port,
       });
     } else {
       res.render('select', {
@@ -276,7 +317,7 @@ if (Config.RIP !== undefined) {
     });
   } else {
     logger.info(`RIP Server started on http://${Config.RIP.ip}:${Config.RIP.port}`);
-  }  
+  }
 
   ripapp.get('/RIP',
     function(req, res) {
