@@ -3,13 +3,108 @@ const Config = require('../config/AppConfig');
 const db = require('../db');
 const logger = require('winston').loggers.get('log');
 
+/* 
+ * Dispatch incoming events.
+ */
+class EventDispatcher {
+
+  static PROCESS = 'process';
+  static ENQUEUE = 'enqueue';
+  static DISCARD = 'discard';
+  static UNMATCHED = 'umatched';
+
+  constructor(eventProcessor) {
+    this.eventProcessor = eventProcessor;
+    this.rules = {}
+    this.handle = {
+      'process': this._process.bind(this),
+      'enqueue': this._enqueue.bind(this),
+    }
+  }
+
+  _process(event) { this.eventProcessor.process(event); }
+
+  _enqueue(event) { this.eventProcessor.enqueue(event); }
+
+  /*
+   * @param {string}   name     The unique name of the routing rule.
+   * @param {function} classify A function that accepts an event and returns a dispatching label ('Process', 'Enqueue', 'Discard').
+   */
+  addRoutingRule(name, classify) {
+    this.rules[name] = { 'classify': classify };
+  }
+
+  dispatch(event) {
+    for (var r in this.rules) {
+      const classify = this.rules[r]['classify'];
+      var type = classify(event);
+      if (type != EventDispatcher.UNMATCHED) {
+        this.handle[type](event);
+        return;
+      }
+    }
+  }
+
+}
+
+/* 
+ * Process incoming events.
+ */
+class EventProcessor {
+
+  constructor() {
+    this.rules = {};
+    this.queue = [];
+    this._start();
+  }
+
+  _start() {
+    setInterval(this._check.bind(this), 100);
+  }
+
+  _check() {
+    var event = this.queue.shift();
+    if(event) { this.process(event); }
+  }
+
+  /*
+   * Add a new event processing rule.
+   *
+   * A rule is defined by a unique name, a condition that must be true to trigger the rule, and the action
+   * that will be triggered.
+   *
+   * @param {object}   name The unique name of the rule.
+   * @param {function} condition The rule triggering condition.
+   * @param {function} action The rule action.
+   */
+  addRule(name, condition, action) {
+    this.rules[name] = {
+      'condition': condition,
+      'action': action,
+    }
+  }
+
+  process(event) {
+    for (var r in this.rules) {
+      const rule = this.rules[r];
+      if(rule['condition'](event)) { rule['action'](event); }
+    }
+  }
+
+  enqueue(event) {
+    this.queue.push(event);
+  }
+}
+
+
+
 /* Session model.
  */
 class Session {
 
   /*
    * @param {User}           user    The user that opened the session.
-   * @param {id}   	     id      The id of the channel (socket) associated to the session.
+   * @param {string}         id      The id of the channel (socket) associated to the session.
    * @param {SessionManager} manager The session manager.
    */
   constructor (user, id, manager) {
@@ -17,18 +112,29 @@ class Session {
     this.user = user;
     this.manager = manager;
     this.hardware = manager.hardware;
+    this.rules = {};
+    this.eventProcessor = new EventProcessor();
+    this.eventDispatcher = new EventDispatcher(this.eventProcessor);
     logger.debug(`Session is ${user.username}`);
-  }
 
-  /*
-   * Process user data. If data contains action command, executte. Otherwise, forward to hardware.
-   * @param {object} data The received data.
-   */
-  process(data) {
-    try {
-      let isCommand = (data.variable == 'config');
-      if(isCommand) {
-        let action = Number(data.value);
+    // # Dispatching Rules
+    // - Enqueue if extern references, otherwise process immediately
+    this.eventDispatcher.addRoutingRule('enqueue_if_extern_process_otherwise', 
+      event => {
+        let isExtern = (event.variable == 'reference' && event.value[0] == 5);
+        return (isExtern) ? EventDispatcher.ENQUEUE : EventDispatcher.PROCESS;
+      }
+    );
+
+    // # Processing Rules
+    // - Process commands 
+    this.eventProcessor.addRule('process_command', 
+      event => { // Rule condition
+        let isCommand = (event.variable == 'config');
+        return isCommand;
+      },
+      event => { // Rule action
+        let action = Number(event.value);
         logger.debug(`Command ${action} received.`);
         switch(action) {
           case 0: this.hardware.end(); break;
@@ -37,12 +143,34 @@ class Session {
           case 3: this.hardware.pause(); break;
           case 4: this.hardware.reset(); break;
         }
-      } else {
-        logger.debug('Forwarding message to hardware.');
-        this.hardware.write(data.variable, data.value);
       }
-    } catch(e) {
-      logger.error('');
+    );
+    // - Process commands immediately
+    this.eventProcessor.addRule('forward_to_hardware',
+      event => { // Rule condition
+        let isCommand = (event.variable == 'config');
+        return !isCommand;
+      },
+      event => { // Rule action
+        logger.debug('Forwarding message to hardware.');
+        this.hardware.write(event.variable, event.value);
+      }
+    );
+
+  }
+
+  /*
+   * Process user data. If data contains action command, executte. Otherwise, forward to hardware.
+   * @param {object} data The received data.
+   */
+  process(event) {
+    if(!Array.isArray(event)) {event = [event]} 
+    for (i in event) {
+      try {
+        this.eventDispatcher.dispatch(event[i]);
+      } catch(e) {
+        logger.error('Can\'t process event.');
+      }
     }
   }
 

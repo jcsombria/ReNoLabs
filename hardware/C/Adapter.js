@@ -272,9 +272,6 @@ class CState extends State {
       var value = JSON.parse(o.split(/:|\n/)[1]);
       this[variable] = value;
     } catch(e){}
-    // signals.o.Time = state.evolution[0];
-    // stream = state.evolution +  " " + state.simulation +  " " + state.controller;
-    // data_stream.write(stream.replace(/,/g, " ") + "\n");
   }
 
   notify(variables) {
@@ -309,7 +306,9 @@ class CState extends State {
 
   set evolution(value) {
     this._evolution = value;
-    this.notify('evolution:' + value);
+    if(this.config == 2) {
+   	this.notify('evolution:' + value);
+    }
   }
 
   get evolution() {

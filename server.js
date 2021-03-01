@@ -371,7 +371,6 @@ if (Config.RIP !== undefined) {
 // This section enables socket.io communications
 const EventGenerator = require('./behavior/events');
 var io = require('socket.io').listen(server);
-console.log(EventGenerator);
 var eg = new EventGenerator(io);
 SessionManager.hardware.addListener(eg);
 
