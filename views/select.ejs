@@ -16,9 +16,9 @@
 	<script>
 		function myFunction(state) {
 			if (state) {
-    			alert("Práctica ocupada. Inténtelo más tarde.");
-    			window.location = "./select";
-    		}
+			alert("Práctica ocupada. Inténtelo más tarde.");
+			window.location = "./select";
+		}
 		}
 </script>
 
@@ -33,26 +33,16 @@
 			<li><a href="data">Datos</a></li>
 			<li style="float:right">
 				<a href="logout" style="float:right">Cerrar Sesión</a>
-				<span> <%= user.username %> </span>
+				<span> <%= user.displayName %> </span>
 				<img class="logout" src="/images/user_icon.png" alt="REAL" width="40" height="36"/>
 			</li>
 		</ul>
 	</div>
   
-<!--<div class="logout-block">
-	<a href="/select">
-		<img src="/images/user_icon.png" alt="REAL" height="35" width="35">
-	</a>
-	<span> <%= user.username %> </span>
-	<a href="/logout">
-   	<button>Logout</button>
-    </a>
-</div>-->
-
 <div class="select">
 <div class="select-block"> 
 <h1>Práctica</h1>
- <p align="center">  <a href="/real"> <img src="/images/opamp.png" alt="REAL" height="160" width="180"> </a> </p>
+ <p align="center">  <a href="/real"> <img src="/images/Op-amp.png" alt="REAL" height="160" width="180"> </a> </p>
 </div> 
 <div class="select-block"> 
 <h1>Experimentos</h1>

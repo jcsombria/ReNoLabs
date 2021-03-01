@@ -1,19 +1,19 @@
 const logger = require('winston').loggers.get('log');
 const HWConfig = require('./Config');
 const LabConfig = require('../../config/LabConfig');
-//const { Updater } = require('../../updater');
+const fs = require('fs');
+const path = require('path');
 var State = require('../State');
 var spawn = require('child_process').spawn;
+
+const CONTROLLER_PATH = "controllers/";
+const CONTROLLER_USER_PATH = "users/";
 
 /**
  * Encapsulates the interaction with the C Server
  *
  * Provides an interface to control the hardware:
- * - start
- * - play
- * - pause
- * - reset
- * - end
+ * - start, play, pause, reset, end
  */
 class CAdapter {
    constructor(options) {
@@ -43,9 +43,9 @@ class CAdapter {
 
   /**
    * Start the controller for user: 'username'.
-   *
-   * If username is valid, then its controller is started.
-   * If invalid or no username, the default controller is started.
+   *   - If username is valid, then its controller is started.
+   *   - If invalid or no username, the default controller is started.
+   * @param {string} username The name of the user that request to start the controller.
    */
   start(username) {
     logger.debug(`User ${username} request to start C controller`);
@@ -53,12 +53,11 @@ class CAdapter {
     /* Start user or default controller */
     if (!username) {
       logger.info('C Adapter: Starting default controller...');
-      this.conn = spawn('sudo', ['./controllers/C/default/' + LabConfig.controller]);
+      this.conn = spawn('sudo', [this._getDefaultFolder('C') + LabConfig.controller]);
     } else {
       logger.info(`C Adapter: Starting user controller (${username})...`);
-      // TO DO: Move _prepare_dev_folder to CAdapter
-      //Updater._prepare_dev_folder(username, 'C');
-      this.conn = spawn('sudo', ['./controllers/C/users/' + username + '/' + LabConfig.controller]);
+      this._prepareUserFolder(username, 'C');
+      this.conn = spawn('sudo', [this._getUserFolder(username, 'C') + LabConfig.controller]);
     }
     // I commented this code and the method definition below because it was never reached
     // I have to check why the event 'spawn' is not being notified
@@ -80,6 +79,50 @@ class CAdapter {
     this.conn.stderr.on('data', this.onerrordata.bind(this));
   }
 
+
+  _getUserFolder(username, language) {
+    return `./${CONTROLLER_PATH}${language}/${CONTROLLER_USER_PATH}${username}/`;
+  }
+
+  _getDefaultFolder(language) {
+    return `./${CONTROLLER_PATH}${language}/default/`;
+  }
+
+  _prepareUserFolder(username, language) {
+    let user_path = this._getUserFolder(username, language);
+    try {
+      var stats = fs.statSync(user_path);
+    } catch (e) {
+      logger.debug('Updater: Folder not found!');
+      let default_path = this._getDefaultFolder(language);
+      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
+      var fileNames = fs.readdirSync(default_path);
+      logger.debug(fileNames);
+      fs.mkdirSync(user_path, {recursive: true});
+      for (var i = 0; i < fileNames.length; i++) {
+        var name = fileNames[i];
+        var content = fs.readFileSync(default_path + name);
+        var stats = fs.statSync(default_path + name);
+        fs.writeFileSync(user_path + name, content, {mode: stats.mode});
+      }
+    }
+  }
+
+  /** Copy files to userpath */
+  _copyFiles(files, userpath, is_selectable) {
+    logger.debug('Updater: Copying files!');
+    for (var f in files) {
+      var filename = files[f].filename;
+      var content = files[f].code;
+      logger.debug(`file: ${filename}`);
+      if(!is_selectable || is_selectable(filename)) {
+        var code_stream = fs.createWriteStream(userpath + filename);
+        code_stream.write(content);
+        code_stream.end();
+      }
+    }
+  }
+
 // I commented this code because it was never reached
 // I have to check why the event 'spawn' is not being notified
 //  onstart() {
@@ -88,7 +131,10 @@ class CAdapter {
 //    this.state.addListener(this.conn);
 //  }
 
-  /* Format the data received from the C controller and forward to the clients */
+  /*
+   * Format the data received from the C controller and forward to the clients
+   * @param {object} ev The event with the date received from the controller.
+   */
   ondata(ev) {
     this.connected = true;
     this.state.update(ev);
@@ -100,7 +146,11 @@ class CAdapter {
     }
   }
 
-  /* Send data to the registered listeners. */
+  /*
+   * Send data to the registered listeners.
+   * @param {object} ev   The event id.
+   * @param {object} data The event data.
+   */
   notify(ev, data) {
     for(var i=0; i<this.listeners.length; i++) {
       logger.silly(`notify ${ev} to listener ${i}`);
@@ -108,17 +158,23 @@ class CAdapter {
     }
   }
 
-  /* Handles errors in the controller process */
+  /* Handles errors in the controller process.
+   * @param {string} error The information about the error.
+   */
   onerror(error) {
     logger.error(`Forcing controller stop: ${error}`);
   }
 
-  /* Handles errors in stderr */
+  /* Handles errors in stderr.
+   * @param {string} error The information about the error.
+   */
   onerrordata(error) {
     logger.error(`C Adapter: ${error}`);
   }
 
-  /* Read the cached value of a variable of the C controller */
+  /* Read the cached value of a variable of the C controller.
+   * @patam {string} variable the name of the variable
+   */
   read(variable) {
     try {
       return this.state[variable];
@@ -127,7 +183,11 @@ class CAdapter {
     }
   }
 
-  /* Send a command to write the value of a variable in the C controller */
+  /* Send a command to write the value of a variable in the C controller.
+   * @patam {string}   variable the name of the variable
+   * @patam {string}   value    the value of the variable
+   * @patam {function} callback Invoked after success
+   */
   write(variable, value, callback) {
     try {
       this.state[variable] = value;
@@ -138,25 +198,25 @@ class CAdapter {
     }
   }
 
-  /* Send 'play' command to C controller */
+  /* Send 'play' command to C controller. */
   play() {
     logger.info('C Adapter: Sending play to C controller.');
     this.write('config', 2);
   }
 
-  /* Send 'pause' command to C controller */
+  /* Send 'pause' command to C controller. */
   pause() {
     logger.info('C Adapter: Sending pause to C controller.');
     this.write('config', 3);
   }
 
-  /* Send 'reset' command to C controller */
+  /* Send 'reset' command to C controller. */
   reset() {
     logger.info('C Adapter: Sending reset to C controller.');
     this.write('config', 4);
   }
 
-  /* Send 'end' command to C controller */
+  /* Send 'end' command to C controller. */
   end() {
     logger.info('C Adapter: Sending stop to C controller.');
     this.write('config', 0);
@@ -164,7 +224,10 @@ class CAdapter {
 //    this.state.removeListener(this.conn);
   }
 
-  /* Compile the controller in userpath. */
+  /* Compile the controller in userpath.
+   * @patam {string}   userpath the folder that contains the files that will be compiled
+   * @patam {function} callback Invoked with the result of the compilation
+   */
   compile(userpath, callback) {
     logger.debug(userpath);
     var p = spawn('make', ['-C', userpath, '-f', 'Makefile', 'c_controller'], {shell:true});

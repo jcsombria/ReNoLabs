@@ -3,7 +3,7 @@ class LabInstance {
   state_REAL = { config: 0, evolution: [], inputs: {}, outputs: {} }; //[0: disconnected, 1: ready, 2: play, 3: pause, 4: reset] 
 
   constructor(address, port) {
-    this.address = address;
+    this.address = address; 
     this.port = port;
     this.key_ejs = undefined;
     this.user = undefined;
@@ -11,6 +11,8 @@ class LabInstance {
     this.configNo = 0;
     this.config = undefined;
     this.socket = undefined;
+    this.BUFFER_SIZE = 1000;
+    this.buffer = [];
   };
 
   getQueryString() {
@@ -40,16 +42,27 @@ class LabInstance {
             var endtime = new Date(data.session.timeout);
             var message = 'Estás conectado al Laboratorio.\n La hora de finalización de la sesión es: ' + endtime.toLocaleTimeString();
             alert(message);
-          } catch(e) {}
+          } catch(e) {} 
           _model.update();
         }.bind(this));
         this.socket.on('signals.get', function(data) {
-          this.state_REAL[data.variable] = data.value;
-          this.state_REAL.inputs[data.variable] = data.value;
-          _model.update();
+          if(!Array.isArray(data)) {
+            data = [data];
+          }
+          for (var i = 0; i < data.length; i++) {
+            var state = data[i];
+            if(state['variable'] == 'evolution') {
+              this.buffer.push(state['value']);
+            } else {
+              this.state_REAL[state.variable] = state.value;
+              this.state_REAL.inputs[state.variable] = state.value;
+            }
+          }
+          //_model.update();
         }.bind(this));
         this.socket.on('disconnect_timeout', function(data) {
           alert('Aviso: La sesión ha finalizado.');
+          window.location = "./select";
         });
         this.socket.on('disconnect', function() {
           this.config = undefined;
@@ -74,7 +87,7 @@ class LabInstance {
       key = this.key_ejs;
     };
     return key;
-  }
+  } 
 
   getURL() {
     let url;
@@ -90,7 +103,7 @@ class LabInstance {
     alert('Te has desconectado del laboratorio. La sesión finalizará por desconexión.');
     if (this.socket.connected) {
       console.log('disconnecting people');
-      //this.socket.disconnect();
+      this.socket.disconnect();
     }
   }
 

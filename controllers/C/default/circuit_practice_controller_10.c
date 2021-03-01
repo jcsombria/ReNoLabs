@@ -16,7 +16,7 @@ char *token;
 int status;
 
 //external variables
-float config = 2; //Configuration: 0: start/end, 1: ready, 2 run, 3 stop, 4 reset
+float config = 1; //Configuration: 0: start/end, 1: ready, 2 run, 3 stop, 4 reset
 float evolution[4] = {0, 0, 0, 0}; //Evolution data: time, ref, u, output
 float reference[5] = {1, 2.5, 10, 0, 0}; //Reference signal: Type A T offsetA offsetT
 float controller[6] = {0,0, 0, 0, 0,1};       //Controller: Manual/PID Kp Ki Kd N NS
@@ -136,8 +136,10 @@ int main (void) {
  * \return The voltage read, in the range (-12, 12) V
  */
 float readIn() {
-  float u = map(analogRead(100), 0, 1023.0, 0, 5);
-  return map(u, 0, 3.6, -12, 12);
+  float u = map(analogRead(100), 0, 1023.0, 0, 3.3);
+  u = (u - 1.649) / 0.1377;
+  //return map(u, 0, 3.3, -12, 12);
+  return u;
 }
 
 /**
@@ -145,7 +147,9 @@ float readIn() {
  * \param value The voltage to write, in the range (-12, 12) V
  */
 void writeOut(float value) {
-  float u = map(value, -12.0, 12.0, 0, 1023);
+  //float u = map(value, -12.0, 12.0, 0, 1023);
+  float u = (value + 12.0941) / 5.9038;
+  u = map(u, 0, 4.096, 0, 1023);
   analogWrite(DAC_PIN, u);
 }
 

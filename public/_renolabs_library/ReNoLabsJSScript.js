@@ -33,7 +33,7 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
   var b3 = EJSS_INTERFACE.twoStateButton(mName+'_btnReset');
   var b4 = EJSS_INTERFACE.twoStateButton(mName+'_btnUpdate');
   var b5 = EJSS_INTERFACE.twoStateButton(mName+'_btnPower');
-  var b6 = EJSS_INTERFACE.twoStateButton(mName+'_btnVersion');
+  //var b6 = EJSS_INTERFACE.twoStateButton(mName+'_btnVersion');
 
   b1.setImageUrlOn(EJSS_INTERFACE.RENOLABS.Images.Play);
   b1.setImageUrlOff(EJSS_INTERFACE.RENOLABS.Images.Play);
@@ -45,15 +45,15 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
   b4.setImageUrlOff(EJSS_INTERFACE.RENOLABS.Images.Update);
   b5.setImageUrlOn(EJSS_INTERFACE.RENOLABS.Images.PowerOn);
   b5.setImageUrlOff(EJSS_INTERFACE.RENOLABS.Images.PowerOff);
-  b6.setImageUrlOn(EJSS_INTERFACE.RENOLABS.Images.Main);
-  b6.setImageUrlOff(EJSS_INTERFACE.RENOLABS.Images.Private);
+  //b6.setImageUrlOn(EJSS_INTERFACE.RENOLABS.Images.Main);
+  //b6.setImageUrlOff(EJSS_INTERFACE.RENOLABS.Images.Private);
 
   self.appendChild(b1);
   self.appendChild(b2);
   self.appendChild(b3);
   self.appendChild(b4);
   self.appendChild(b5);
-  self.appendChild(b6);
+  //self.appendChild(b6);
 
   self.setLab=function(lab){
     mLab = lab;
@@ -63,15 +63,15 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
       b3.setDisabled(true);
       b4.setDisabled(true);
       b5.setDisabled(true);
-      b6.setDisabled(true);
+      //b6.setDisabled(true);
       return;
     }
     else {
       b4.setDisabled(false);
       b5.setDisabled(false);
-      b6.setDisabled(false);
+      //b6.setDisabled(false);
     }
-    
+
     /* Fixed Relations */
     var button_state = null;
     switch (mLab.state_REAL.config) {
@@ -94,7 +94,7 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
       b1.setDisabled(!button_state[1]);
       b2.setDisabled(!button_state[2]);
       b3.setDisabled(!button_state[3]);
-      b6.setDisabled(!button_state[4]);
+      //b6.setDisabled(!button_state[4]);
       b5.setState(!button_state[0]);
     }
   };
@@ -110,7 +110,7 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
     b3.getStyle().setWidth(buttonWidth);
     b4.getStyle().setWidth(buttonWidth);
     b5.getStyle().setWidth(buttonWidth)
-    b6.getStyle().setWidth(buttonWidth)
+    //b6.getStyle().setWidth(buttonWidth)
   };
   self.getButtonWidth=function(){
     return buttonWidth
@@ -124,7 +124,7 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
     b3.getStyle().setHeight(buttonHeight);
     b4.getStyle().setHeight(buttonHeight);
     b5.getStyle().setHeight(buttonHeight)
-    b6.getStyle().setHeight(buttonHeight)
+    //b6.getStyle().setHeight(buttonHeight)
   };
   self.getButtonHeight=function(){
     return buttonHeight
@@ -135,7 +135,7 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
     EJSS_CORE.promoteToControlElement(b3,self.getView(),b3.getName());
     EJSS_CORE.promoteToControlElement(b4,self.getView(),b4.getName());
     EJSS_CORE.promoteToControlElement(b5,self.getView(),b5.getName());
-    EJSS_CORE.promoteToControlElement(b6,self.getView(),b6.getName());
+    //EJSS_CORE.promoteToControlElement(b6,self.getView(),b6.getName());
     EJSS_INTERFACE.RENOLABS.LabControl.registerProperties(self,controller);
 
     b1.setAction('OnClick', function(_data,_info) { if (mLab.send_connect) mLab.send_connect(2) });
@@ -154,7 +154,7 @@ EJSS_INTERFACE.RENOLABS.labControl=function(mName){
     });
     b4.setAction('OnClick', function(_data,_info) { if (mLab.update) mLab.update() });
     b4.setAction('OffClick', function(_data,_info) { if (mLab.update) mLab.update() });
-    b5.setAction('OnClick', function(_data,_info) { if (mLab.send_connect) mLab.send_connect(1, b6.getState()); if (mLab.reset) mLab.reset() });
+    b5.setAction('OnClick', function(_data,_info) { if (mLab.send_connect) mLab.send_connect(1, 0); if (mLab.reset) mLab.reset() });
     b5.setAction('OffClick', function(_data,_info) { if (mLab.send_connect) mLab.send_connect(0) });
   };
   self.setButtonWidth('120px');
@@ -234,10 +234,10 @@ EJSS_INTERFACE.RENOLABS.LabNumberParameter={
     EJSS_INTERFACE.Element.registerProperties(element,controller);
     controller.registerProperty('Title',element.setTitle);
     controller.registerProperty('EjsValue',element.setEjsValue,element.getEjsValue);
-    controller.registerAction('OnChange');
+    controller.registerAction('OnChange', (value)=>{console.log(value);});
   }
 };
-EJSS_INTERFACE.RENOLABS.labNumberParameter=function(mName){
+EJSS_INTERFACE.RENOLABS.labNumberParameter = function(mName){
   var self = EJSS_INTERFACE.panel(mName+'_parameter');
   var columnWidth = '0px';
   var rowHeight = '0px';
@@ -273,28 +273,28 @@ EJSS_INTERFACE.RENOLABS.labNumberParameter=function(mName){
     }
   };
 
-  self.setTitle=function(title){
+  self.setTitle = function(title) {
     title_label.setText(title);
   }
-  self.setRealValue=function(value){
+  self.setRealValue = function(value) {
     if (stored_real_value !== value) {
       stored_real_value = value;
       REAL_value.setValue(value);
     }
   };
-  self.getRealValue=function(){
-    return stored_real_value
+  self.getRealValue = function() {
+    return stored_real_value;
   };
-  self.setEjsValue=function(value){
+  self.setEjsValue = function(value) {
     if (stored_ejs_value !== value) {
       stored_ejs_value = value;
       EJS_value.setValue(value)
     }
   };
-  self.getEjsValue=function(){
+  self.getEjsValue = function() {
     return stored_ejs_value
   };
-  self.setEditable=function(value){
+  self.setEditable = function(value) {
     EJS_value.setEditable(value)
   };
   self.getEditable=function(){
@@ -354,10 +354,10 @@ EJSS_INTERFACE.RENOLABS.labNumberParameter=function(mName){
   return self
 };
 EJSS_INTERFACE.RENOLABS.LabOptionsParameter={
-  registerProperties:function(element,controller){
-    EJSS_INTERFACE.Element.registerProperties(element,controller);
+  registerProperties:function(element, controller){
+    EJSS_INTERFACE.Element.registerProperties(element, controller);
     controller.registerProperty('Title',element.setTitle);
-    controller.registerProperty('EjsValue',element.setEjsValue,element.getEjsValue);
+    controller.registerProperty('EjsValue',element.setEjsValue, element.getEjsValue);
     controller.registerAction('OnChange');
   }
 };
@@ -513,8 +513,8 @@ EJSS_INTERFACE.RENOLABS.LabFunctionParameter={
     controller.registerProperty('Font', element.setControlFont);
   }
 };
-EJSS_INTERFACE.RENOLABS.labFunctionParameter=function(mName){
-  var self=EJSS_INTERFACE.panel(mName);
+EJSS_INTERFACE.RENOLABS.labFunctionParameter = function(mName) {
+  var self = EJSS_INTERFACE.panel(mName);
 
   var mLab = null;
   var mConfig = undefined;
@@ -667,7 +667,7 @@ EJSS_INTERFACE.RENOLABS.labFunctionParameter=function(mName){
     parFunction.setDisabled(false);
     for (var i = 0; i < parameters.length; i++)
       parameters[i].setEditable(true);
-    
+
     /* Fixed Relations */
     parFunction.setEjsValue(mLab.state_EJS.inputs[mConfig][0]);
     displayFunctionPanel();
@@ -832,7 +832,7 @@ EJSS_INTERFACE.RENOLABS.labWaveFunctions=function(mName){
       parOffsetY.setEditable(true);
       parOffsetT.setEditable(true);
     }
-    
+
     /* Fixed Relations */
     parWave.setRealValue(mLab.state_REAL.reference[0]);
     parAmplitude.setRealValue(mLab.state_REAL.reference[1]);

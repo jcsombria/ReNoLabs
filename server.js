@@ -151,13 +151,15 @@ app.post('/', passport.authenticate('local', { failureRedirect: '/' }),
 app.get('/select',
   login.ensureLoggedIn('/'),
   function (req, res) {
-    res.render('select', {user: req.user, state: false});
+    var user = db.users.getUser(req.user.username);
+    res.render('select', {user: user, state: false});
 });
 
 app.get('/help',
   login.ensureLoggedIn('/'),
   function (req, res) {
-    res.render('help', {user: req.user});
+    var user = db.users.getUser(req.user.username);
+    res.render('help', {user: user});
 });
 
 app.get('/data',
@@ -178,8 +180,9 @@ app.get('/data',
       files.date[i] = fs.statSync('./data/'+files.name[i]).atime;
       files.size[i] = fs.statSync('./data/'+files.name[i]).size;
     }
+    var user = db.users.getUser(req.user.username);
     res.render('experiments', {
-      user: req.user,
+      user: user,
       names: files.name,
       dates: files.date,
       sizes: files.size
@@ -197,8 +200,6 @@ app.get('/real',
   login.ensureLoggedIn('/'),
   function (req, res) {
     var credentials = { 'username': req.user.username, 'password': req.user.password };
-    logger.debug("User: " + req.user.username + ":" + req.user.password);
-    logger.debug(SessionManager.idle);
     if(SessionManager.idle) {
       logger.debug(`User ${req.user.username} starts session.`);
       SessionManager.start(credentials);
@@ -207,21 +208,19 @@ app.get('/real',
       var token = SessionManager.getToken(credentials);
       session['token'] = token;
     } catch(e) {
-      logger.debug("TOKEN: " + token);
       session = { token:token };
     }
+    var user = db.users.getUser(req.user.username);
     if(token) {
-      logger.debug(`Key: ${token}`);
-      logger.debug(`Si recargo el usuario: ${req.user}`)
       res.render('real.ejs', {
-        user: req.user,
+        user: user,
         key: token,
         ip: Config.WebServer.ip,
         port: Config.WebServer.port,
       });
     } else {
       res.render('select', {
-        user: req.user,
+        user: user,
         state: true
       });
     }
@@ -370,8 +369,12 @@ if (Config.RIP !== undefined) {
 }
 
 // This section enables socket.io communications
+const EventGenerator = require('./behavior/events');
 var io = require('socket.io').listen(server);
-SessionManager.hardware.addListener(io);
+console.log(EventGenerator);
+var eg = new EventGenerator(io);
+SessionManager.hardware.addListener(eg);
+
 io.sockets.on('connection', function(socket) {
   var id = 'socket_' + socket.id;
   var credentials = {
