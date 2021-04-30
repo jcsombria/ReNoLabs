@@ -8,10 +8,10 @@ const logger = require('winston').loggers.get('log');
  */
 class EventDispatcher {
 
-  static PROCESS = 'process';
-  static ENQUEUE = 'enqueue';
-  static DISCARD = 'discard';
-  static UNMATCHED = 'umatched';
+  //static PROCESS = 'process';
+  //static ENQUEUE = 'enqueue';
+  //static DISCARD = 'discard';
+  //static UNMATCHED = 'umatched';
 
   constructor(eventProcessor) {
     this.eventProcessor = eventProcessor;
@@ -38,7 +38,7 @@ class EventDispatcher {
     for (var r in this.rules) {
       const classify = this.rules[r]['classify'];
       var type = classify(event);
-      if (type != EventDispatcher.UNMATCHED) {
+      if (type != 'unmatched') { //EventDispatcher.UNMATCHED) {
         this.handle[type](event);
         return;
       }
@@ -87,7 +87,9 @@ class EventProcessor {
   process(event) {
     for (var r in this.rules) {
       const rule = this.rules[r];
-      if(rule['condition'](event)) { rule['action'](event); }
+      if(rule['condition'](event)) { 
+        rule['action'](event); 
+      }
     }
   }
 
@@ -121,8 +123,8 @@ class Session {
     // - Enqueue if extern references, otherwise process immediately
     this.eventDispatcher.addRoutingRule('enqueue_if_extern_process_otherwise', 
       event => {
-        let isExtern = (event.variable == 'reference' && event.value[0] == 5);
-        return (isExtern) ? EventDispatcher.ENQUEUE : EventDispatcher.PROCESS;
+        let isExtern = (event.variable == 'reference' && event.value[0] == 4);
+        return (isExtern) ? 'enqueue' : 'process'; // EventDispatcher.ENQUEUE : EventDispatcher.PROCESS;
       }
     );
 

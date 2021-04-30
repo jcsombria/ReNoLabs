@@ -217,6 +217,7 @@ app.get('/real',
         key: token,
         ip: Config.WebServer.ip,
         port: Config.WebServer.port,
+	gui: Config.Lab.GUI_JS,
       });
     } else {
       res.render('select', {

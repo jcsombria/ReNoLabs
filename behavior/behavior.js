@@ -119,6 +119,7 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
 
   get_users() {
     logger.info('Sending list of users...A great power comes with a great responsibility!');
+    logger.debug(db.users.getUsers());
     this.sender.emit(USERS_GET, db.users.getUsers());
   }
 

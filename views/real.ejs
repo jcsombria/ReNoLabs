@@ -8,7 +8,8 @@
     <script src="_ejs_library/scripts/common_script.js"></script>
     <script src="_ejs_library/scripts/textresizedetector.js"></script>
     <script src="_ejs_library/ejsS.v1.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.0/math.js" integrity="sha512-bd8Oth+p1rTn+/iUFHsSozuYn7JpmH59vMWe6L+M3huScB/SMTXWkQoME3Ytk0sbGJ40VGp2mO2b8K8FNrewfQ==" crossorigin="anonymous"></script>
+    
     <!-- stylesheets ReNoLabs -->
     <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
     <link href='/stylesheets/template_routes.css' rel='stylesheet'>
@@ -26,7 +27,7 @@
     <script type="text/javascript"><!--//--><![CDATA[//><!--
       const LAB_KEY = <%- JSON.stringify(key) %>;
       const LAB_ADDRESS = "http://<%- ip %>:<%- port -%>";
-      <%- include real.js %>
+      <%- include(gui) %>
     //--><!]]></script>
 
   </head>

@@ -20,7 +20,7 @@ class CAdapter {
     this.listeners = [];
     this.connected = false;
     this.conn = null;
-    this.toNotify = ['config', 'evolution', 'reference'];
+    this.toNotify = ['config', 'evolution', 'reference', 'controller'];
     this.state = new CState();
     this.options = (options !== undefined) ? options : HWConfig;
   }
@@ -51,14 +51,14 @@ class CAdapter {
     logger.debug(`User ${username} request to start C controller`);
     if(this.connected) return;
     /* Start user or default controller */
-    if (!username) {
+    //if (!username) {
       logger.info('C Adapter: Starting default controller...');
       this.conn = spawn('sudo', [this._getDefaultFolder('C') + LabConfig.controller]);
-    } else {
-      logger.info(`C Adapter: Starting user controller (${username})...`);
-      this._prepareUserFolder(username, 'C');
-      this.conn = spawn('sudo', [this._getUserFolder(username, 'C') + LabConfig.controller]);
-    }
+    //} else {
+    //  logger.info(`C Adapter: Starting user controller (${username})...`);
+    //  this._prepareUserFolder(username, 'C');
+    //  this.conn = spawn('sudo', [this._getUserFolder(username, 'C') + LabConfig.controller]);
+    //}
     // I commented this code and the method definition below because it was never reached
     // I have to check why the event 'spawn' is not being notified
     //this.conn.on('spawn', this.onstart.bind(this));
@@ -133,7 +133,7 @@ class CAdapter {
 
   /*
    * Format the data received from the C controller and forward to the clients
-   * @param {object} ev The event with the date received from the controller.
+   * @param {object} ev The event with the data received from the controller.
    */
   ondata(ev) {
     this.connected = true;
@@ -190,7 +190,7 @@ class CAdapter {
    */
   write(variable, value, callback) {
     try {
-      this.state[variable] = value;
+      //this.state[variable] = value;
       this.conn.stdin.write(variable + ':' + value);
       logger.debug(`${variable}->${value}`);
     } catch(e) {
@@ -268,10 +268,17 @@ class CState extends State {
 
   update(o) {
     try {
-      var variable = o.split(":")[0];
-      var value = JSON.parse(o.split(/:|\n/)[1]);
-      this[variable] = value;
-    } catch(e){}
+      var lines = o.split("\n");
+      for (var l in lines) {
+	if(lines[l].length > 0) {
+          var variable = lines[l].split(":")[0];
+          var value = JSON.parse(lines[l].split(/:|\n/)[1]);
+          this[variable] = value;
+        }
+      }
+    } catch(e){
+      logger.warn('Can\'t parse controller data.');
+    }
   }
 
   notify(variables) {
@@ -305,14 +312,27 @@ class CState extends State {
   }
 
   set evolution(value) {
-    this._evolution = value;
-    if(this.config == 2) {
-   	this.notify('evolution:' + value);
+    try {
+      let changed = ((!this._evolution && value) || Math.abs(this._evolution[0] - value[0])>1e-3);
+      if(this.config == 2 && changed) {
+        this._evolution = value;
+      }
+    } catch(e) {
+      logger.warn('C Adapter: Cannot set evolution');
     }
   }
 
   get evolution() {
     return this._evolution;
+  }
+
+  set controller(value) {
+    this._controller = value;
+    this.notify(['controller:' + value]);
+  }
+
+  get controller() {
+    return this._controller;
   }
 }
 

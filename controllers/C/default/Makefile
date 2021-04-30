@@ -60,9 +60,9 @@ circuit_practice_controller_10:	circuit_practice_controller_10.o gertboardISA.o
 	@echo [link]
 	@$(CC) -o $@  gertboardISA.o circuit_practice_controller_10.o $(LDFLAGS) $(LDLIBS)
 
-circuit_practice_controller_9:	circuit_practice_controller_9.o gertboardISA.o
+circuitos:	circuitos.o gertboardISA.o
 	@echo [link]
-	@$(CC) -o $@  gertboardISA.o circuit_practice_controller_9.o $(LDFLAGS) $(LDLIBS)
+	@$(CC) -o $@  gertboardISA.o circuitos.o $(LDFLAGS) $(LDLIBS)
 
 .c.o:
 	@echo [CC] $<
