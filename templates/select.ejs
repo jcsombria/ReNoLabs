@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- stylesheets -->
+		<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+		<link href='/stylesheets/template_main.css' rel='stylesheet'>
+		<!-- metas -->
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!-- title-->
+		<title>Circuito Analogico</title>		
+		<script>
+			function myFunction(state) {
+				if (state) {
+					alert("Práctica ocupada. Inténtelo más tarde.");
+					window.location = "./select";
+				}
+			}
+		</script>
+	</head>
+	<body onload='myFunction(<%= state %>)'>
+        <%- include('ui/menu', {user: user}); %>
+		<div class="select">
+			<div class="select-block"> 
+				<h1>Descripción</h1>
+				<p align="center"> <a href="/help"> <img src="/images/help_question_4509.png" alt="REAL" height="160" width="180"> </a> </p>
+			</div>
+			<div class="select-block"> 
+				<h1>Experimento</h1>
+				<p align="center">  <a href="/real"> <img src="/images/Op-amp.png" alt="REAL" height="160" width="180"> </a> </p>
+			</div> 
+			<div class="select-block"> 
+				<h1>Datos</h1>
+				<p align="center">  <a href="/data"> <img src="/images/carpeta_transp.png" alt="REAL" height="160" width="180"> </a> </p>
+			</div> 
+		</div>
+	</body>
+</html>
+

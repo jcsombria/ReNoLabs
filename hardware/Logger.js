@@ -14,7 +14,9 @@ class Logger extends EventEmitter {
 	log(data) {
 		logger.silly('Logging hardware data.');
 		try {
-			datalogger.info(data);
+			if (data) {
+				datalogger.info(data);
+			}
 		} catch {
 			logger.debug('Logger: Can\'t write log.');
 		}
@@ -36,15 +38,17 @@ class Logger extends EventEmitter {
 	}
 
 	start(username) {
-		var logfile = this._getFolder() + this._getFilename(username);
-		datalogger.clear()
-			.add(new transports.File({
+		var logfilename = this._getFolder() + this._getFilename(username);
+		this.logfile = new transports.File({
 			format: format.printf((info) => { return `${info.message}`; }),
-			filename: logfile,
+			filename: logfilename,
 			level: 'silly',
-		}));
-		datalogger.info(`% User: ${username}`);
-		datalogger.info('% Cols: time y0 y1 ...');
+		});
+		datalogger.clear().add(this.logfile);
+	}
+
+	end() {
+		datalogger.remove(this.logfile);
 	}
 
 	_getFolder() {

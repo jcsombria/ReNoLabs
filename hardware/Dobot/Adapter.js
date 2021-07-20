@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 var State = require('../State');
 var spawn = require('child_process').spawn;
+const zmq = require('zeromq');
 
 const CONTROLLER_PATH = "controllers/";
 const CONTROLLER_USER_PATH = "users/";
@@ -48,102 +49,36 @@ class CAdapter {
    * @param {string} username The name of the user that request to start the controller.
    */
   start(username) {
-    logger.debug(`User ${username} request to start C controller`);
+    logger.debug(`User ${username} request to start Dobot controller`);
     if(this.connected) return;
     /* Start user or default controller */
-    //if (!username) {
-      logger.info('C Adapter: Starting default controller...');
-      this.conn = spawn('sudo', [this._getDefaultFolder('C') + LabConfig.controller]);
-    //} else {
-    //  logger.info(`C Adapter: Starting user controller (${username})...`);
-    //  this._prepareUserFolder(username, 'C');
-    //  this.conn = spawn('sudo', [this._getUserFolder(username, 'C') + LabConfig.controller]);
-    //}
-    // I commented this code and the method definition below because it was never reached
-    // I have to check why the event 'spawn' is not being notified
-    //this.conn.on('spawn', this.onstart.bind(this));
-    this.conn.on('error', this.onerror.bind(this));
-    this.conn.on('close', function() {this.connected = false;}.bind(this));
-    /* En caso de fallo del controlador resetea las variables config y evolucion. */
-    this.conn.on('exit', function(code, string) {
-      logger.info(`Exiting controller with error ${code}`)
-      if (code == null) {
-        this.state['config'] = 0;
-        var e = new Array(4); for (var i = 0; i < 18; i++) { e[i] = 0; }
-        this.state['evolution'] = e;
-      }
-    }.bind(this));
-    // Redirect stdout/stderr to log
-    this.conn.stdout.setEncoding('utf8');
-    this.conn.stdout.on('data', this.ondata.bind(this));
-    this.conn.stderr.on('data', this.onerrordata.bind(this));
-  }
+    logger.info('Dobot Adapter: Starting default controller...');
+    this.conn = spawn('sudo', [this._getDefaultFolder('Dobot') + LabConfig.controller]);
+    this.socket = zmq.socket('req');
 
-
-  _getUserFolder(username, language) {
-    return `./${CONTROLLER_PATH}${language}/${CONTROLLER_USER_PATH}${username}/`;
+    this.socket.on('message', this.ondata.bind(this));
+    var endpoint = 'tcp://127.0.0.1:5555';
+    socket.connect(endpoint);
   }
 
   _getDefaultFolder(language) {
     return `./${CONTROLLER_PATH}${language}/default/`;
   }
 
-  _prepareUserFolder(username, language) {
-    let user_path = this._getUserFolder(username, language);
-    try {
-      var stats = fs.statSync(user_path);
-    } catch (e) {
-      logger.debug('Updater: Folder not found!');
-      let default_path = this._getDefaultFolder(language);
-      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
-      var fileNames = fs.readdirSync(default_path);
-      logger.debug(fileNames);
-      fs.mkdirSync(user_path, {recursive: true});
-      for (var i = 0; i < fileNames.length; i++) {
-        var name = fileNames[i];
-        var content = fs.readFileSync(default_path + name);
-        var stats = fs.statSync(default_path + name);
-        fs.writeFileSync(user_path + name, content, {mode: stats.mode});
-      }
-    }
-  }
-
-  /** Copy files to userpath */
-  _copyFiles(files, userpath, is_selectable) {
-    logger.debug('Updater: Copying files!');
-    for (var f in files) {
-      var filename = files[f].filename;
-      var content = files[f].code;
-      logger.debug(`file: ${filename}`);
-      if(!is_selectable || is_selectable(filename)) {
-        var code_stream = fs.createWriteStream(userpath + filename);
-        code_stream.write(content);
-        code_stream.end();
-      }
-    }
-  }
-
-// I commented this code because it was never reached
-// I have to check why the event 'spawn' is not being notified
-//  onstart() {
-//    logger.debug('Controller spawned.');
-//    this.connected = true;
-//    this.state.addListener(this.conn);
-//  }
-
   /*
    * Format the data received from the C controller and forward to the clients
    * @param {object} ev The event with the data received from the controller.
    */
   ondata(ev) {
-    this.connected = true;
-    this.state.update(ev);
-    for(var i=0; i<this.toNotify.length; i++) {
-      var name = this.toNotify[i], value = this.state[name];
-      var data = {'variable': name, 'value': value};
-      this.notify('signals.get', data);
-      logger.silly(`${name}->${value}`);
-    }
+    console.log(ev);
+    // this.connected = true;
+    // this.state.update(ev);
+    // for(var i=0; i<this.toNotify.length; i++) {
+    //   var name = this.toNotify[i], value = this.state[name];
+    //   var data = {'variable': name, 'value': value};
+    //   this.notify('signals.get', data);
+    //   logger.silly(`${name}->${value}`);
+    // }
   }
 
   /*
@@ -217,7 +152,7 @@ class CAdapter {
   }
 
   /* Send 'end' command to C controller. */
-  stop() {
+  end() {
     logger.info('C Adapter: Sending stop to C controller.');
     this.write('config', 0);
     this.connected = false;
@@ -264,6 +199,33 @@ class CAdapter {
 class CState extends State {
   constructor() {
     super();
+  }
+
+  update(o) {
+    try {
+      var lines = o.split("\n");
+      for (var l in lines) {
+	if(lines[l].length > 0) {
+          var variable = lines[l].split(":")[0];
+          var value = JSON.parse(lines[l].split(/:|\n/)[1]);
+          this[variable] = value;
+        }
+      }
+    } catch(e){
+      logger.warn('Can\'t parse controller data.');
+    }
+  }
+
+  notify(variables) {
+     for (var i=0; i<this.listeners.length; i++) {
+       try {
+         for (var j=0; j<variables.length; j++) {
+           this.listeners[i].write(variables[j], ()=>{});
+         }
+       } catch(error) {
+         logger.warn(`C Adapter: Cannot notify listener.`);
+       }
+     }
   }
 
   set config(value) {

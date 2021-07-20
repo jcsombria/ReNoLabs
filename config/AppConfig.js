@@ -1,12 +1,12 @@
 // Application Configuration
 module.exports = {
   WebServer: { // Web Server configuration
-    ip: "147.96.67.49",
-    port: 80,
+    ip: "127.0.0.1",
+    port: 8080,
   },
   Session: {
     timeout: 60, // minutes
-    disconnectTimeout: 20, // seconds
+    disconnectTimeout: 60, // seconds
   },
   // Hardware specific configuration (C, TwinCAT-Quad)
   Hardware: require('../hardware/C'),

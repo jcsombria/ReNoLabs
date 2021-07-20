@@ -1,0 +1,48 @@
+<html>
+	<head> 
+		<!-- <link href="/stylesheets/experiments.css" rel="stylesheet"> -->
+		<link href="/stylesheets/table.css" rel="stylesheet">
+		<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+		<link href='/stylesheets/template_routes.css' rel='stylesheet'>
+	</head>
+	<body>
+	    <%- include('ui/menu', {user: user}); %>
+		<div id="cabeceraDiv">
+			<p><strong><font color="#CC0000" size="6">&nbsp;<img src="/images/imagenes/lupa.gif" width="28" height="27" align="absmiddle"> Archivos de experimentos del usuario: <%= user.displayName %></font></strong></p>
+			<hr size="4" noshade color="#660000">
+			<!-- <h1 class="usuario">Archivos de experimentos del usuario: <%= user.displayName %> </h1> -->
+			<blockquote>
+			<p class="instrucciones"> 
+				A continuación se muestra un listado de los archivos de
+				datos de los experimentos que ha realizado. Se encuentran ordenados según la fecha 
+				y hora en que se realizaron. Para descargar cualquier archivo de datos, pulse sobre
+				el botón de la derecha. 
+			</p>
+		</div>
+
+		<script type="text/javascript">
+			var files = {name: 0, size: []};
+			files.name = <%- JSON.stringify(names) %>;
+			files.date = <%- JSON.stringify(dates) %>;
+			//var files = <%= names %>;
+			files.size = <%- JSON.stringify(sizes) %>;
+			//files.size = <%= sizes %>;
+			var table = '<table id="table-2" align="center" bgcolor="#ECECEC">';
+			table += '<thead><th>Día</th><th>Hora</th><th>Tamaño</th><th>Enlace</th></thead>';
+			for (i = 0; i < files.name.length; i++) {
+				table += '<tr>';
+					//table += '<td>' + files.name[i].split('_')[1] + '</td>';
+					table += '<td>' + new Date(files.date[i]).toLocaleDateString() + '</td>';
+					//table += '<td>' + files.name[i].split(/_|\./)[2] + '</td>';
+					table += '<td>' + new Date(files.date[i]).toLocaleTimeString() + '</td>';
+					table += '<td>' + files.size[i] + '</td>';
+					//table += '<td><a href=/download/' + files.name[i] + '</a></td>';
+					table += '<td><a href=/download/' + files.name[i] + '>' + 'link' + '</a></td>';
+				table += '</tr>';
+			}
+			table += '</table>';
+			document.write(table);
+		</script>
+		<hr size="4" noshade color="#660000">
+	</body>
+</html>

@@ -32,9 +32,18 @@ class State {
 
   // Parse the notification and update the state
   update(o) {
-    variable = o.split(":")[0];
-    value = JSON.parse(o.split(/:|\n/)[1]);
-    state[variable] = value;
+    try {
+      var lines = o.split("\n");
+      for (var l in lines) {
+      	if(lines[l].length > 0) {
+          var variable = lines[l].split(":")[0];
+          var value = JSON.parse(lines[l].split(/:|\n/)[1]);
+          this[variable] = value;
+        }
+      }
+    } catch(e){
+      logger.warn('Can\'t parse controller data.');
+    }
   }
 }
 

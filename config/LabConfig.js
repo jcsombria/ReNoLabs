@@ -2,9 +2,9 @@
 module.exports = {
   GUI: 'circuit_practice_11.ejs',
   GUI_JS: 'real.js',
-  controller: 'circuit_practice_controller_10',
+  controller: 'c_controller',
   info: {
-    name: 'Circuitos',
+    name: 'Circuitos - Configuración 1',
     description: '<h1>Práctica de Circuitos</h1><p>Lab description</p>',
   },
   parameters: {

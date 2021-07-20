@@ -30,32 +30,32 @@ INCLUDE	= -I/usr/local/include
 CFLAGS	= $(DEBUG) -Wall $(INCLUDE) -Winline -pipe
 
 LDFLAGS	= -L/usr/local/lib
-LDLIBS    = -lwiringPi -lwiringPiDev -lpthread -lm
+LDLIBS    = -lpthread -lm
 
 # Should not alter anything below this line
 ###############################################################################
 
-SRC	=	i2c_test.c	circuit_practice_controller.c  circuit_practice_controller_10.c 
+SRC	=	$(wildcard *.c)
 
 OBJ	=	$(SRC:.c=.o)
 
 BINS	=	$(SRC:.c=)
 
 all:	
-	@cat README.TXT
+#	@cat README.TXT
 	@echo "    $(BINS)" | fmt
 	@echo ""
 
 really-all:	$(BINS)
 
-i2c_test:	i2c_test.o
+c_controller:	$(OBJ)
 	@echo [link]
 	@$(CC) -o $@ i2c_test.o $(LDFLAGS) $(LDLIBS)
 
 circuit_practice_controller:	circuit_practice_controller.o gertboardISA.o
 	@echo [link]
 	@$(CC) -o $@  gertboardISA.o circuit_practice_controller.o $(LDFLAGS) $(LDLIBS)
-	
+
 circuit_practice_controller_10:	circuit_practice_controller_10.o gertboardISA.o
 	@echo [link]
 	@$(CC) -o $@  gertboardISA.o circuit_practice_controller_10.o $(LDFLAGS) $(LDLIBS)
@@ -72,11 +72,11 @@ clean:
 	@echo "[Clean]"
 	@rm -f $(OBJ) *~ core tags $(BINS)
 
-tags:	$(SRC)
+tags:	@$(SRC)
 	@echo [ctags]
 	@ctags $(SRC)
 
 depend:
-	makedepend -Y $(SRC)
+	@makedepend -Y $(SRC)
 
 # DO NOT DELETE
