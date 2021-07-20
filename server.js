@@ -1,39 +1,3 @@
-/**
- * Summary. (use period)
- *
- * Description. (use period)
- *
- * @since      x.x.x
- * @deprecated x.x.x Use new_function_name() instead.
- * @access     private
- *
- * @class
- * @augments parent
- * @mixes    mixin
- *
- * @alias    realName
- * @memberof namespace
- *
- * @see  Function/class relied on
- * @link URL
- * @global
- *
- * @fires   eventName
- * @fires   className#eventName
- * @listens event:eventName
- * @listens className~event:eventName
- *
- * @param {type}   var           Description.
- * @param {type}   [var]         Description of optional variable.
- * @param {type}   [var=default] Description of optional variable with default variable.
- * @param {Object} objectVar     Description.
- * @param {type}   objectVar.key Description of a key in the objectVar parameter.
- *
- * @yield {type} Yielded value description.
- *
- * @return {type} Return value description.
- */
-
 // Logs Configuration
 const winston = require('winston');
 const { format, transports } = winston;
@@ -50,24 +14,13 @@ const console_ = new transports.Console({
 });
 // System Events Logger
 winston.loggers.add('log', { transports: [errors, console_] });
-
-const behavior = require('./behavior');
-const Config = require('./config/AppConfig');
-const db = require('./db');
-const SessionManager = require('./sessions').SessionManager;
-// const RIPBroker = require('./rip/RIPBroker');
-// var ripBroker = new RIPBroker(Config.RIP);
-// SessionManager.hardware.adapter.addListener(ripBroker);
-
-// Express modules.
-const express = require('express');
-const fs = require('fs');
-const login = require('connect-ensure-login');
 const logger = require('winston').loggers.get('log');
 logger.level = 'debug';
+// Express modules.
+const express = require('express');
+const login = require('connect-ensure-login');
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
-
 /*
 * Protocolo de autentificación (passport module).
 */
@@ -80,11 +33,9 @@ passport.use(new Strategy(
       return cb(null, user);
     });
   }));
-
   passport.serializeUser(function(user, cb) {
   cb(null, user.id);
 });
-
 passport.deserializeUser(function(id, cb) {
   db.users.findById(id, function (err, user) {
     if (err) { return cb(err); }
@@ -100,18 +51,24 @@ var app = express();
  * Con esto podemos pasar información a los html (archivos .ejs), por ejemplo, el usuario.
  *
  */
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/templates');
 app.set('view engine', 'ejs');
 /*
  * Selección de la carpeta donde están los archivos estáticos (imagenes, css, script, etc)
  */
 app.use(express.static('public'));
+// Application Modules
+const behavior = require('./behavior');
+const Config = require('./config/AppConfig');
+const db = require('./db');
+const SessionManager = require('./sessions').SessionManager;
+const { Updater } = require('./updater');
+const views = require ('./myviews');
 /*
  * Carga de módulos que utiliza la aplicación express (app).
  */
 const cookie_parser = require('cookie-parser')();
 const body_parser = require('body-parser');
-const { Updater } = require('./updater');
 const express_session = require('express-session')({
   secret: 'keyboard cat',
   resave: false,
@@ -123,191 +80,43 @@ app.use(body_parser.json({ type: '*/*'}));
 app.use(express_session);
 app.use(passport.initialize());
 app.use(passport.session());
-/*
- * Seleción del servidor (ip + puerto).
- */
+// HTTP Server
 var server = app.listen(Config.WebServer.port, Config.WebServer.ip, function () {
   var host = server.address().address;
   var port = server.address().port;
   logger.info(`Server started on http://${host}:${port}`);
 });
-/*
- * Configuracion de rutas.
- */
-app.get('/', function (req, res) {
-  if (req.isAuthenticated()) {
-    res.redirect('/select');
-  } else {
-    context = { lab_title: Config.Lab['info']['name']};
-    res.render('login', context);
-  }
-});
+// URLs
+app.get('/', views.index);
+app.post('/', passport.authenticate('local', { failureRedirect: '/' }), views.home);
+app.get('/select', login.ensureLoggedIn('/'), views.select);
+app.get('/help', login.ensureLoggedIn('/'), views.help);
+app.get('/data', login.ensureLoggedIn('/'), views.data);
+app.get('/download/*', login.ensureLoggedIn('/'), views.download);
+app.get('/real', login.ensureLoggedIn('/'), views.experience);
+app.get('/logout', views.logout);
 
-app.post('/', passport.authenticate('local', { failureRedirect: '/' }),
-  function(req, res) {
-    res.redirect('/select');
-});
+// app.get('/admin', login.ensureLoggedIn('/'), views.admin);
+app.get('/admin/experiences', views.admin.experiences);
+app.get('/admin/users/get', views.admin.users.get);
+app.get('/admin/users/set', views.admin.users.set);
+app.get('/admin/config/get', views.admin.config.get);
+app.get('/admin/config/set', views.admin.config.set);
+app.get('/admin/views/set', views.admin.views.set);
+app.get('/admin/views/get', views.admin.views.get);
 
-app.get('/select',
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    var user = db.users.getUser(req.user.username);
-    res.render('select', {user: user, state: false});
-});
+// app.get('/experience/Sistemas Lineales/*', login.ensureLoggedIn('/'), )
+// function (req, res) {
+//   res.download('./data/' + req.params[0]);
+// }
 
-app.get('/help',
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    var user = db.users.getUser(req.user.username);
-    res.render('help', {user: user});
-});
 
-app.get('/data',
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    /*
-     * Filtra los ficheros de cada usuario
-     */
-    var files = {name: 0, date: [], size: []};
-    var dir = './data/';
-    files.name = fs.readdirSync(dir)
-      .filter((e) => { if (e.split('_')[0] == req.user.username) { return e; } })
-      .sort((a, b) => { return fs.statSync(dir + b).mtime.getTime() - fs.statSync(dir + a).mtime.getTime(); });
-    /*
-     * Devuelve la hora de creación y el tamaño de cada fichero
-     */
-    for (i = 0; i < files.name.length; i++) {
-      files.date[i] = fs.statSync('./data/'+files.name[i]).atime;
-      files.size[i] = fs.statSync('./data/'+files.name[i]).size;
-    }
-    var user = db.users.getUser(req.user.username);
-    res.render('experiments', {
-      user: user,
-      names: files.name,
-      dates: files.date,
-      sizes: files.size
-    });
-});
-
-app.get('/download/*', /**/
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    res.download('./data/' + req.params[0]);
-  }
-);
-
-app.get('/real',
-  login.ensureLoggedIn('/'),
-  function (req, res) {
-    var credentials = { 'username': req.user.username, 'password': req.user.password };
-    if(SessionManager.idle) {
-      logger.debug(`User ${req.user.username} starts session.`);
-      SessionManager.start(credentials);
-    }
-    try {
-      var token = SessionManager.getToken(credentials);
-      session['token'] = token;
-    } catch(e) {
-      session = { token:token };
-    }
-    var user = db.users.getUser(req.user.username);
-    if(token) {
-      res.render('real.ejs', {
-        user: user,
-        key: token,
-        ip: Config.WebServer.ip,
-        port: Config.WebServer.port,
-	gui: Config.Lab.GUI_JS,
-      });
-    } else {
-      res.render('select', {
-        user: user,
-        state: true
-      });
-    }
-  }
-);
-
-// app.get('/signals/:signalName',
-//   login.ensureLoggedIn('/'),
-//   function (req, res) {
-//     res.header('Access-Control-Allow-Credentials', "true");
-//     res.header('Access-Control-Allow-Origin', req.headers.origin);
-//     res.header('Access-Control-Allow-Methods', 'GET');
-//     res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
-//     logger.debug(`Conexion recibida`);
-//     var credentials = { 'key': token };
-//     var session = SessionManager.connect('http_', req.socket, credentials);
-//     var signal = req.params['signalName'];
-//     try {
-//       var value = session.hw.get(signal);
-//       logger.debug(`${value}`);
-//       res.json(value);
-//     } catch(e) {
-//       res.json({});
-//     }
-//   }
-// );
-
-// app.get('/signals/:signalName/:signalValue',
-//   login.ensureLoggedIn('/'),
-//   function (req, res) {
-//     // Allow Cross-Origin-Resource-Sharing (CORS)
-//     res.header('Access-Control-Allow-Credentials', "true");
-//     res.header('Access-Control-Allow-Origin', req.headers.origin);
-//     res.header('Access-Control-Allow-Methods', 'GET');
-//     res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
-//     var credentials = { 'key': token };
-//     var session = SessionManager.connect('http_', req.socket, credentials);
-//     var name = req.params['signalName'];
-//     try {
-//       var value = session.hw.set(signal);
-//       session.hw.write(name, value);
-//       res.json(value);
-//     } catch (e) {
-//       res.json({});
-//     }
-//   }
-// );
-
-app.get('/logout',
-  function(req, res) {
-    req.logOut();
-    res.redirect('/');
-  }
-);
-
-app.get('/admin',
-  function(req, res) {
-    res.render('editor/code');
-  }
-)
-
-// app.get('/signals/info',
-//  // login.ensureLoggedIn('/'),
-//   function (req, res) {
-//     // Allow Cross-Origin-Resource-Sharing (CORS)
-//     // res.header('Access-Control-Allow-Credentials', "true");
-//     // res.header('Access-Control-Allow-Origin', req.headers.origin);
-//     // res.header('Access-Control-Allow-Methods', 'GET');
-//     // res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
-//     // var credentials = { 'key': token };
-//     // var session = SessionManager.connect('http_', req.socket, credentials);
-//     // var name = req.params['signalName'];
-//     // try {
-//     //   var value = session.hw.set(signal);
-//     //   session.hw.write(name, value);
-//     //   res.json(value);
-//     // } catch (e) {
-//     //   res.json({});
-//     // }
-//     res.json(Updater.getSignals());
-//   }
-// );
-
-// This section add RIP support (if enabled in AppConfig.js)
+// This section adds RIP support (if enabled in AppConfig.js)
 if (Config.RIP !== undefined) {
-  var ripapp = app;
+  const RIPBroker = require('./rip/RIPBroker');
+  const ripBroker = new RIPBroker(Config.RIP);
+  SessionManager.hardware.addListener(ripBroker);
+    var ripapp = app;
   if(Config.RIP.port != Config.WebServer.port) {
     ripapp = express();
     var ripserver = ripapp.listen(Config.RIP.port, Config.RIP.ip, function () {
@@ -370,7 +179,7 @@ if (Config.RIP !== undefined) {
 }
 
 // This section enables socket.io communications
-const EventGenerator = require('./behavior/events');
+const { EventGenerator } = require('./behavior/events');
 var io = require('socket.io').listen(server);
 var eg = new EventGenerator(io);
 SessionManager.hardware.addListener(eg);
@@ -383,14 +192,14 @@ io.sockets.on('connection', function(socket) {
     'password': socket.handshake.query.password,
   }
   logger.debug(`Request from user: ${credentials['username']}`);
-  if(socket.handshake.query.mode != 'client') {
-    var session = SessionManager.connect(id, socket, credentials);
-    if(!session) {
-      socket.emit('login_error', {'text':'Invalid credentials'});
-      socket.disconnect();
-      return;
-    }
+  // if(socket.handshake.query.mode != 'client') {
+  var session = SessionManager.connect(id, socket, credentials);
+  if(!session) {
+    socket.emit('login_error', {'text':'Invalid credentials'});
+    socket.disconnect();
+    return;
   }
+  // }
   logger.debug(`User ${credentials['username']} authenticated`);
   logger.debug(`Mode: ${socket.handshake.query.mode}`);
   switch (socket.handshake.query.mode) {
@@ -411,10 +220,6 @@ io.sockets.on('connection', function(socket) {
       break;
     default:
       // Behave as a normal user
-      if(SessionManager.idle) {
-        logger.debug(`User ${credentials['username']} starts session.`);
-        SessionManager.start(credentials);
-      }
       if (session.isActive()) {
         logger.info('Entering user mode...');
         logger.debug('Registering common services...');

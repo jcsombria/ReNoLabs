@@ -1,3 +1,23 @@
+/**
+ * RIPBroker.js
+ * author: Jesús Chacón <jcsombria@gmail.com>
+ *
+ * Copyright (C) 2019 Jesús Chacón
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 const EventEmitter = require('events');
 const RIP = require('./RIPGeneric');
 const RIPConfig = require('../config/RIPConfig');
@@ -9,7 +29,7 @@ const jsonrpc = require('../rip/jsonrpc')
 class RIPBroker extends EventEmitter {
 	constructor(config) {
 		super();
-		this.on('serverOut_clientIn', this.update);
+		this.on('signals.get', this.update);
 		this.SSEperiod = 100;
 		this.sse = new SSE([]);
 		var labIp = RIPConfig.ip + ':' + RIPConfig.port;

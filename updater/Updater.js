@@ -15,13 +15,22 @@ const CONFIG_PATH = "./config/";
 const CONFIG_BACKUP_PATH = "config/backup/";
 const VIEWS_PATH = "./views/";
 
+const AdmZip = require('adm-zip');
+
+
 class Updater {
   upload_view(data) {
     logger.debug(data.length);
     var fileName = LabConfig.GUI_JS;
-    var code_stream = fs.createWriteStream(VIEWS_PATH + fileName);
+    var code_stream = fs.createWriteStream(VIEWS_PATH + fileName + '.tmp');
     code_stream.write(data);
     code_stream.end();
+
+    
+    var source = VIEWS_PATH + fileName + '.tmp';
+    var target = VIEWS_PATH + fileName + '.folder.tmp';
+    const file = new AdmZip(source);
+    file.extractAllTo(target);
   }
 
   upload_code(data, callback) {
@@ -164,10 +173,15 @@ class Updater {
     }
   }
 
-  getDescription() {
+  download_description() {
   }
 
-  setDescription() {
+  upload_description(description) {
+    logger.debug(data.length);
+    var fileName = LabConfig.GUI_JS;
+    var code_stream = fs.createWriteStream(VIEWS_PATH + fileName);
+    code_stream.write(data);
+    code_stream.end();
   }
 
   getSignals() {

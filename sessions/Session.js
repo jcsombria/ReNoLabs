@@ -2,106 +2,10 @@
 const Config = require('../config/AppConfig');
 const db = require('../db');
 const logger = require('winston').loggers.get('log');
+const rules = require('../behavior/rules')
+const { EventProcessor, EventDispatcher } = require('../behavior/events');
 
-/* 
- * Dispatch incoming events.
- */
-class EventDispatcher {
-
-  //static PROCESS = 'process';
-  //static ENQUEUE = 'enqueue';
-  //static DISCARD = 'discard';
-  //static UNMATCHED = 'umatched';
-
-  constructor(eventProcessor) {
-    this.eventProcessor = eventProcessor;
-    this.rules = {}
-    this.handle = {
-      'process': this._process.bind(this),
-      'enqueue': this._enqueue.bind(this),
-    }
-  }
-
-  _process(event) { this.eventProcessor.process(event); }
-
-  _enqueue(event) { this.eventProcessor.enqueue(event); }
-
-  /*
-   * @param {string}   name     The unique name of the routing rule.
-   * @param {function} classify A function that accepts an event and returns a dispatching label ('Process', 'Enqueue', 'Discard').
-   */
-  addRoutingRule(name, classify) {
-    this.rules[name] = { 'classify': classify };
-  }
-
-  dispatch(event) {
-    for (var r in this.rules) {
-      const classify = this.rules[r]['classify'];
-      var type = classify(event);
-      if (type != 'unmatched') { //EventDispatcher.UNMATCHED) {
-        this.handle[type](event);
-        return;
-      }
-    }
-  }
-
-}
-
-/* 
- * Process incoming events.
- */
-class EventProcessor {
-
-  constructor() {
-    this.rules = {};
-    this.queue = [];
-    this._start();
-  }
-
-  _start() {
-    setInterval(this._check.bind(this), 100);
-  }
-
-  _check() {
-    var event = this.queue.shift();
-    if(event) { this.process(event); }
-  }
-
-  /*
-   * Add a new event processing rule.
-   *
-   * A rule is defined by a unique name, a condition that must be true to trigger the rule, and the action
-   * that will be triggered.
-   *
-   * @param {object}   name The unique name of the rule.
-   * @param {function} condition The rule triggering condition.
-   * @param {function} action The rule action.
-   */
-  addRule(name, condition, action) {
-    this.rules[name] = {
-      'condition': condition,
-      'action': action,
-    }
-  }
-
-  process(event) {
-    for (var r in this.rules) {
-      const rule = this.rules[r];
-      if(rule['condition'](event)) { 
-        rule['action'](event); 
-      }
-    }
-  }
-
-  enqueue(event) {
-    this.queue.push(event);
-  }
-}
-
-
-
-/* Session model.
- */
+/* Session model. */
 class Session {
 
   /*
@@ -114,8 +18,9 @@ class Session {
     this.user = user;
     this.manager = manager;
     this.hardware = manager.hardware;
+    this.logger = manager.hwlogger;
     this.rules = {};
-    this.eventProcessor = new EventProcessor();
+    this.eventProcessor = new EventProcessor(this);
     this.eventDispatcher = new EventDispatcher(this.eventProcessor);
     logger.debug(`Session is ${user.username}`);
 
@@ -128,39 +33,15 @@ class Session {
       }
     );
 
-    // # Processing Rules
-    // - Process commands 
-    this.eventProcessor.addRule('process_command', 
-      event => { // Rule condition
-        let isCommand = (event.variable == 'config');
-        return isCommand;
-      },
-      event => { // Rule action
-        let action = Number(event.value);
-        logger.debug(`Command ${action} received.`);
-        switch(action) {
-          case 0: this.hardware.end(); break;
-          case 1: this.hardware.start(this.user.username); break;
-          case 2: this.hardware.play(); break;
-          case 3: this.hardware.pause(); break;
-          case 4: this.hardware.reset(); break;
-        }
+    for (var r in rules) {
+      try {
+        this.eventProcessor.addRule(r, rules[r]['condition'], rules[r]['action']);
+      } catch(e) {
+        logger.warn('Cannot import event processing rule.')
       }
-    );
-    // - Process commands immediately
-    this.eventProcessor.addRule('forward_to_hardware',
-      event => { // Rule condition
-        let isCommand = (event.variable == 'config');
-        return !isCommand;
-      },
-      event => { // Rule action
-        logger.debug('Forwarding message to hardware.');
-        this.hardware.write(event.variable, event.value);
-      }
-    );
-
+    }
   }
-
+  
   /*
    * Process user data. If data contains action command, executte. Otherwise, forward to hardware.
    * @param {object} data The received data.
@@ -176,6 +57,31 @@ class Session {
     }
   }
 
+  stop() {
+    // this.hardware.stop();
+    // this.logger.end();
+  }
+  
+  start() {
+    console.log('starting')
+    var user = this.user.username;
+    this.logger.start(user);
+    this.hardware.start(user);
+    this.hardware.play();    
+  }
+  
+  play() {
+    // this.hardware.play();
+  }
+  
+  pause() {
+    // this.hardware.pause();
+  }
+  
+  reset() {
+    // this.hardware.reset();
+  }
+  
   /*
    * Finish the session.
    */
@@ -215,7 +121,7 @@ class Session {
   }
 }
 
-// Coordina el inicios y fin de sesión entre hardware, logger y autenticación
+// Coordina el inicio y fin de sesión entre hardware, logger y autenticación
 class SessionManager {
   constructor() {
     this.clients = {};
@@ -243,37 +149,57 @@ class SessionManager {
   connect(id, socket, credentials) {
     var user = this.validate(credentials);
     if (!user) return;
-    let isActive = (this.active_user == user.username);
-    let isSupervisor = db.users.isSupervisor(user);
-    if (isActive || isSupervisor || !this.active_user) {
-      logger.debug(`User ${user.username} connected to session ${id}.`);
-      this.clients[id] = socket;
-      var session = new Session(user, id, this);
-      this._clearDisconnectTimeout();
-      session.token = this.token;
+    var session = new Session(user, id, this);
+    this.clients[id] = socket;
+    if (this.idle) {
+      this.active_user = user.username;
+      this.token = Math.floor((Math.random() * 1000000) + 1);
+      this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.timeout);
+      this.sessionStartTime = new Date();
+      this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.timeout);
+      this.running = true;
+      session.start();
+      logger.info(`${new Date()} - PRÁCTICA INICIADA: Usuario ${this.active_user}`);
       return session;
+    } else {
+      let isActive = (this.active_user == user.username);
+      let isSupervisor = db.users.isSupervisor(user);
+      if (isActive || isSupervisor || !this.active_user) {
+        logger.debug(`User ${user.username} connected to session ${id}.`);
+        this._clearDisconnectTimeout();
+        session.token = this.token;
+        return session;
+      } else {
+        logger.debug(`User ${user.username} not allowed to connect to session ${id}.`);
+        socket.disconnect();
+        delete this.clients[id];
+        return ;
+      }
     }
   }
 
-  start(credentials) {
-    try {
-      var username = credentials['username'];
-      logger.debug(`Starting session for user: ${username}`);
-      if(this.active_user == null) {
-        this.active_user = username;
-        this.token = Math.floor((Math.random() * 1000000) + 1);
-        this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.timeout);
-        this.sessionStartTime = new Date();
-        this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.timeout);
-        this.hardware.start(username);
-        this.hwlogger.start(this.active_user);
-        this.running = true;
-        logger.info(`${new Date()} - PRÁCTICA INICIADA: Usuario ${this.active_user}`);
-      }
-    } catch(e) {
-      logger.error(`Session: ${e}`);
-    }
-  }
+  // start(credentials) {
+  //   try {
+  //     var username = credentials['username'];
+  //     logger.debug(`Starting session for user: ${username}`);
+  //     var user = this.validate(credentials);
+  //     if(this.active_user == null) {
+  //       this.active_user = username;
+  //       this.token = Math.floor((Math.random() * 1000000) + 1);
+  //       this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.timeout);
+  //       this.sessionStartTime = new Date();
+  //       this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.timeout);
+  //       this.running = true;
+  //       var session = new Session(user, id, this);
+  //       session.start();
+  //       // this.hardware.start(username);
+  //       // this.hwlogger.start(this.active_user);
+  //       logger.info(`${new Date()} - PRÁCTICA INICIADA: Usuario ${this.active_user}`);
+  //     }
+  //   } catch(e) {
+  //     logger.error(`Session: ${e}`);
+  //   }
+  // }
 
   validate(credentials) {
     try {
@@ -293,7 +219,11 @@ class SessionManager {
 
   disconnect(id) {
     logger.debug(`Disconnecting client ${id}`);
-    this.clients[id].disconnect();
+    try {
+      this.clients[id].disconnect();
+    } catch(e) {
+      logger.debug('Can\'t disconnect client properly.')
+    }
     delete this.clients[id];
     logger.debug("clients:" + Object.keys(this.clients));
     if(!this.hasClients() && !this.disconnectTimer) {
@@ -316,13 +246,12 @@ class SessionManager {
 
   _sessionTimeout() {
     this.end();
-    logger.info(`PRÁCTICA FINALIZADA POR TIMEOUT - ${new Date()}`);
+    logger.info(`Session expired - ${new Date()}`);
   };
 
   _disconnectTimeout() {
     this.end();
-//    this.hardware.removeListener(this.hwlogger);
-    logger.info(`PRÁCTICA FINALIZADA POR DESCONEXIÓN- ${new Date()}`);
+    logger.info(`Disconnection Timeout - ${new Date()}`);
   }
 
   end() {
@@ -330,10 +259,8 @@ class SessionManager {
     this._clearDisconnectTimeout();
     this.running = false;
     this._disconnectAll();
-    setTimeout(this.hardware.end.bind(this.hardware), 1000);
-    this.hardware.end();
-//    this.hwlogger.end();
-//    this.hardware.removeListener(this.hwlogger);
+    this.hardware.stop();
+    this.hwlogger.end();
     this.active_user = null;
   }
 
