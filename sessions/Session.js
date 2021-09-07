@@ -29,7 +29,7 @@ class Session {
     this.eventDispatcher.addRoutingRule('enqueue_if_extern_process_otherwise', 
       event => {
         let isExtern = (event.variable == 'reference' && event.value[0] == 4);
-        return (isExtern) ? 'enqueue' : 'process'; // EventDispatcher.ENQUEUE : EventDispatcher.PROCESS;
+        return isExtern ? 'enqueue' : 'process'; // EventDispatcher.ENQUEUE : EventDispatcher.PROCESS;
       }
     );
 
@@ -63,7 +63,6 @@ class Session {
   }
   
   start() {
-    console.log('starting')
     var user = this.user.username;
     this.logger.start(user);
     this.hardware.start(user);
@@ -159,14 +158,16 @@ class SessionManager {
       this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.timeout);
       this.running = true;
       session.start();
-      logger.info(`${new Date()} - PRÁCTICA INICIADA: Usuario ${this.active_user}`);
+      logger.info(`Session started: user ${this.active_user} - ${new Date()}`);
       return session;
     } else {
-      let isActive = (this.active_user == user.username);
+      let isActive = (this.active_user == user.username || !this.active_user);
       let isSupervisor = db.users.isSupervisor(user);
-      if (isActive || isSupervisor || !this.active_user) {
+      if (isActive || isSupervisor) {
         logger.debug(`User ${user.username} connected to session ${id}.`);
-        this._clearDisconnectTimeout();
+        if (isActive) {
+          this._clearDisconnectTimeout();
+        }
         session.token = this.token;
         return session;
       } else {

@@ -35,9 +35,9 @@ class EventGenerator extends events.EventEmitter {
    */ 
   onEvolution(data) {
     var variable = data['variable'], value = data['value'];
-     if (variable == 'evolution') {
+    if (variable == 'evolution') {
       this.buffer.push(data); 
-     } else {
+    } else {
       if(!this.state[variable] || this.state[variable] != value) {
         this.state[variable] = value;
         return data;
@@ -154,8 +154,7 @@ class EventProcessor {
     for (var r in this.rules) {
       const rule = this.rules[r];
       if(rule['condition'](event)) { 
-        let action = rule['action'].bind(this);
-        console.log(action)
+        let action = rule['action'].bind(this.session);
         action(event);
       }
     }

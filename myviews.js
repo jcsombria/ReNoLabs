@@ -129,6 +129,10 @@ module.exports = {
     
             set: function(req, res) {
                 
+            },
+
+            edit: function(req, res) {
+                res.render('admin/views', )
             }
         },
 

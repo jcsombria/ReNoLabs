@@ -55,7 +55,6 @@ class CAdapter {
     logger.info('Dobot Adapter: Starting default controller...');
     this.conn = spawn('sudo', [this._getDefaultFolder('Dobot') + LabConfig.controller]);
     this.socket = zmq.socket('req');
-
     this.socket.on('message', this.ondata.bind(this));
     var endpoint = 'tcp://127.0.0.1:5555';
     socket.connect(endpoint);

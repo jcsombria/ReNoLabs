@@ -1,3 +1,5 @@
+const logger = require('winston').loggers.get('log');
+
 // A generic class to synchronize the hardware state
 class State {
   constructor() {

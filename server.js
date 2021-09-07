@@ -1,3 +1,4 @@
+global.__basedirname = __dirname;
 // Logs Configuration
 const winston = require('winston');
 const { format, transports } = winston;
@@ -102,6 +103,7 @@ app.get('/admin/users/get', views.admin.users.get);
 app.get('/admin/users/set', views.admin.users.set);
 app.get('/admin/config/get', views.admin.config.get);
 app.get('/admin/config/set', views.admin.config.set);
+app.get('/admin/views', views.admin.views.edit);
 app.get('/admin/views/set', views.admin.views.set);
 app.get('/admin/views/get', views.admin.views.get);
 
@@ -112,71 +114,71 @@ app.get('/admin/views/get', views.admin.views.get);
 
 
 // This section adds RIP support (if enabled in AppConfig.js)
-if (Config.RIP !== undefined) {
-  const RIPBroker = require('./rip/RIPBroker');
-  const ripBroker = new RIPBroker(Config.RIP);
-  SessionManager.hardware.addListener(ripBroker);
-    var ripapp = app;
-  if(Config.RIP.port != Config.WebServer.port) {
-    ripapp = express();
-    var ripserver = ripapp.listen(Config.RIP.port, Config.RIP.ip, function () {
-      var host = ripserver.address().address;
-      var port = ripserver.address().port;
-      logger.info(`RIP Server started on http://${host}:${port}`);
-    });
-  } else {
-    logger.info(`RIP Server started on http://${Config.RIP.ip}:${Config.RIP.port}`);
-  }
+// if (Config.RIP !== undefined) {
+//   const RIPBroker = require('./rip/RIPBroker');
+//   const ripBroker = new RIPBroker(Config.RIP);
+//   SessionManager.hardware.addListener(ripBroker);
+//     var ripapp = app;
+//   if(Config.RIP.port != Config.WebServer.port) {
+//     ripapp = express();
+//     var ripserver = ripapp.listen(Config.RIP.port, Config.RIP.ip, function () {
+//       var host = ripserver.address().address;
+//       var port = ripserver.address().port;
+//       logger.info(`RIP Server started on http://${host}:${port}`);
+//     });
+//   } else {
+//     logger.info(`RIP Server started on http://${Config.RIP.ip}:${Config.RIP.port}`);
+//   }
 
-  ripapp.get('/RIP',
-    function(req, res) {
-      try {
-        var expId = req.query['expId'];
-        logger.debug(expId);
-        var info = ripBroker.info(expId);
-      } catch(e) {
-        expId = undefined;
-        var info = ripBroker.info();
-      }
-      logger.debug('info:' +info);
-      res.json(info);
-    }
-  );
+//   ripapp.get('/RIP',
+//     function(req, res) {
+//       try {
+//         var expId = req.query['expId'];
+//         logger.debug(expId);
+//         var info = ripBroker.info(expId);
+//       } catch(e) {
+//         expId = undefined;
+//         var info = ripBroker.info();
+//       }
+//       logger.debug('info:' +info);
+//       res.json(info);
+//     }
+//   );
 
-  ripapp.post('/RIP/POST',
-    function(req, res) {
-      res.header('Access-Control-Allow-Origin', req.headers.origin);
-      ripBroker.process(req.body);
-      res.json({'result':'ok'});
-    }
-  );
+//   ripapp.post('/RIP/POST',
+//     function(req, res) {
+//       res.header('Access-Control-Allow-Origin', req.headers.origin);
+//       ripBroker.process(req.body);
+//       res.json({'result':'ok'});
+//     }
+//   );
 
-  ripapp.get('/RIP/SSE',
-    function (req, res) {
-      // TO DO: The RIP username should not be hardcoded
-      var username = 'rip';
-      var credentials = { 'username': username };
-      var id = 'sse_' + req.socket.id;
-      if(SessionManager.idle) {
-        SessionManager.start(credentials);
-      } 
-      var session = SessionManager.connect(id, ripBroker, credentials);
-      var expId = req.query['expId'];
-      if(session != undefined){
-        logger.info('new connection to SSE, user:' + username);
-        res.header('Access-Control-Allow-Origin', req.headers.origin);
-        if(ripBroker.connect(expId)) {
-          logger.debug(`RIP Broker: connected to ${expId}`);
-        } else {
-          logger.debug(`RIP Connection: User ${username} disconnected ${expId}`);
-          SessionManager.disconnect(id);
-        }
-        ripBroker.handle(req, res);
-        logger.debug(`RIP Connection: User ${username} connected to ${expId}`);
-      } 
-    }
-  );
-}
+//   ripapp.get('/RIP/SSE',
+//     function (req, res) {
+//       // TO DO: The RIP username should not be hardcoded
+//       var username = 'rip';
+//       var credentials = { 'username': username };
+//       var id = 'sse_' + req.socket.id;
+//       if(SessionManager.idle) {
+//         SessionManager.start(credentials);
+//       } 
+//       var session = SessionManager.connect(id, ripBroker, credentials);
+//       var expId = req.query['expId'];
+//       if(session != undefined){
+//         logger.info('new connection to SSE, user:' + username);
+//         res.header('Access-Control-Allow-Origin', req.headers.origin);
+//         if(ripBroker.connect(expId)) {
+//           logger.debug(`RIP Broker: connected to ${expId}`);
+//         } else {
+//           logger.debug(`RIP Connection: User ${username} disconnected ${expId}`);
+//           SessionManager.disconnect(id);
+//         }
+//         ripBroker.handle(req, res);
+//         logger.debug(`RIP Connection: User ${username} connected to ${expId}`);
+//       } 
+//     }
+//   );
+// }
 
 // This section enables socket.io communications
 const { EventGenerator } = require('./behavior/events');

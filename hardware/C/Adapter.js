@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 var State = require('../State');
 var spawn = require('child_process').spawn;
+const Adapter = require('../Adapter');
 
 const CONTROLLER_PATH = "controllers/";
 const CONTROLLER_USER_PATH = "users/";
@@ -15,7 +16,7 @@ const CONTROLLER_USER_PATH = "users/";
  * Provides an interface to control the hardware:
  * - start, play, pause, reset, end
  */
-class CAdapter {
+class CAdapter extends Adapter {
    constructor(options) {
     this.listeners = [];
     this.connected = false;
@@ -25,21 +26,21 @@ class CAdapter {
     this.options = (options !== undefined) ? options : HWConfig;
   }
 
-  // TO DO: extract the interface listener?
-  // {
-  addListener(o) {
-    if(!(o in this.listeners)) {
-      this.listeners.push(o);
-    }
-  }
-
-  removeListener(o) {
-    var i = this.listeners.indexOf(o);
-    if(i != -1) {
-      this.listeners.splice(i, 1);
-    }
-  }
+  // // TO DO: extract the interface listener?
+  // // {
+  // addListener(o) {
+  //   if(!(o in this.listeners)) {
+  //     this.listeners.push(o);
+  //   }
   // }
+
+  // removeListener(o) {
+  //   var i = this.listeners.indexOf(o);
+  //   if(i != -1) {
+  //     this.listeners.splice(i, 1);
+  //   }
+  // }
+  // // }
 
   /**
    * Start the controller for user: 'username'.
@@ -123,14 +124,6 @@ class CAdapter {
     }
   }
 
-// I commented this code because it was never reached
-// I have to check why the event 'spawn' is not being notified
-//  onstart() {
-//    logger.debug('Controller spawned.');
-//    this.connected = true;
-//    this.state.addListener(this.conn);
-//  }
-
   /*
    * Format the data received from the C controller and forward to the clients
    * @param {object} ev The event with the data received from the controller.
@@ -198,31 +191,31 @@ class CAdapter {
     }
   }
 
-  /* Send 'play' command to C controller. */
-  play() {
-    logger.info('C Adapter: Sending play to C controller.');
-    this.write('config', 2);
-  }
+//   /* Send 'play' command to C controller. */
+//   play() {
+//     logger.info('C Adapter: Sending play to C controller.');
+//     this.write('config', 2);
+//   }
 
-  /* Send 'pause' command to C controller. */
-  pause() {
-    logger.info('C Adapter: Sending pause to C controller.');
-    this.write('config', 3);
-  }
+//   /* Send 'pause' command to C controller. */
+//   pause() {
+//     logger.info('C Adapter: Sending pause to C controller.');
+//     this.write('config', 3);
+//   }
 
-  /* Send 'reset' command to C controller. */
-  reset() {
-    logger.info('C Adapter: Sending reset to C controller.');
-    this.write('config', 4);
-  }
+//   /* Send 'reset' command to C controller. */
+//   reset() {
+//     logger.info('C Adapter: Sending reset to C controller.');
+//     this.write('config', 4);
+//   }
 
-  /* Send 'end' command to C controller. */
-  stop() {
-    logger.info('C Adapter: Sending stop to C controller.');
-    this.write('config', 0);
-    this.connected = false;
-//    this.state.removeListener(this.conn);
-  }
+//   /* Send 'end' command to C controller. */
+//   stop() {
+//     logger.info('C Adapter: Sending stop to C controller.');
+//     this.write('config', 0);
+//     this.connected = false;
+// //    this.state.removeListener(this.conn);
+//   }
 
   /* Compile the controller in userpath.
    * @patam {string}   userpath the folder that contains the files that will be compiled
