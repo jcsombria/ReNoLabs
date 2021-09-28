@@ -13,37 +13,59 @@ const CONTROLLER_PATH = "controllers/";
 const CONTROLLER_USER_PATH = "users/";
 const CONFIG_PATH = "./config/";
 const CONFIG_BACKUP_PATH = "config/backup/";
-const VIEWS_PATH = "./views/";
+const VIEWS_PATH = "views/";
+const PROFILES_PATH = "./profiles/";
 
 const AdmZip = require('adm-zip');
 
-
 class Updater {
-  upload_view(data) {
-    logger.debug(data.length);
-    var fileName = LabConfig.GUI_JS;
-    var code_stream = fs.createWriteStream(VIEWS_PATH + fileName + '.tmp');
-    code_stream.write(data);
-    code_stream.end();
 
-    
-    var source = VIEWS_PATH + fileName + '.tmp';
-    var target = VIEWS_PATH + fileName + '.folder.tmp';
-    const file = new AdmZip(source);
-    file.extractAllTo(target);
+  // @deprecated
+  upload_view(data) {
+    setView(data);
+  }
+  
+  setView(data) {
+    var fileName = 'view.zip';
+    var source = PROFILES_PATH + VIEWS_PATH + fileName;
+    var target = PROFILES_PATH + VIEWS_PATH + fileName + '.folder.tmp';
+    var code_stream = fs.createWriteStream(source);
+    code_stream.write(data, null, ()=>{
+      const file = new AdmZip(source);
+      file.extractAllTo(target);
+    });
+    code_stream.end();
   }
 
-  upload_code(data, callback) {
-    let username = data.username, language = data.language;
-    let path = '';
-    if (data.version && data.version === 'private') {
-      path = this._get_user_folder(username, language);
-    } else {
-      path = this._get_default_folder(username, language);
+  getView() {
+    try {
+      var filename = VIEWS_PATH + LabConfig.GUI;
+      var view = fs.readFileSync(filename);
+      return view;
+    } catch (e) {
+      logger.debug('Updater: views folder not found!');
     }
+  }
+
+  // @deprecated
+  upload_code(data, callback) {
+    setController(data, callback);
+  }
+
+  setController(data, callback) {
+    let username = data.username, language = data.language;
+    let path = this._get_controller_path(data);
     this._prepare_dev_folder(username, language);
     this._copy_files(data.files, path);
     SessionManager.hardware.compile(path, callback);
+  }
+
+  _get_controller_path(data) {
+    if (data.version && data.version === 'private') {
+      return this._get_user_folder(data.username, data.language);
+    } else {
+      return this._get_default_folder(data.language);
+    }
   }
 
   _get_user_folder(username, language) {
@@ -61,16 +83,22 @@ class Updater {
     } catch (e) {
       logger.debug('Updater: Folder not found!');
       let default_path = this._get_default_folder(language);
-      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
-      var fileNames = fs.readdirSync(default_path);
-      fs.mkdirSync(user_path, {recursive: true});
-      for (var i = 0; i < fileNames.length; i++) {
-        var name = fileNames[i];
-        var content = fs.readFileSync(default_path + name);
-        var stats = fs.statSync(default_path + name);
-        fs.writeFileSync(user_path + name, content, {mode: stats.mode});
+      try {
+        logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
+        var fileNames = fs.readdirSync(default_path);
+        fs.mkdirSync(user_path, {recursive: true});
+        for (var i = 0; i < fileNames.length; i++) {
+          var name = fileNames[i];
+          var content = fs.readFileSync(default_path + name);
+          var stats = fs.statSync(default_path + name);
+          fs.writeFileSync(user_path + name, content, {mode: stats.mode});
+        }
+      } catch(e1) {
+        logger.warn(`Updater: Missing default controller ${default_path}`);
+        return false;
       }
     }
+    return true;
   }
 
   /** Copy files to userpath */
@@ -88,51 +116,31 @@ class Updater {
     }
   }
 
-  /** Return the controller code files */
-  download_code(data) {
-    let path = '';
-    if (data.version && data.version === 'private') {
-      path = this._get_user_folder(data.username, data.language);
-    } else {
-      path = this._get_default_folder(data.username, data.language);
+  /* Send a command to write the value of a variable in the C controller.
+   * @param {object}   data a dictionary like object:
+      {
+        version: 'private' | 'default',
+        username: <any valid user>,
+        language: <any supported language> ('C' | 'Python' | ... ),
+      }
+   * @return the controller files if exist, otherwise undefined. 
+   */
+  getController(data) {
+    let path = this._get_controller_path(data);
+    let controllerExists = this._prepare_dev_folder(data.username, data.language);
+    if (controllerExists) {
+      return this._get_files(path);
     }
-    this._prepare_dev_folder(data.username, data.language);
-    return this._get_files(path, this._is_C_file);
-    // var fileNames = fs.readdirSync(path);
-    // var files = [];
-    // for (var i = 0; i < fileNames.length; i++) {
-    //   var name = fileNames[i];
-    //   if(this._is_selectable(name)) {
-    //     var fileInfo = {};
-    //     fileInfo.filename = name;
-    //     fileInfo.code = fs.readFileSync(path + name, {encoding: 'utf8'});
-    //     files.push(fileInfo);
-    //   }
-    // }
-    return files;
   }
 
-  _is_C_file(name) {
-    return name.endsWith('.c') || name == "Makefile";
-  }
-
-  /** Update the users database and archives the old version. */
-  updateUsers(users) {
-    var src = USERSDB_PATH + USERSDB_FILE;
-    //var dst = USERSDB_BACKUP_PATH + USERSDB_FILE + date;
-    this._archive(src, USERSDB_BACKUP_PATH);
-    // try {
-    //   fs.accessSync(USERSDB_BACKUP_PATH);
-    //   console.log('can read/write');
-    // } catch (err) {
-    //   fs.mkdirSync(USERSDB_BACKUP_PATH);
-    //   console.error('no access!');
-    // }
-    // fs.copyFileSync(src, dst);
-    fs.writeFileSync(src, "module.exports = " + users + ";");
+  // @deprecated
+  download_code(data) {
+    return this.getController(data);
   }
 
   _get_files(path, is_selectable) {
+    let defaultFilter = (()=>{ return true; });
+    is_selectable = is_selectable || defaultFilter;
     var fileNames = fs.readdirSync(path);
     var files = [];
     for (var i = 0; i < fileNames.length; i++) {
@@ -147,6 +155,17 @@ class Updater {
     return files;
   }
 
+  _is_C_file(name) {
+    return name.endsWith('.c') || name == "Makefile";
+  }
+
+  /** Update the users database and archives the old version. */
+  updateUsers(users) {
+    var src = USERSDB_PATH + USERSDB_FILE;
+    this._archive(src, USERSDB_BACKUP_PATH);
+    fs.writeFileSync(src, "module.exports = " + users + ";");
+  }
+
   _archive(filename, backup_path) {
     try {
       fs.accessSync(backup_path);
@@ -158,19 +177,6 @@ class Updater {
     var backup = backup_path + path.basename(filename) + date;
     logger.info(`Saving ${path.basename(filename)} as ${path.basename(backup)}.`);
     fs.copyFileSync(filename, backup);
-  }
-
-  setView() {
-  }
-
-  getView() {
-    try {
-      var filename = VIEWS_PATH + LabConfig.GUI;
-      var view = fs.readFileSync(filename);
-      return view;
-    } catch (e) {
-      logger.debug('Updater: views folder not found!');
-    }
   }
 
   download_description() {
@@ -188,6 +194,15 @@ class Updater {
     return LabConfig;
   }
 
+  /* Send a command to update the configuration.
+   * @param {object}   data a dictionary-like object:
+      {
+        files: [{
+          filename: <any valid filenam>,
+          code: <text content>,
+        }, {...}]
+      }
+   */
   setConfig(data) {
     var files = fs.readdirSync(CONFIG_PATH);
     for (var i = 0; i < files.length; i++) {

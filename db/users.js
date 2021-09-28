@@ -29,6 +29,7 @@ exports.getUser = function(username) {
   for (var i = 0, len = records.length; i < len; i++) {
     var record = records[i];
     if (record.username === username) {
+      record.isAdmin = exports.isAdministrator(record);
       return record;
     }
   }

@@ -17,11 +17,49 @@ const console_ = new transports.Console({
 winston.loggers.add('log', { transports: [errors, console_] });
 const logger = require('winston').loggers.get('log');
 logger.level = 'debug';
+// Application Modules
+const behavior = require('./behavior');
+const Config = require('./config/AppConfig');
+const db = require('./db');
+const SessionManager = require('./sessions').SessionManager;
+const { Updater } = require('./updater');
+const views = require ('./myviews');
 // Express modules.
 const express = require('express');
 const login = require('connect-ensure-login');
+const fileUpload = require('express-fileupload');
+const cookie_parser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const express_session = require('express-session')({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false
+});
+const flash = require('connect-flash');
 const passport = require('passport');
 const Strategy = require('passport-local').Strategy;
+const csrf = require('csurf');
+const csrfProtection = csrf({ cookie: true });
+/*
+* Inicialización de la aplicación express empleado para las rutas del servidor.
+*/
+var app = express();
+app.set('views', __dirname + '/templates');
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
+app.use(cookie_parser());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json({type: 'application/json'}));
+app.use(express_session);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+app.use(fileUpload());
+app.use(csrfProtection);
+app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 /*
 * Protocolo de autentificación (passport module).
 */
@@ -43,44 +81,7 @@ passport.deserializeUser(function(id, cb) {
     cb(null, user);
   });
 });
-/*
- * Inicialización de la aplicación express empleado para las rutas del servidor.
- */
-var app = express();
-/*
- * Selección del modo de renderizado, en este caso ejs (no confundir con el otro EJS)
- * Con esto podemos pasar información a los html (archivos .ejs), por ejemplo, el usuario.
- *
- */
-app.set('views', __dirname + '/templates');
-app.set('view engine', 'ejs');
-/*
- * Selección de la carpeta donde están los archivos estáticos (imagenes, css, script, etc)
- */
-app.use(express.static('public'));
-// Application Modules
-const behavior = require('./behavior');
-const Config = require('./config/AppConfig');
-const db = require('./db');
-const SessionManager = require('./sessions').SessionManager;
-const { Updater } = require('./updater');
-const views = require ('./myviews');
-/*
- * Carga de módulos que utiliza la aplicación express (app).
- */
-const cookie_parser = require('cookie-parser')();
-const body_parser = require('body-parser');
-const express_session = require('express-session')({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: false
-});
-app.use(cookie_parser);
-app.use(body_parser.urlencoded({ extended: true }));
-app.use(body_parser.json({ type: '*/*'}));
-app.use(express_session);
-app.use(passport.initialize());
-app.use(passport.session());
+
 // HTTP Server
 var server = app.listen(Config.WebServer.port, Config.WebServer.ip, function () {
   var host = server.address().address;
@@ -89,23 +90,30 @@ var server = app.listen(Config.WebServer.port, Config.WebServer.ip, function () 
 });
 // URLs
 app.get('/', views.index);
-app.post('/', passport.authenticate('local', { failureRedirect: '/' }), views.home);
-app.get('/select', login.ensureLoggedIn('/'), views.select);
+app.post('/', passport.authenticate('local', {
+  successRedirect: '/home',
+  failureRedirect: '/',
+  failureFlash: 'El usuario o la contraseña es incorrecto.'
+}));
+app.get('/home', login.ensureLoggedIn('/'), views.home);
 app.get('/help', login.ensureLoggedIn('/'), views.help);
 app.get('/data', login.ensureLoggedIn('/'), views.data);
 app.get('/download/*', login.ensureLoggedIn('/'), views.download);
 app.get('/real', login.ensureLoggedIn('/'), views.experience);
 app.get('/logout', views.logout);
-
-// app.get('/admin', login.ensureLoggedIn('/'), views.admin);
-app.get('/admin/experiences', views.admin.experiences);
-app.get('/admin/users/get', views.admin.users.get);
-app.get('/admin/users/set', views.admin.users.set);
-app.get('/admin/config/get', views.admin.config.get);
-app.get('/admin/config/set', views.admin.config.set);
-app.get('/admin/views', views.admin.views.edit);
-app.get('/admin/views/set', views.admin.views.set);
-app.get('/admin/views/get', views.admin.views.get);
+app.get('/admin', login.ensureLoggedIn('/'), views.admin.home);
+app.get('/admin/experiences', login.ensureLoggedIn('/'), views.admin.experiences);
+app.get('/admin/users/get', login.ensureLoggedIn('/'), views.admin.users.get);
+app.post('/admin/users/set', login.ensureLoggedIn('/'), views.admin.users.set);
+app.get('/admin/controller', login.ensureLoggedIn('/'), views.admin.controller.edit);
+app.get('/admin/controller/get', login.ensureLoggedIn('/'), views.admin.controller.get);
+app.post('/admin/controller/set', login.ensureLoggedIn('/'), views.admin.controller.set);
+app.get('/admin/config/edit', login.ensureLoggedIn('/'), views.admin.config.edit);
+app.get('/admin/config/get', login.ensureLoggedIn('/'), views.admin.config.get);
+app.post('/admin/config/set', login.ensureLoggedIn('/'), views.admin.config.set);
+app.get('/admin/views', login.ensureLoggedIn('/'), views.admin.views.edit);
+app.get('/admin/views/get', login.ensureLoggedIn('/'), views.admin.views.get);
+app.post('/admin/views/set', login.ensureLoggedIn('/'), views.admin.views.set);
 
 // app.get('/experience/Sistemas Lineales/*', login.ensureLoggedIn('/'), )
 // function (req, res) {
@@ -227,5 +235,5 @@ io.sockets.on('connection', function(socket) {
         logger.debug('Registering common services...');
         new behavior.Normal(session).register(socket);
       }
-    }
+  }
 });

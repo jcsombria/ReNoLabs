@@ -17,30 +17,10 @@ const CONTROLLER_USER_PATH = "users/";
  * - start, play, pause, reset, end
  */
 class CAdapter extends Adapter {
-   constructor(options) {
-    this.listeners = [];
-    this.connected = false;
-    this.conn = null;
-    this.toNotify = ['config', 'evolution', 'reference', 'controller'];
+  constructor(options) {
+    super(options);
     this.state = new CState();
-    this.options = (options !== undefined) ? options : HWConfig;
   }
-
-  // // TO DO: extract the interface listener?
-  // // {
-  // addListener(o) {
-  //   if(!(o in this.listeners)) {
-  //     this.listeners.push(o);
-  //   }
-  // }
-
-  // removeListener(o) {
-  //   var i = this.listeners.indexOf(o);
-  //   if(i != -1) {
-  //     this.listeners.splice(i, 1);
-  //   }
-  // }
-  // // }
 
   /**
    * Start the controller for user: 'username'.

@@ -1,12 +1,10 @@
 <html>
 	<head>
+		<%- include('ui/header'); %>
 		<title>Circuito Analogico - Ayuda</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-		<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
-		<link href='/stylesheets/template_routes.css' rel='stylesheet'>
 	</head>
 	<body>
-		<%- include('ui/menu', {user: user}); %>
+		<%- include('ui/menu', {user: user, active: 'help'}); %>
 		<div id="content">
 			<iframe style="border: 0; margin-top: 50;" width="100%" height="100%" src="./Sistemas Lineales/Unnamed_Intro_1.html"></iframe>
 		</div>

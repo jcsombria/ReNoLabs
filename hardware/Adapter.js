@@ -13,7 +13,7 @@ const CONTROLLER_PATH = "controllers/";
  * - start, play, pause, reset, end
  */
 class Adapter {
-   constructor(options) {
+  constructor(options) {
     this.listeners = [];
     this.connected = false;
     this.conn = null;

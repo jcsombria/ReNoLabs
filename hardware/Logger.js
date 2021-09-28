@@ -4,6 +4,12 @@ const winston = require('winston');
 const { format, transports } = winston;
 const datalogger = winston.loggers.get('data');
 const logger = require('winston').loggers.get('log');
+const { InfluxDB, Point, HttpError } = require('@influxdata/influxdb-client')
+const { url, token, org, bucket } = require('./env')
+const { hostname } = require('os')
+console.log(url)
+const writeApi = new InfluxDB({url, token}).getWriteApi(org, bucket, 'ns')
+writeApi.useDefaultTags({location: hostname()})
 
 class Logger extends EventEmitter {
 	constructor() {
@@ -16,10 +22,20 @@ class Logger extends EventEmitter {
 		try {
 			if (data) {
 				datalogger.info(data);
+				this._toInfluxDB(data);
 			}
 		} catch {
 			logger.debug('Logger: Can\'t write log.');
 		}
+	}
+
+	_toInfluxDB(data) {
+		const point = new Point('evolution')
+		.tag('user', this.username)
+		.floatField('value', 10 + Math.round(100 * Math.random()) / 10)
+		.timestamp(new Date());
+		writeApi.writePoint(point);
+		console.log(` ${point.toLineProtocol(writeApi)}`)
 	}
 
 	_ondata(data) {
@@ -38,6 +54,7 @@ class Logger extends EventEmitter {
 	}
 
 	start(username) {
+		this.username = username;
 		var logfilename = this._getFolder() + this._getFilename(username);
 		this.logfile = new transports.File({
 			format: format.printf((info) => { return `${info.message}`; }),

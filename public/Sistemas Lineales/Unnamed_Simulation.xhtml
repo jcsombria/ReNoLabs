@@ -1072,7 +1072,7 @@ class LabInstance {
 
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 /* _inputParameters: an object with different values for the model parameters */
-function Unnamed(_topFrame,_libraryPath,_codebasePath, _inputParameters) {
+function Control(_topFrame,_libraryPath,_codebasePath, _inputParameters) {
   var _model = EJSS_CORE.createAnimationLMS();
   var _view;
   var _isPlaying = false;
@@ -1088,7 +1088,7 @@ var _stringProperties = {};
     uploadText: function(action) { EJSS_TOOLS.File.uploadText(_model,action); } 
   };
 
-var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
+  var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
 
 
   function _play()  { _isPaused = false; _isPlaying = true;  _model.play();  }
@@ -1289,18 +1289,6 @@ var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
 
   _model.addToInitialization(function() {
     if (!__pagesEnabled["Init Page"]) return;
-    /*  // > Initialization.Init Page:1
-    accelerometer.start(); // Starts the accelerometer  // > Initialization.Init Page:2
-    var data = accelerometer.getDeviceData(); // Reads the current acceleration   // > Initialization.Init Page:3
-    _println("The acceleration on the X axis is " + data.x);  // > Initialization.Init Page:4
-    _println("The acceleration on the Y axis is " + data.y);  // > Initialization.Init Page:5
-    _println("The acceleration on the Z axis is " + data.z);  // > Initialization.Init Page:6
-    var viewData = accelerometer.getViewData(); // Reads the acceleration in the view reference system   // > Initialization.Init Page:7
-    _println("The view acceleration on the X axis is " + viewData.x);  // > Initialization.Init Page:8
-    _println("The view acceleration on the Y axis is " + viewData.y);  // > Initialization.Init Page:9
-    _println("The view acceleration on the Z axis is " + viewData.z);  // > Initialization.Init Page:10
-    accelerometer.stop(); // Stops the accelerometer  // > Initialization.Init Page:11
-    */    // > Initialization.Init Page:12
   });
 
   _model.addToEvolution(function() {
@@ -1319,16 +1307,12 @@ var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
         u = state[2];  // > Evolution.Evol Page:12
         output = state[3];  // > Evolution.Evol Page:13
       }  // > Evolution.Evol Page:14
-    //  time = lab.state_REAL.evolution[0];  // > Evolution.Evol Page:15
-    //  ref = lab.state_REAL.evolution[1];  // > Evolution.Evol Page:16
-    //  u = lab.state_REAL.evolution[2];  // > Evolution.Evol Page:17
-    //  output = lab.state_REAL.evolution[3];  // > Evolution.Evol Page:18
-    } catch(e) {  // > Evolution.Evol Page:19
-      time = 0;  // > Evolution.Evol Page:20
-      ref = 0;  // > Evolution.Evol Page:21
-      u = 0;  // > Evolution.Evol Page:22
-      output = 0;  // > Evolution.Evol Page:23
-    }  // > Evolution.Evol Page:24
+    } catch(e) {  // > Evolution.Evol Page:15
+      time = 0;  // > Evolution.Evol Page:16
+      ref = 0;  // > Evolution.Evol Page:17
+      u = 0;  // > Evolution.Evol Page:18
+      output = 0;  // > Evolution.Evol Page:19
+    }  // > Evolution.Evol Page:20
   });
 
   _model.addToFixedRelations(function() { _isPaused = _model.isPaused(); _isPlaying = _model.isPlaying(); });
@@ -1359,7 +1343,7 @@ var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
 
   function _selectView(_viewNumber) {
     _view = null;
-    _view = new Unnamed_View(_topFrame,_viewNumber,_libraryPath,_codebasePath);
+    _view = new Control_View(_topFrame,_viewNumber,_libraryPath,_codebasePath);
     var _view_super_reset = _view._reset;
     _view._reset = function() {
       _view_super_reset();
@@ -1381,14 +1365,14 @@ var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
           _view.ref.linkProperty("X",  function() { return -time; } ); // HtmlView Page linking property 'X' for element 'ref'
           _view.ref.linkProperty("InputX",  function() { return time; }, function(_v) { time = _v; } ); // HtmlView Page linking property 'InputX' for element 'ref'
           _view.ref.linkProperty("InputY",  function() { return ref; }, function(_v) { ref = _v; } ); // HtmlView Page linking property 'InputY' for element 'ref'
-          _view.output.linkProperty("Maximum",  function() { return MAX_POINTS; }, function(_v) { MAX_POINTS = _v; } ); // HtmlView Page linking property 'Maximum' for element 'output'
-          _view.output.linkProperty("X",  function() { return -time; } ); // HtmlView Page linking property 'X' for element 'output'
-          _view.output.linkProperty("InputX",  function() { return time; }, function(_v) { time = _v; } ); // HtmlView Page linking property 'InputX' for element 'output'
-          _view.output.linkProperty("InputY",  function() { return output; }, function(_v) { output = _v; } ); // HtmlView Page linking property 'InputY' for element 'output'
           _view.input.linkProperty("Maximum",  function() { return MAX_POINTS; }, function(_v) { MAX_POINTS = _v; } ); // HtmlView Page linking property 'Maximum' for element 'input'
           _view.input.linkProperty("X",  function() { return -time; } ); // HtmlView Page linking property 'X' for element 'input'
           _view.input.linkProperty("InputX",  function() { return time; }, function(_v) { time = _v; } ); // HtmlView Page linking property 'InputX' for element 'input'
           _view.input.linkProperty("InputY",  function() { return u; }, function(_v) { u = _v; } ); // HtmlView Page linking property 'InputY' for element 'input'
+          _view.output.linkProperty("Maximum",  function() { return MAX_POINTS; }, function(_v) { MAX_POINTS = _v; } ); // HtmlView Page linking property 'Maximum' for element 'output'
+          _view.output.linkProperty("X",  function() { return -time; } ); // HtmlView Page linking property 'X' for element 'output'
+          _view.output.linkProperty("InputX",  function() { return time; }, function(_v) { time = _v; } ); // HtmlView Page linking property 'InputX' for element 'output'
+          _view.output.linkProperty("InputY",  function() { return output; }, function(_v) { output = _v; } ); // HtmlView Page linking property 'InputY' for element 'output'
           _view.plottingPanel2.setAction("OnDoubleClick", function(_data,_info) {
   _view.trail2.clear();
 
@@ -1449,9 +1433,8 @@ var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
   _view.plottingPanel2.getController().setWorldYMax(0);
 
 }); // HtmlView Page setting action 'OnCheckOn' for element 'autoScaleLissajous'
+          _view.labFunctionParameterReference.linkProperty("Lab",  function() { return lab; }, function(_v) { lab = _v; } ); // HtmlView Page linking property 'Lab' for element 'labFunctionParameterReference'
           _view.labControl.linkProperty("Lab",  function() { return lab; }, function(_v) { lab = _v; } ); // HtmlView Page linking property 'Lab' for element 'labControl'
-          _view.labFunctionParameter.linkProperty("Lab",  function() { return lab; }, function(_v) { lab = _v; } ); // HtmlView Page linking property 'Lab' for element 'labFunctionParameter'
-          _view.labLogin.linkProperty("Labs",  function() { return lab; } ); // HtmlView Page linking property 'Labs' for element 'labLogin'
           break;
       } // end of switch
     }; // end of new reset
@@ -1467,25 +1450,24 @@ var lab = new LabInstance("127.0.0.1", "8080");lab.connect();
   _selectView(_model._autoSelectView(_getViews())); // this includes _model.reset()
   return _model;
 }
-
-function Unnamed_View (_topFrame,_viewNumber,_libraryPath,_codebasePath) {
+function Control_View (_topFrame,_viewNumber,_libraryPath,_codebasePath) {
   var _view;
   switch(_viewNumber) {
     case -10 : break; // make Lint happy
     default :
-    case 0: _view = Unnamed_View_0 (_topFrame); break;
+    case 0: _view = Control_View_0 (_topFrame); break;
   } // end of switch
 
   if (_codebasePath) _view._setResourcePath(_codebasePath);
 
   if (_libraryPath) _view._setLibraryPath(_libraryPath);
 
-  _view._addDescriptionPage('Intro Page','./Unnamed_Intro_1.html');
+  _view._addDescriptionPage('Intro Page','./Control_Intro_1.html');
 
   return _view;
 } // end of main function
 
-function Unnamed_View_0 (_topFrame) {
+function Control_View_0 (_topFrame) {
   var _view = EJSS_CORE.createView(_topFrame);
 
   _view._reset = function() {
@@ -1497,7 +1479,7 @@ function Unnamed_View_0 (_topFrame) {
       ;
 
     _view._addElement(EJSS_INTERFACE.imageAndTextButton,"topLabel", _view.labelPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'topLabel'
-      .setProperty("Text","<h1>Práctica de Sistemas Lineales</h1>") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'topLabel'
+      .setProperty("Text","<h1>Práctica de Control de Sistemas</h1>") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'topLabel'
       ;
 
     _view._addElement(EJSS_INTERFACE.panel,"mainPanel", _view.threePanelsPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'mainPanel'
@@ -1514,7 +1496,7 @@ function Unnamed_View_0 (_topFrame) {
       .setProperty("Width","100%") // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'plottingPanel1'
       .setProperty("CSS",{"float":"left"}) // EJsS HtmlView.HtmlView Page: setting property 'CSS' for element 'plottingPanel1'
       .setProperty("EnabledZooming",true) // EJsS HtmlView.HtmlView Page: setting property 'EnabledZooming' for element 'plottingPanel1'
-      .setProperty("Title","Entrada (azul), Salida (rojo)") // EJsS HtmlView.HtmlView Page: setting property 'Title' for element 'plottingPanel1'
+      .setProperty("Title","Consigna (azul), Control (verde), Salida (rojo)") // EJsS HtmlView.HtmlView Page: setting property 'Title' for element 'plottingPanel1'
       .setProperty("Enabled",true) // EJsS HtmlView.HtmlView Page: setting property 'Enabled' for element 'plottingPanel1'
       .setProperty("MaximumY",12) // EJsS HtmlView.HtmlView Page: setting property 'MaximumY' for element 'plottingPanel1'
       .setProperty("MaximumX",0) // EJsS HtmlView.HtmlView Page: setting property 'MaximumX' for element 'plottingPanel1'
@@ -1530,16 +1512,16 @@ function Unnamed_View_0 (_topFrame) {
       .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 'ref'
       ;
 
+    _view._addElement(EJSS_DRAWING2D.trail,"input", _view.plottingPanel1) // EJsS HtmlView.HtmlView Page: declaration of element 'input'
+      .setProperty("LineColor","Green") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 'input'
+      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 'input'
+      .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 'input'
+      ;
+
     _view._addElement(EJSS_DRAWING2D.trail,"output", _view.plottingPanel1) // EJsS HtmlView.HtmlView Page: declaration of element 'output'
       .setProperty("LineColor","Red") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 'output'
       .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 'output'
       .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 'output'
-      ;
-
-    _view._addElement(EJSS_DRAWING2D.trail,"input", _view.plottingPanel1) // EJsS HtmlView.HtmlView Page: declaration of element 'input'
-      .setProperty("LineColor","Blue") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 'input'
-      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 'input'
-      .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 'input'
       ;
 
     _view._addElement(EJSS_DRAWING2D.plottingPanel,"plottingPanel2", _view.subPanel1) // EJsS HtmlView.HtmlView Page: declaration of element 'plottingPanel2'
@@ -1560,18 +1542,6 @@ function Unnamed_View_0 (_topFrame) {
       .setProperty("LineColor","Blue") // EJsS HtmlView.HtmlView Page: setting property 'LineColor' for element 'trail2'
       .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 'trail2'
       .setProperty("LineWidth",2) // EJsS HtmlView.HtmlView Page: setting property 'LineWidth' for element 'trail2'
-      ;
-
-    _view._addElement(EJSS_DRAWING2D.plottingPanel,"inputPlottingPanel", _view.subPanel1) // EJsS HtmlView.HtmlView Page: declaration of element 'inputPlottingPanel'
-      .setProperty("TitleY","tensión (V)") // EJsS HtmlView.HtmlView Page: setting property 'TitleY' for element 'inputPlottingPanel'
-      .setProperty("AutoScaleY",true) // EJsS HtmlView.HtmlView Page: setting property 'AutoScaleY' for element 'inputPlottingPanel'
-      .setProperty("TitleX","muestra (n)") // EJsS HtmlView.HtmlView Page: setting property 'TitleX' for element 'inputPlottingPanel'
-      .setProperty("AutoScaleX",true) // EJsS HtmlView.HtmlView Page: setting property 'AutoScaleX' for element 'inputPlottingPanel'
-      .setProperty("Title","Entrada") // EJsS HtmlView.HtmlView Page: setting property 'Title' for element 'inputPlottingPanel'
-      ;
-
-    _view._addElement(EJSS_DRAWING2D.trace,"idInput", _view.inputPlottingPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'idInput'
-      .setProperty("NoRepeat",true) // EJsS HtmlView.HtmlView Page: setting property 'NoRepeat' for element 'idInput'
       ;
 
     _view._addElement(EJSS_INTERFACE.panel,"subPanel2", _view.mainPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'subPanel2'
@@ -1632,22 +1602,37 @@ function Unnamed_View_0 (_topFrame) {
       ;
 
     _view._addElement(EJSS_INTERFACE.panel,"controlPanel", _view.threePanelsPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'controlPanel'
-      .setProperty("CSS",{"padding-top":"30px" }) // EJsS HtmlView.HtmlView Page: setting property 'CSS' for element 'controlPanel'
+      .setProperty("Width",800) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'controlPanel'
+      .setProperty("CSS",{"padding-top":"30px", "display":"flex" }) // EJsS HtmlView.HtmlView Page: setting property 'CSS' for element 'controlPanel'
       ;
 
-    _view._addElement(EJSS_INTERFACE.RENOLABS.labControl,"labControl", _view.controlPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'labControl'
+    _view._addElement(EJSS_INTERFACE.panel,"panel6", _view.controlPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'panel6'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"topLabel2", _view.panel6) // EJsS HtmlView.HtmlView Page: declaration of element 'topLabel2'
+      .setProperty("Text","<h2>Consigna</h2>") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'topLabel2'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.RENOLABS.labFunctionParameter,"labFunctionParameterReference", _view.panel6) // EJsS HtmlView.HtmlView Page: declaration of element 'labFunctionParameterReference'
+      .setProperty("RowHeight","20px") // EJsS HtmlView.HtmlView Page: setting property 'RowHeight' for element 'labFunctionParameterReference'
+      .setProperty("ColumnWidth","80px") // EJsS HtmlView.HtmlView Page: setting property 'ColumnWidth' for element 'labFunctionParameterReference'
+      .setProperty("Config","reference") // EJsS HtmlView.HtmlView Page: setting property 'Config' for element 'labFunctionParameterReference'
+      .setProperty("Width",380) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'labFunctionParameterReference'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"panel7", _view.controlPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'panel7'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.imageAndTextButton,"topLabel22", _view.panel7) // EJsS HtmlView.HtmlView Page: declaration of element 'topLabel22'
+      .setProperty("Text","<h2>Control</h2>") // EJsS HtmlView.HtmlView Page: setting property 'Text' for element 'topLabel22'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.panel,"panel5", _view.threePanelsPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'panel5'
+      ;
+
+    _view._addElement(EJSS_INTERFACE.RENOLABS.labControl,"labControl", _view.panel5) // EJsS HtmlView.HtmlView Page: declaration of element 'labControl'
       .setProperty("ButtonHeight","30px") // EJsS HtmlView.HtmlView Page: setting property 'ButtonHeight' for element 'labControl'
       .setProperty("ButtonWidth","65px") // EJsS HtmlView.HtmlView Page: setting property 'ButtonWidth' for element 'labControl'
-      ;
-
-    _view._addElement(EJSS_INTERFACE.RENOLABS.labFunctionParameter,"labFunctionParameter", _view.controlPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'labFunctionParameter'
-      .setProperty("RowHeight","20px") // EJsS HtmlView.HtmlView Page: setting property 'RowHeight' for element 'labFunctionParameter'
-      .setProperty("ColumnWidth","80px") // EJsS HtmlView.HtmlView Page: setting property 'ColumnWidth' for element 'labFunctionParameter'
-      .setProperty("Config","reference") // EJsS HtmlView.HtmlView Page: setting property 'Config' for element 'labFunctionParameter'
-      .setProperty("Width",380) // EJsS HtmlView.HtmlView Page: setting property 'Width' for element 'labFunctionParameter'
-      ;
-
-    _view._addElement(EJSS_INTERFACE.RENOLABS.labLogin,"labLogin", _view.controlPanel) // EJsS HtmlView.HtmlView Page: declaration of element 'labLogin'
       ;
 
   };
@@ -1685,7 +1670,7 @@ function Unnamed_View_0 (_topFrame) {
       var _scorm;
       window.addEventListener('load',
         function () { 
-          _model =  new Unnamed("_topFrame","_ejs_library/",null);
+          _model =  new Control("_topFrame","_ejs_library/",null);
           if (typeof _isApp !== "undefined" && _isApp) _model.setRunAlways(true);
           TextResizeDetector.TARGET_ELEMENT_ID = '_topFrame';
           TextResizeDetector.USER_INIT_FUNC = function () {

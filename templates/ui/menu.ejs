@@ -1,12 +1,30 @@
-<div class="menu">
-    <ul>
-        <li><a href="help">Descripción</a></li>
-        <li><a href="real">Experimento</a></li>
-        <li><a href="data">Datos</a></li>
-        <li style="float:right">
-            <a href="logout" style="float:right">Cerrar Sesión</a>
-            <span> <%= user.displayName %> </span>
-            <img class="logout" src="/images/user_icon.png" alt="REAL" width="40" height="36"/>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary text-light fw-bold">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">VRLab</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link<% if(locals.active=='help') { %> active<% } %>" aria-current="page" href="help"><i class="mx-1 bi bi-info-circle"></i>Descripción</a>
         </li>
-    </ul>
-</div>
+        <li class="nav-item">
+          <a class="nav-link<% if(locals.active=='experiment') { %> active<% } %>" href="real"><i class="mx-1 bi bi-hammer"></i>Experimento</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link<% if(locals.active=='data') { %> active<% } %>" href="data"><i class="mx-1 bi bi-download"></i>Datos</a>
+        </li>
+        <% if (user.name = 'admin') { %>
+        <li class="nav-item">
+          <a class="nav-link<% if(locals.active=='admin') { %> active<% } %>" href="admin"><i class="mx-1 bi bi-gear"></i>Administración</a>
+        </li>
+        <% } %>
+      </ul>
+      <div class="d-flex">
+        <span class="mx-2"><%= user.displayName %><img class="mx-2 logout" src="/images/user_icon.png" alt="REAL" width="40" height="36"/></span>
+        <a class="fw-bold btn btn-danger btn-outline" href="logout">Cerrar Sesión</a>
+      </div>
+    </div>
+  </div>
+</nav>

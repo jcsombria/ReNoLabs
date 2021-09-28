@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Easy Learning Analytics Tool</title>
+   <script src="https://unpkg.com/vue@next"></script>
+<!-- 	<script src="//cdn.jsdelivr.net/npm/sortablejs@1.10.2/Sortable.min.js"></script>
+ -->
+	<script src="https://cdn.jsdelivr.net/npm/vue-draggable-next"></script>
+
+</head>
+<body>
+    <div id="app">
+
+    </div>
+    <script>
+
+
+        const App = {
+            delimiters: ["[[", "]]"],
+            data() {
+                    return {
+                        dragging: -1,
+                        params: [
+                        { name: 'Kp', description: 'Proportional Gain', min: 0, max: 1, value: 0 },
+                        { name: 'Ki', description: 'Integral Gain', min: 0, max: 1, value: 0 },
+                        { name: 'Kd', description: 'Derivative Gain', min: 0, max: 1, value: 0 },
+                        { name: 'N', description: 'Proportional Gain', min: 0, max: 1, value: 0 }
+                        ]
+                    } 
+                },
+                methods: {
+                    dragStart(which, ev) {
+                        console.log(which);
+                    ev.dataTransfer.setData('Text', this.id);
+                    ev.dataTransfer.dropEffect = 'move'
+                    this.dragging = which;
+                    },
+                    dragEnter(ev) {
+                    /* 
+                    if (ev.clientY > ev.target.height / 2) {
+                        ev.target.style.marginBottom = '10px'
+                    } else {
+                        ev.target.style.marginTop = '10px'
+                    }
+                    */
+                    },
+                    dragLeave(ev) {
+                    /* 
+                    ev.target.style.marginTop = '2px'
+                    ev.target.style.marginBottom = '2px'
+                    */
+                    },
+                    dragEnd(ev) {
+                        console.log("end");
+                    this.dragging = -1
+                    },
+                    dragFinish(to, ev) {
+                        console.log("drop");
+                    this.moveItem(this.dragging, to);
+                    ev.target.style.marginTop = '2px'
+                    ev.target.style.marginBottom = '2px'
+                },
+                    moveItem(from, to) {
+                    if (to === -1) {
+                        //this.removeItemAt(from);
+                    } else {
+                        console.log(this.params);
+                        this.params.splice(to, 0, this.params.splice(from, 1)[0]);
+                    }
+                    }
+                }
+        }
+        const app = Vue.createApp(App)
+        
+        app.component('parameter', {
+        delimiters: ["[[", "]]"],
+        props: ['model'],
+        template: '<li><label :for="[[ model.name ]]">[[ model.name ]]:</label><input :title="[[ model.description ]]" :name="[[ model.name ]]" :value="[[ model.value ]]"></input></li>'
+        })
+
+        app.mount('#app')    
+  </script>
+</body>
+</html>

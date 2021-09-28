@@ -118,9 +118,9 @@ class CAdapter {
   }
 
   /* Send a command to write the value of a variable in the C controller.
-   * @patam {string}   variable the name of the variable
-   * @patam {string}   value    the value of the variable
-   * @patam {function} callback Invoked after success
+   * @param {string}   variable the name of the variable
+   * @param {string}   value    the value of the variable
+   * @param {function} callback Invoked after success
    */
   write(variable, value, callback) {
     try {
@@ -159,8 +159,8 @@ class CAdapter {
   }
 
   /* Compile the controller in userpath.
-   * @patam {string}   userpath the folder that contains the files that will be compiled
-   * @patam {function} callback Invoked with the result of the compilation
+   * @param {string}   userpath the folder that contains the files that will be compiled
+   * @param {function} callback Invoked with the result of the compilation
    */
   compile(userpath, callback) {
     logger.debug(userpath);
