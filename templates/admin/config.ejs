@@ -1,18 +1,14 @@
 <style type="text/css" media="screen">
-  #pills-tab {
-    padding-top: 30pt;
-  }
   .editor {
-    width: 100%;
     height: 400pt;
   }
 </style>
-<div class="nav flex-row nav-pills" id="pills-tab" role="tablist" aria-orientation="horizontal">
+<div class="nav nav-tabs flex-row h-100" id="pills-tab" role="tablist" aria-orientation="horizontal">
   <% for (var i=0; i<files.length; i++) { %>
   <button 
-    class="nav-link<% if(i==0) {%> active<% } %>"
+    class="nav-link fs-6<% if(i==0) {%> active<% } %>"
     id="label-<%= prefix+'-'+i %>"
-    data-bs-toggle="pill"
+    data-bs-toggle="tab"
     data-bs-target="#tab-<%= prefix+'-'+i %>"
     type="button"
     role="tab"
@@ -28,39 +24,27 @@
     id="tab-<%= prefix+'-'+i %>"
     role="tabpanel"
     aria-labelledby="label-<%= prefix+'-'+i %>">
-    <div class="editor w-100" id="editor-<%= prefix %>-<%= i %>"><%= files[i].code %></div>
+    <div class="editor" id="editor-<%= prefix %>-<%= i %>"><%= files[i].code %></div>
     <div>
-        <button class="btn btn-success" id="save-file-<%= files[i].filename %>" type="button" onclick="save('editor-<%= prefix %>-<%= i %>', '<%= files[i].filename %>')">Guardar <%= files[i].filename %></button>
+        <button class="btn btn-success" id="save-file-<%= files[i].filename %>" type="button" onclick="save('editor-<%= prefix %>-<%= i %>', '<%= files[i].filename %>', 'admin/<%= prefix %>/set')">Guardar <%= files[i].filename %></button>
     </div>
   </div>
   <% } %>
 </div>
 
-<script>
-  for (var i=0; i<<%= files.length %>; i++) {
-    var editor = ace.edit('editor-<%= prefix %>-'+i);
-    editor.setTheme("ace/theme/monokai");
-    editor.session.setMode("ace/mode/javascript");
-  }
-
-  function save(target, filename) {
-    var editor = ace.edit(target);
-    var data = { files: [{
-        filename: filename,
-        code: editor.getValue(),
-      }]
-    };
-
-    var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    $.ajax({
-      'url': '/admin/config/set',
-      'method': 'post',
-      'data': data,
-      'processData': false,
-      'headers': { 'CSRF-Token': token},
-      'success': function(result) {
-        alert(result);
-      },
-    });
-  };
-</script>
+<div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="configModalLabel">Guardar Configuración</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          La configuración se ha actualizado correctamente.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

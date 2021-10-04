@@ -3,7 +3,9 @@ const SessionManager = require('./sessions').SessionManager;
 const logger = require('winston').loggers.get('log');
 const Config = require('./config/AppConfig');
 const { Updater } = require('./updater');
+const models = require('./models');
 const fs = require('fs');
+const { where } = require('sequelize');
 
 module.exports = {
   index: function (req, res) {
@@ -18,45 +20,49 @@ module.exports = {
     }
   },
   
-  home: function(req, res) {
-    var user = db.users.getUser(req.user.username);
+  home: async function(req, res) {
+    var user = await db.users.getUser(req.user.username);
     res.render('home', {user: user, state: false});
   },
   
-  help: function(req, res) {
-    var user = db.users.getUser(req.user.username);
+  help: async function(req, res) {
+    var user = await db.users.getUser(req.user.username);
     res.render('help', {
       user: user,
       view: './Sistemas Lineales/Unnamed_Intro.xhtml'
     });
   },
 
-  data: function(req, res) {
-    /*
-    * Filtra los ficheros de cada usuario
-    */
+  data: async function(req, res) {
+    // Read current user's files
     var files = {name: 0, date: [], size: []};
     var dir = './data/';
     files.name = fs.readdirSync(dir)
       .filter((e) => { if (e.split('_')[0] == req.user.username) { return e; } })
       .sort((a, b) => { return fs.statSync(dir + b).mtime.getTime() - fs.statSync(dir + a).mtime.getTime(); });
-    /*
-    * Devuelve la hora de creación y el tamaño de cada fichero
-    */
+    let f = [];
     for (i = 0; i < files.name.length; i++) {
-      files.date[i] = fs.statSync('./data/'+files.name[i]).atime;
-      files.size[i] = fs.statSync('./data/'+files.name[i]).size;
+      var name = './data/' + files.name[i];
+      var stats = fs.statSync(name);
+      files.date[i] = stats.atime;
+      files.size[i] = stats.size;
+      f.push({
+        'name': files.name[i],
+        'date': stats.atime,
+        'size': stats.size
+      });
     }
-    var user = db.users.getUser(req.user.username);
+    var user = await db.users.getUser(req.user.username);
     res.render('experiments', {
       user: user,
       names: files.name,
       dates: files.date,
-      sizes: files.size
+      sizes: files.size,
+      files: f,
     });
   },
   
-  experience: function(req, res) {
+  experience: async function(req, res) {
     var credentials = { 'username': req.user.username, 'password': req.user.password };
     // if(SessionManager.idle) {
     //     logger.debug(`User ${req.user.username} starts session.`);
@@ -69,14 +75,22 @@ module.exports = {
     } catch(e) {
       session = { token:token };
     }
-    var user = db.users.getUser(req.user.username);
+    var user = await db.users.getUser(req.user.username);
     if(token) {
-      res.render('remote_lab.ejs', {
-        user: user,
-        key: token,
-        ip: Config.WebServer.ip,
-        port: Config.WebServer.port,
-        view: Config.Lab.view,
+      models.View.findAll({
+        where: {
+          id: Config.Lab.view
+        }
+      }).then(v => {
+        res.render('remote_lab.ejs', {
+          user: user,
+          key: token,
+          ip: Config.WebServer.ip,
+          port: Config.WebServer.port,
+          view: v[0].dataValues.id + '/' + v[0].dataValues.path,
+        });
+      }).catch(error => {
+        res.send('View is not configured');      
       });
     } else {
       res.render('home', {
@@ -94,16 +108,16 @@ module.exports = {
     req.logOut();
     res.redirect('/');
   },
-  
+ 
   admin: {
-    home: function(req, res) {
-      var user = db.users.getUser(req.user.username);
+    home: async function(req, res) {
+      var user = await db.users.getUser(req.user.username);
       var data = {
         version: 'private' | 'default',
         username: user.username,
         language: 'C',
       };
-      let users = db.users.getUsers();
+      let users = await db.users.getUsers();
       res.render('admin/home', {
         user: user,
         config: Updater.getConfig(),
@@ -112,17 +126,34 @@ module.exports = {
       });
     },
 
+    getTable: async function(req, res) {
+      const table = req.params.table;
+      const MODELS = {
+        'activities': models.Activity,
+        'views': models.View,
+        'controllers': models.Controller,
+        'users': models.User,
+      }
+      try {
+        const resource = MODELS[table];
+        const result = (req.method == 'POST') ? req.body.data : await resource.findAll();
+        res.render('admin/table/' + table, {result: result});
+      } catch(error) {
+        res.status(400).send(error);
+      }
+    },
+
     users: {
-      get: function(req, res) {
+      get: async function(req, res) {
         logger.info('Sending list of users...A great power comes with a great responsibility!');
-        let users = db.users.getUsers();
+        let users = await db.users.getUsers();
         res.send(users);
       },
       set: function(req, res) {
-        let data = req.body;
-        Updater.updateUsers(JSON.stringify(data));
+        let data = JSON.stringify(req.body);
+        Updater.setUsers(data);
         logger.info('Updating list of users...A great power comes with a great responsibility!');
-        db.users.reload();
+        // db.users.reload();
         res.send(data);
       },
     },
@@ -152,7 +183,11 @@ module.exports = {
     views: {
       get: function(req, res) {
         logger.info('Sending view...A great power comes with a great responsibility!');
-        // res.send();
+        const v = models.View.findAll().then((result) => {
+          res.render('admin/table/views', {result: result});
+        }).catch((error) => {
+          res.status(400).send(error);
+        });
       },
       
       set: function(req, res) {
@@ -160,14 +195,29 @@ module.exports = {
         if (!req.files || Object.keys(req.files).length === 0) {
           return res.status(400).send('No files were uploaded.');
         }
-        let data = req.files.view.data;
+        data = {
+          name: req.body.name,
+          comment: req.body.comment,
+          view: req.files.view.data
+        }
         Updater.setView(data);
-        res.send('OK');
+        res.redirect('/admin');
       },
       
       edit: function(req, res) {
         var user = db.users.getUser(req.user.username);
         res.render('admin/views', {user: user})
+      }
+    },
+
+    activities: {
+      get: function(req, res) {
+        const a = models.Activity.findAll()
+          .then(result => {
+            res.render('admin/table/activities', {activities: result});
+          })
+          .catch(error => {
+          });
       }
     },
 

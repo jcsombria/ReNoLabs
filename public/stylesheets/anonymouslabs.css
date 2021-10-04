@@ -1,0 +1,218 @@
+html {
+  /* background: url(../images/imagenes/TarjetaRE.jpg); */
+  background-size: cover;
+  font-family: Montserrat;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Montserrat;
+  margin: 0;
+  padding: 0;
+}
+
+/* .logo {
+  width: 100%;
+  height: 40px;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: larger;
+  margin: 30px auto;
+  color:white;
+} */
+
+.login-block {
+  /* width: 400px; */
+  padding: 20px;
+  /* background: #fff; */
+  /* border-radius: 5px; */
+  /* border-top: 5px solid #ff656c; */
+  margin: 0 auto;
+}
+
+/*.login-block h1 {
+  text-align: center;
+  color: #000;
+  font-size: 18px;
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: 20px;
+}*/
+
+.login-block input {
+  width: 100%;
+  height: 42px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  font-size: 14px;
+  /* font-family: Montserrat; */
+  padding: 0 20px 0 50px;
+  /* outline: none; */
+}
+
+.login-block input#username {
+  background: #fff url(../images/username_icon.png) 20px top no-repeat;
+  background-size: 16px 80px;
+}
+
+.login-block input#password {
+  background: #fff url(../images/password_icon.png) 20px top no-repeat;
+  background-size: 16px 80px;
+}
+
+/* .login-block input:active, .login-block input:focus {
+  border: 1px solid #ff656c;
+} */
+
+/*.login-block button {
+  width: 100%;
+  height: 40px;
+  background: #ff656c;
+  box-sizing: border-box;
+  border-radius: 5px;
+  border: 1px solid #e15960;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-family: Montserrat;
+  outline: none;
+  cursor: pointer;
+}
+
+.login-block button:hover {
+  background: #ff7b81;
+} */
+
+.select {
+	width: 100%;
+	height: 260px;
+	text-align: center;
+	margin: 70px auto;
+	padding:20px;
+}
+
+.select-block {
+	display: inline-block;
+  width: 220px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 5px;
+  border-top: 5px solid #3C78DC;
+	border-bottom:5px solid #3C78DC;
+  margin: 0 auto;
+  margin-left:2%;
+  margin-right:2%;
+	float:left;
+}
+
+.select-block h1 {
+  text-align: center;
+  color: #000;
+  font-size: 18px;
+  text-transform: uppercase;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.logout-block {
+	width: 100%;
+	text-align: right;
+	margin: 30px auto;
+}
+
+.logout-block button {
+  width: 80px;
+  height: 40px;
+  margin-right: 22%;
+  vertical-align: middle;
+  background: #ff656c;
+  box-sizing: border-box;
+  border-radius: 5px;
+  border: 1px solid #e15960;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-family: Montserrat;
+  outline: none;
+  cursor: pointer;
+}
+
+.logout-block button:hover {
+  background: #ff7b81;
+}
+
+.logout-block span {
+	color: #fff;
+	font-size: 20px;
+	vertical-align: middle;
+}
+
+.logout-block img {
+	vertical-align: middle;
+}
+
+/* .menu ul {
+    list-style-type: none;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 64px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    color: #ffffff;
+    background-color: #000022;
+    vertical-align: middle;
+    line-height: 32px;
+    font-weight: bold;
+  } */
+
+/*   
+.menu li {
+    float: left;
+    border-right: 1p solid #bbb;
+    vertical-align: middle;
+}
+  
+.menu li a {
+  display: block;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  padding: 8px 16px;
+  background-color: #0000cc;
+}
+
+.menu li a:hover {
+  background-color: #aa0000;
+}
+
+.menu a:active {
+  background-color: #4CAF50;
+} */
+
+.logout {
+/*    margin-right: 22%;*/
+  background: #ff656c;
+  box-sizing: border-box;
+  border-radius: 5px;
+/*    border: 1px solid #e15960;*/
+  color: #fff;
+/*    font-weight: bold;
+  font-size: 14px;
+  font-family: Montserrat;*/
+  outline: none;
+  /*cursor: pointer;*/
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+#_topFrame {
+  margin: 0;
+  padding-top: 0;
+}

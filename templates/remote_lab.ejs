@@ -3,18 +3,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">
   <head>
     <%- include('ui/header'); %>
-    <!-- stylesheets EJsS -->
-    <!-- <script src="_ejs_library/scripts/common_script.js"></script>
-    <script src="_ejs_library/scripts/textresizedetector.js"></script>
-    <script src="_ejs_library/ejsS.v1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.0/math.js" integrity="sha512-bd8Oth+p1rTn+/iUFHsSozuYn7JpmH59vMWe6L+M3huScB/SMTXWkQoME3Ytk0sbGJ40VGp2mO2b8K8FNrewfQ==" crossorigin="anonymous"></script> -->
-    <!-- stylesheets ReNoLabs -->
-    <!-- <link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
-    <link href='/stylesheets/template_routes.css' rel='stylesheet'>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="_renolabs_library/ReNoLabsJSScript.js"></script>
-    <script src="_renolabs_library/LabControl.js"></script> -->
-    <!-- title-->
     <title>LAB</title>
     <script type="text/javascript">
       var LAB_KEY = <%- JSON.stringify(key) %>;
@@ -24,7 +12,7 @@
   <body>
     <%- include('ui/menu', {user: user, active: 'experiment'}); %>
     <div class="h-100 container-fluid">
-      <iframe class="container-fluid" seamless="true" style="border: 0; height: 1000px;" src="<%= view %>"></iframe>
+      <iframe class="container-fluid" seamless="true" style="border: 0; height: 1000px;" src="views/<%= view %>"></iframe>
     </div>
   </body>
 </html>

@@ -4,7 +4,11 @@ const DateFormat = require('dateformat');
 const fs = require('fs');
 const path = require('path');
 const spawn = require('child_process').spawn;
+const AdmZip = require('adm-zip');
 const SessionManager = require('../sessions').SessionManager;
+const models = require('../models');
+const { User } = require('../models');
+const { username } = require('../hardware/env');
 
 const USERSDB_PATH = "db/";
 const USERSDB_BACKUP_PATH = "db/backup/";
@@ -15,26 +19,53 @@ const CONFIG_PATH = "./config/";
 const CONFIG_BACKUP_PATH = "config/backup/";
 const VIEWS_PATH = "views/";
 const PROFILES_PATH = "./profiles/";
+const PUBLIC_PATH = "./public/";
 
-const AdmZip = require('adm-zip');
 
 class Updater {
 
   // @deprecated
   upload_view(data) {
-    setView(data);
+    this.setView(data);
   }
   
   setView(data) {
-    var fileName = 'view.zip';
-    var source = PROFILES_PATH + VIEWS_PATH + fileName;
-    var target = PROFILES_PATH + VIEWS_PATH + fileName + '.folder.tmp';
+    let view = models.View.build({
+      name: data.name,
+      comment: data.comment
+    })
+    var extension = '.zip';
+    var source = PROFILES_PATH + VIEWS_PATH + view.id + extension;
+    var target = PUBLIC_PATH + VIEWS_PATH + view.id;
     var code_stream = fs.createWriteStream(source);
-    code_stream.write(data, null, ()=>{
-      const file = new AdmZip(source);
-      file.extractAllTo(target);
+    code_stream.write(data.view, null, () => {
+      const zip = new AdmZip(source);
+      zip.extractAllTo(target);
+      code_stream.end();
+      // Read metadata
+      var metadata = zip.getEntry('_metadata.txt');
+      var data = metadata.getData();
+      var lines = Buffer.from(data).toString();
+      try {
+          var main = lines.match(/main-simulation:\s(\S.*)\n/);
+          var description = lines.match(/html-description:\s(\S.*)\n/);
+          if (description) {
+            view.description = description[1];
+          }
+          if (main) {
+            view.path = main[1];
+          }
+      } catch(e) {
+          console.error('No se encuentra la descripcion')
+      }
+      view.save()
+        .then(() => {
+          logger.info('View imported.');
+        })
+        .catch(() => {
+          logger.warn('Cannot import view.');
+        });
     });
-    code_stream.end();
   }
 
   getView() {
@@ -49,11 +80,14 @@ class Updater {
 
   // @deprecated
   upload_code(data, callback) {
-    setController(data, callback);
+    this.setController(data, callback);
   }
 
   setController(data, callback) {
     let username = data.username, language = data.language;
+    // Controller.build({
+    //   name:
+    // });
     let path = this._get_controller_path(data);
     this._prepare_dev_folder(username, language);
     this._copy_files(data.files, path);
@@ -160,10 +194,15 @@ class Updater {
   }
 
   /** Update the users database and archives the old version. */
-  updateUsers(users) {
-    var src = USERSDB_PATH + USERSDB_FILE;
-    this._archive(src, USERSDB_BACKUP_PATH);
-    fs.writeFileSync(src, "module.exports = " + users + ";");
+  setUsers(users) {
+    var userList = JSON.parse(users);
+    userList.forEach(async u => {
+      try {
+        await User.create(u);
+      } catch(error) {
+        console.log(error.message);
+      }
+    });
   }
 
   _archive(filename, backup_path) {
@@ -209,6 +248,8 @@ class Updater {
       if(this._is_js_file(files[i])) {
         var filename = CONFIG_PATH + files[i];
         this._archive(filename, CONFIG_BACKUP_PATH);
+        // var path = require.resolve(filename);
+        // delete require.cache[path];
       }
     }
     this._copy_files(data.files, CONFIG_PATH);

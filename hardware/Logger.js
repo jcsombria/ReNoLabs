@@ -7,7 +7,6 @@ const logger = require('winston').loggers.get('log');
 const { InfluxDB, Point, HttpError } = require('@influxdata/influxdb-client')
 const { url, token, org, bucket } = require('./env')
 const { hostname } = require('os')
-console.log(url)
 const writeApi = new InfluxDB({url, token}).getWriteApi(org, bucket, 'ns')
 writeApi.useDefaultTags({location: hostname()})
 
@@ -35,7 +34,7 @@ class Logger extends EventEmitter {
 		.floatField('value', 10 + Math.round(100 * Math.random()) / 10)
 		.timestamp(new Date());
 		writeApi.writePoint(point);
-		console.log(` ${point.toLineProtocol(writeApi)}`)
+		// console.log(` ${point.toLineProtocol(writeApi)}`)
 	}
 
 	_ondata(data) {

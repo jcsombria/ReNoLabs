@@ -124,7 +124,7 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
   }
 
   set_users(data) {
-    Updater.updateUsers(data);
+    Updater.setUsers(data);
     logger.info('Updating list of users...A great power comes with a great responsibility!');
     db.users.reload();
     this.sender.emit(USERS_SET, db.users.getUsers());

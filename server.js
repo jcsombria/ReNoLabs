@@ -13,10 +13,19 @@ const errors = new transports.File({
 const console_ = new transports.Console({
   format: consoleformat,
 });
+
 // System Events Logger
 winston.loggers.add('log', { transports: [errors, console_] });
 const logger = require('winston').loggers.get('log');
 logger.level = 'debug';
+
+// Database
+const { Sequelize, where } = require('sequelize');
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: 'db/database.sqlite'
+});
+const models = require('./models');
 // Application Modules
 const behavior = require('./behavior');
 const Config = require('./config/AppConfig');
@@ -64,22 +73,28 @@ app.use((req, res, next) => {
 * Protocolo de autentificación (passport module).
 */
 passport.use(new Strategy(
-  function(username, password, cb) {
-    db.users.findByUsername(username, function(err, user) {
-      if (err) { return cb(err); }
-      if (!user) { return cb(null, false); }
-      if (user.password != password) { return cb(null, false); }
-      return cb(null, user);
-    });
-  }));
-  passport.serializeUser(function(user, cb) {
-  cb(null, user.id);
+  function(username, password, done) {
+    models.User.findOne({ where: {username: username} })
+      .catch(error => { return done(error); })
+      .then(user => {
+        if(!user) {
+          return done(null, false, { message: 'Incorrect username.'});
+        }
+        if(user.password != password) {
+          return done(null, false, { message: 'Incorrect password.'});
+        };
+        return done(null, user);
+      });
+    }
+  )
+);
+passport.serializeUser(function(user, done) {
+    done(null, user.username);
 });
-passport.deserializeUser(function(id, cb) {
-  db.users.findById(id, function (err, user) {
-    if (err) { return cb(err); }
-    cb(null, user);
-  });
+passport.deserializeUser(function(username, done) {
+  models.User.findOne({ where: {username: username} })
+  .catch(error => { return done(error); })
+  .then(user => { return done(null, user); });
 });
 
 // HTTP Server
@@ -99,20 +114,25 @@ app.get('/home', login.ensureLoggedIn('/'), views.home);
 app.get('/help', login.ensureLoggedIn('/'), views.help);
 app.get('/data', login.ensureLoggedIn('/'), views.data);
 app.get('/download/*', login.ensureLoggedIn('/'), views.download);
-app.get('/real', login.ensureLoggedIn('/'), views.experience);
+app.get('/remotelab', login.ensureLoggedIn('/'), views.experience);
 app.get('/logout', views.logout);
 app.get('/admin', login.ensureLoggedIn('/'), views.admin.home);
 app.get('/admin/experiences', login.ensureLoggedIn('/'), views.admin.experiences);
+
 app.get('/admin/users/get', login.ensureLoggedIn('/'), views.admin.users.get);
+app.get('/admin/controller/get', login.ensureLoggedIn('/'), views.admin.controller.get);
+app.get('/admin/config/get', login.ensureLoggedIn('/'), views.admin.config.get);
+app.get('/admin/views/get', login.ensureLoggedIn('/'), views.admin.views.get);
+app.get('/admin/activities/get', login.ensureLoggedIn('/'), views.admin.activities.get);
+app.get('/admin/table/get/:table', login.ensureLoggedIn('/'), views.admin.getTable);
+app.post('/admin/table/get/:table', login.ensureLoggedIn('/'), views.admin.getTable);
+
 app.post('/admin/users/set', login.ensureLoggedIn('/'), views.admin.users.set);
 app.get('/admin/controller', login.ensureLoggedIn('/'), views.admin.controller.edit);
-app.get('/admin/controller/get', login.ensureLoggedIn('/'), views.admin.controller.get);
 app.post('/admin/controller/set', login.ensureLoggedIn('/'), views.admin.controller.set);
 app.get('/admin/config/edit', login.ensureLoggedIn('/'), views.admin.config.edit);
-app.get('/admin/config/get', login.ensureLoggedIn('/'), views.admin.config.get);
 app.post('/admin/config/set', login.ensureLoggedIn('/'), views.admin.config.set);
 app.get('/admin/views', login.ensureLoggedIn('/'), views.admin.views.edit);
-app.get('/admin/views/get', login.ensureLoggedIn('/'), views.admin.views.get);
 app.post('/admin/views/set', login.ensureLoggedIn('/'), views.admin.views.set);
 
 // app.get('/experience/Sistemas Lineales/*', login.ensureLoggedIn('/'), )
@@ -190,6 +210,7 @@ app.post('/admin/views/set', login.ensureLoggedIn('/'), views.admin.views.set);
 
 // This section enables socket.io communications
 const { EventGenerator } = require('./behavior/events');
+const { UserMaintenance } = require('./behavior');
 var io = require('socket.io').listen(server);
 var eg = new EventGenerator(io);
 SessionManager.hardware.addListener(eg);

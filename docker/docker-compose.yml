@@ -1,0 +1,20 @@
+version: "2"
+services:
+  node:
+    image: "node:8"
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./volumes/node:/home/node/app
+    expose:
+      - "8080"
+    command: "npm start"
+
+  influxdb:
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./volumes/influxdb:/var/lib/influxdb
+    image: "influxdb:latest"
