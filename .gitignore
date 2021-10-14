@@ -68,3 +68,6 @@ log/
 db/records.js
 controllers/C/users/
 docker/volumes
+
+# User data
+var/
