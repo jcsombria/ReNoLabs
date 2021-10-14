@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('../ui/header', {csrfToken: ""}) %>
+  <script src="/vue-grid-layout.umd.js"></script>
+</head>
+<body>
+  <div id="app">
+    <grid-layout
+      :layout.sync="params"
+      :col-num="12"
+      :row-height="30"
+      :is-draggable="true"
+      :is-resizable="true"
+      :is-mirrored="false"
+      :vertical-compact="true"
+      :margin="[10, 10]"
+      :use-css-transforms="true"
+    >
+      <grid-item v-for="element in view.elements"
+                :static="false"
+                :x="element.x"
+                :y="element.y"
+                :w="element.w"
+                :h="element.h"
+                :i="element.i"
+                :key="element.i"
+      >
+        <select name="select" v-if="element.type == 'options'">
+          <option :value="option" v-for="(element, option) in element.data">
+            {{ option }}
+            <!-- {{ model.parameters[element] }} -->
+            <!-- <parameter v-bind:model=model.parameters[element] v-bind:key="param.data.name"></parameter> -->
+          </option>
+        </select>
+        <div v-if="element.type == 'options'" v-for="(value, key) in element.data"
+          class="d-flex flex-column"
+          :value="value"
+          :key="key"
+          >
+          <parameter v-for="v in value.elements"
+            v-bind:model=model.parameters[v]
+            v-bind:key="v"
+            v-show="value.seen"
+          >{{ value.seen }}
+          </parameter>
+        </div>
+      </grid-item>
+    </grid-layout>
+  </div>
+  
+
+  <script>
+    Vue.component('parameter', {
+      props: ['model'],
+      template: `
+      <div class="d-flex">
+        <slot></slot>
+        <label class="col-form-label m-1"
+          :for="model.name"
+        >
+          {{ model.name }}:
+        </label>
+        <input
+          class="form-control"
+          :title="model.description"
+          :name="model.name"
+          :value="model.value"
+        ></input>
+      </div>
+      `
+    });
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        jadi: false,
+        view: {
+          elements: [{
+            name: 'Grafo',
+            type: 'graph',
+            data: {
+              signal: { 'x': 'evolution.time', 'y': 'evolution.control' }
+            },
+            "x":0, "y":0, "w":1, "h":1, "i":"0",
+          }, {
+            name: 'Opciones',
+            type: 'options',
+            data: {
+              'Senoidal'   : { seen:true, elements: [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ] },
+              'Cuadrada'   : { seen:false, elements: [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ] },
+              'Triangular' : { seen:false, elements: [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ] },
+              'Impulse'    : { seen:false, elements: [ 'Amplitud', 'Periodo', 'Offset X' ] },
+              'Step'       : { seen:false, elements: [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ] },
+              'Extern'     : { seen:false, elements: [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ] },
+            },
+            "x":0, "y":1, "w":1, "h":6, "i":"1",
+          }]
+        },
+        model: {
+          parameters: { // name, description, type, min, max, precision
+            'Amplitud' : { name: 'Amplitud', description: "La amplitud.", type: "", min: 0, max: 0, precision: " " },
+            'Periodo'  : { name: 'Periodo', description: "El periodo.", type: "", min: 0, max: 0, precision: " " },
+            'Offset X' : { name: 'Offset X', description: "El desplazamiento en X.", type: "", min: 0, max: 0, precision: " " },
+            'Offset Y' : { name: 'Offset Y', description: "El desplazamiento en Y.", type: "", min: 0, max: 0, precision: " " },
+          },
+          signals: {
+            evolution : {
+              type: 'array',
+              cols: [ 'time', 'reference', 'control', 'output' ]
+            }
+          }
+        },
+
+        params: [
+          // { data: { name: 'Kp', description: 'Proportional Gain', min: 0, max: 1, value: 0 },
+          //   "x":0, "y":0, "w":1, "h":1, "i":"0" },
+          // { data: { name: 'Ki', description: 'Integral Gain', min: 0, max: 1, value: 0 },
+          //   "x":1, "y":0, "w":1, "h":1, "i":"1" },
+          // { data: { name: 'Kd', description: 'Derivative Gain', min: 0, max: 1, value: 0 },
+          //   "x":2, "y":0, "w":1, "h":1, "i":"2" },
+          // { data: { name: 'N', description: 'Proportional Gain', min: 0, max: 1, value: 0 },
+          //   "x":3, "y":0, "w":1, "h":1, "i":"3" }
+        ],
+      },
+	  });
+
+    let model = {
+      parameters: { // name, description, type, min, max, precision
+        'Amplitud' : { description: "Amplitud", type: "", min: 0, max: 0, precision: "0" },
+        'Periodo'  : { description: "Periodo", type: "", min: 0, max: 0, precision: "0" },
+        'Offset X' : { description: "Offset X", type: "", min: 0, max: 0, precision: "0" },
+        'Offset Y' : { description: "Offset Y", type: "", min: 0, max: 0, precision: "0" },
+      },
+      signals: {
+        'evolution' : {
+          type: 'array',
+          cols: [ 'time', 'reference', 'control', 'output' ]
+        }
+      }
+    };
+
+    // let view = {
+    //   elements: [{
+    //       type: 'graph',
+    //       data: { 'x': 'evolution.time', 'y': 'evolution.control' },
+    //     }, {
+    //       type: 'options',
+    //       data: {
+    //         'Senoidal'   : [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ],
+    //         'Cuadrada'   : [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ],
+    //         'Triangular' : [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ],
+    //         'Impulse'    : [ 'Amplitud', 'Periodo', 'Offset X' ],
+    //         'Step'       : [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ],
+    //         'Extern'     : [ 'Amplitud', 'Periodo', 'Offset X', 'Offset Y' ],
+    //       },
+    //     }
+    //   ]
+    // },
+
+      // function model2view(model, view) {
+      //   let i = 0;
+      //   let n = view.elements.length;
+      //   view.elements.forEach(e => {
+      //     switch(e.type) {
+      //       case 'graph':
+      //         break;
+      //       case 'options':
+      //         break;
+      //     }
+      //     e.x = i; e.y = 0; e.w = 12; e.h = 1; e.i = i;
+      //     i += 1;
+      //   });
+      // };
+    </script>
+  </body>
+</html>

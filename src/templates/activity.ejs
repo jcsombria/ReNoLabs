@@ -1,0 +1,52 @@
+<html>
+  <head>
+    <%- include('ui/header'); %>
+    <title>Circuito Analogico - Actividad</title>
+  </head>
+  <body class="bg-light">
+    <%- include('ui/menu', {active: ''}); %>
+    <div class="d-flex align-items-start">
+      <div class="nav flex-column nav-pills bg-dark min-vh-100 align-items-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+        <button class="nav-link container-fluid d-flex active" id="v-pills-description-tab" data-bs-toggle="pill" data-bs-target="#v-pills-description" type="button" role="tab" aria-controls="v-pills-description" aria-selected="true" onclick="load('help', 'description');">
+          <i class="fs-5 bi bi-gear me-2"></i><span class="fs-5 d-none d-sm-inline" title="Configuración"> Descripción</span>
+        </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-remotelab-tab" data-bs-toggle="pill" data-bs-target="#v-pills-remotelab" type="button" role="tab" aria-controls="v-pills-remotelab" aria-selected="false" onclick="load('remotelab', 'remotelab');">
+          <i class="fs-5 bi bi-tv me-2"></i><span class="fs-5 d-none d-sm-inline" title="Vista"> Experimento</span>
+        </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-data-tab" data-bs-toggle="pill" data-bs-target="#v-pills-data" type="button" role="tab" aria-controls="v-pills-remotelab" aria-selected="false" onclick="load('data', 'data');">
+          <i class="fs-5 bi bi-tools me-2"></i><span class="fs-5 d-none d-sm-inline" title="Actividades"> Datos</span>
+        </button>
+      </div>
+      <div class="m-1 px-0 tab-content d-flex justify-content-center container-fluid" id="v-pills-tabContent">
+        <div class="tab-pane fade w-100 h-100 show active" id="v-pills-description" role="tabpanel" aria-labelledby="v-pills-description-tab">
+          <div class="container-fluid" id="description"></div>
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-remotelab" role="tabpanel" aria-labelledby="v-pills-remotelab-tab">
+          <div class="container-fluid" id="remotelab"></div>    
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-data" role="tabpanel" aria-labelledby="v-pills-data-tab">
+    		  <div class="vw-100 vh-100">
+            <div class="w-50 h-75 overflow-scroll" id="data">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      load('help', 'description');
+      function load(url, tab) {
+        // var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        $.ajax({
+          'url': url,
+          'method': 'get',
+          'processData': false,
+          // 'headers': { 'CSRF-Token': token},
+          'success': function(result) {
+            $('#'+tab).empty();
+            $('#'+tab).append(result);
+          },
+        });
+      }
+    </script>
+  <body>
+</html>

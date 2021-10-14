@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<%- include('ui/header', { csrfToken: '' }  ); %>
+    <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
+	</head>
+	<body>
+    <div class="container-fluid d-flex">
+      <div class="editor w-100" id="editor" style="min-height: 400pt;"></div>
+      <div class="container" id="editor-log"><textarea class="w-100 h-100" id="logger"></textarea></div>
+    </div>
+    <div class="container d-flex">
+      <button class="btn btn-primary m-1" id="run" onclick="play()"><i class="bi bi-play"></i></button>
+      <button class="btn btn-secondary m-1" id="step" onclick="step()"><i class="bi bi-pause"></i></button>
+      <button class="btn btn-secondary m-1" id="stop" onclick="stop()"><i class="bi bi-stop"></i></button>
+      <button class="btn btn-secondary m-1" id="load" onclick="load()"><i class="bi bi-cloud-download"></i></button>
+      <button class="btn btn-secondary m-1" id="save" onclick="save()"><i class="bi bi-cloud-upload"></i></button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/peggy"></script>
+    <script>
+      var editor = ace.edit('editor');
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/javascript");
+      
+      var grammar = "{ function makeInteger(o) { return parseInt(o.join(''), 10); } }\n"
+        + "start\n"
+        + "  = _ head:instruction tail:(_ @instruction _)* { return [head, ...tail]; } \n"
+        + "begin_point = '['\n"
+        + "end_point   = ']'\n"
+        + "instruction\n"
+        + "  =\n"
+        + "    I:assignment /\n"
+        + "    I:instr_0op { return [I]; } /\n"
+        + "    I:instr_1op _ A:operand { return [I, A]; } /\n"
+        + "    I:instr_2op _ A:operand _ B:operand { return [I, A, B]; }\n\n"
+        + " _ 'whitespace'\n"
+        + "  = [ \\t\\n\\r]*\n\n"
+        + "assignment\n"
+        + "  = A:identifier _ '=' _ B:point {return ['=', A, B]}\n\n"
+        + "identifier\n"
+        + "  = [A-Z]\n\n"
+        + "point\n"
+        + "  = begin_point _ X:number _ ',' _ Y:number _ ',' _ Z:number _ ',' _ R:number _ end_point { return [X,Y,Z,R]; }\n\n"
+        + "instr_0op\n"
+        + "  = 'open'i / 'close'i\n\n"
+        + "instr_1op\n"
+        + "  = 'mov'i\n\n"
+        + "instr_2op\n"
+        + "  = 'add'i\n\n"
+        + "operand\n"
+        + "  = identifier / point\n\n"
+        + "number\n"
+        + "  = digits:[0-9]+ { return makeInteger(digits); }\n";
+      var parser = peggy.generate(grammar);
+
+      function play() {
+        var input = editor.getValue();
+        var logger = $("#logger")[0];
+        var result;
+        try {
+          result = parser.parse(input);
+          result.forEach(element => {
+            logger.value += element + '\n';
+          });
+        } catch(e) {
+          logger.value += e;
+        } finally {
+          logger.value += '\n---\n';
+        }
+      };
+
+      function step() {};
+      function stop() {};
+      function load() {};
+      function save() {};
+
+      function interpreter(code) {
+        
+        var output = [];
+        var state = {};
+        var error = [];
+
+        code.forEach(i => {
+          switch(i) {
+            case '=':
+              
+              break;
+            case 'MOV':
+              break;
+          }
+        })
+      };
+  </script>
+
+  </body>
+</html>

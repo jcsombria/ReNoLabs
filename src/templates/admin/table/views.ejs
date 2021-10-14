@@ -1,0 +1,23 @@
+<table class="table table-sm table-striped table-hover table-borderless caption-top" id="controllersTable">
+  <caption>Vistas</caption>
+  <thead class="table-primary">
+      <tr>
+        <th class="align-middle" scope="col"><input type="checkbox"></input></th>
+        <th scope="col">Id</th>
+        <th scope="col">Nombre</th>
+        <th scope="col">Ruta</th>
+        <th scope="col">Fecha</th>
+      </tr>
+  </thead>
+  <tbody>
+      <% result.forEach((v) => { %>
+      <tr>
+          <td class="align-middle"><input type="checkbox"></input></td>
+          <th scope="row"><%= v.dataValues.id %></th>
+          <td><%= v.dataValues.name %></td>
+          <td><%= v.dataValues.path %></td>
+          <td><%= v.dataValues.date %></td>
+      </tr>
+      <% }); %>
+  </tbody>
+</table>

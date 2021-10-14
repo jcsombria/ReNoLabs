@@ -1,0 +1,21 @@
+<table class="table table-sm table-striped table-hover table-borderless caption-top" id="activitiesTable">
+  <caption>Vistas disponibles</caption>
+  <thead class="table-primary">
+    <tr>
+      <th scope="col">Nombre</th>
+      <th scope="col">Vista</th>
+      <th scope="col">Controlador</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+      <% result.forEach(function(a){ %>
+          <tr>
+            <th scope="row"><%= a.dataValues.name %></th>
+            <td><%= a.dataValues.ViewId %></td>
+            <td><%= a.dataValues.ControllerName %></td>
+            <td><i class="bi bi-hand-index-thumb"></i></td>
+          </tr>
+      <% }); %>
+  </tbody>
+</table>
