@@ -1,23 +1,37 @@
-<table class="table table-sm table-striped table-hover table-borderless caption-top" id="controllersTable">
+<table class="table table-sm table-striped table-hover table-borderless caption-top" id="viewsTable">
   <caption>Vistas</caption>
   <thead class="table-primary">
       <tr>
         <th class="align-middle" scope="col"><input type="checkbox"></input></th>
         <th scope="col">Id</th>
         <th scope="col">Nombre</th>
-        <th scope="col">Ruta</th>
+        <th scope="col">Ruta Principal</th>
+        <th scope="col">Ruta Descripcion</th>
         <th scope="col">Fecha</th>
       </tr>
   </thead>
   <tbody>
-      <% result.forEach((v) => { %>
-      <tr>
+      <%
+        var i = 0, j = 0, n = 20;
+        result.forEach(v => {
+          i = (i < n) ? i + 1 : 1;
+          if (i == 1) {
+            j += 1; 
+      %>
+      <div id="page_<%= j %>">
+      <%  } %>
+        <tr>
           <td class="align-middle"><input type="checkbox"></input></td>
-          <th scope="row"><%= v.dataValues.id %></th>
-          <td><%= v.dataValues.name %></td>
-          <td><%= v.dataValues.path %></td>
-          <td><%= v.dataValues.date %></td>
-      </tr>
-      <% }); %>
+          <th scope="row"><%= v.id %></th>
+          <td><%= v.name %></td>
+          <td><%= v.path %></td>
+          <td><%= v.description %></td>
+          <td><%= v.date %></td>
+        </tr>
+      <%  if (i == n) { %>
+      </div>
+      <% 
+        }
+      }); %>
   </tbody>
 </table>

@@ -3,49 +3,7 @@
     <%- include('../ui/header'); %>
     <title>Circuito Analogico - Administración</title>
     <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
-  </head>
-  <body class="bg-light">
-    <%- include('../ui/menu', {active: 'admin'}); %>
-    <div class="d-flex align-items-start">
-      <div class="nav flex-column nav-pills bg-dark min-vh-100 align-items-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-        <button class="nav-link container-fluid d-flex active" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
-          <i class="fs-5 bi bi-gear me-2"></i><span class="fs-5 d-none d-sm-inline" title="Configuración"> Configuración</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-view-tab" data-bs-toggle="pill" data-bs-target="#v-pills-view" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
-          <i class="fs-5 bi bi-tv me-2"></i><span class="fs-5 d-none d-sm-inline" title="Vista"> Vista</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-activity-tab" data-bs-toggle="pill" data-bs-target="#v-pills-activity" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
-          <i class="fs-5 bi bi-tools me-2"></i><span class="fs-5 d-none d-sm-inline" title="Actividades"> Actividades</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-controller-tab" data-bs-toggle="pill" data-bs-target="#v-pills-controller" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">
-          <i class="fs-5 bi bi-cpu me-2"></i><span class="fs-5 d-none d-sm-inline" title="Controlador"> Controlador</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-users-tab" data-bs-toggle="pill" data-bs-target="#v-pills-users" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">
-          <i class="bi bi-people me-2"></i><span class="fs-5 d-none d-sm-inline" title="Usuarios"> Usuarios</span>
-        </button>
-      </div>
-      <div class="m-1 px-0 tab-content d-flex justify-content-center container-fluid" id="v-pills-tabContent">
-        <div class="tab-pane fade w-100 h-100 show active" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-home-tab">
-          <%- include('./config', {files: config, prefix: 'config'}); %>
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-view" role="tabpanel" aria-labelledby="v-pills-view-tab">
-          <%- include('./views') %>
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
-          <div class="container-fluid" id="activities"></div>
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-controller" role="tabpanel" aria-labelledby="v-pills-controller-tab">
-          <%- include('./controllers') %>
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-users" role="tabpanel" aria-labelledby="v-pills-users-tab">
-          <%- include('./users'); %>
-        </div>
-      </div>
-    </div>
     <script>
-      initEditors('config');
-      // initEditors('controller');
-
       function initEditors(prefix) {
         var n = (prefix == 'config') ? <%= config.length %> : <%= controller.length %>;
         for (var i=0; i<n; i++) {
@@ -91,13 +49,67 @@
         });
       }
 
+      function load(url, tab) {
+        // var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        $.ajax({
+          'url': url,
+          'method': 'get',
+          'processData': false,
+          // 'headers': { 'CSRF-Token': token},
+          'success': function(result) {
+            $('#'+tab).empty();
+            $('#'+tab).append(result);
+          },
+        });
+      }
+
       $(function() {
         let tables = ['controllers', 'activities', 'views', 'users'];
         tables.forEach(t => {
           refreshTable(t);
         });
+        initEditors('config');
+      // initEditors('controller');
       })
-
     </script>
+  </head>
+  <body class="bg-light">
+    <%- include('../ui/menu', {active: 'admin'}); %>
+    <div class="d-flex align-items-start">
+      <div class="nav flex-column nav-pills bg-dark min-vh-100 align-items-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+        <button class="nav-link container-fluid d-flex active" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
+          <i class="fs-5 bi bi-gear me-2"></i><span class="fs-5 d-none d-sm-inline" title="Configuración"> Configuración</span>
+        </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-activity-tab" data-bs-toggle="pill" data-bs-target="#v-pills-activity" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+          <i class="fs-5 bi bi-tools me-2"></i><span class="fs-5 d-none d-sm-inline" title="Actividades"> Actividades</span>
+        </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-view-tab" data-bs-toggle="pill" data-bs-target="#v-pills-view" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+          <i class="fs-5 bi bi-tv me-2"></i><span class="fs-5 d-none d-sm-inline" title="Vista"> Vista</span>
+        </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-controller-tab" data-bs-toggle="pill" data-bs-target="#v-pills-controller" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">
+          <i class="fs-5 bi bi-cpu me-2"></i><span class="fs-5 d-none d-sm-inline" title="Controlador"> Controlador</span>
+        </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-users-tab" data-bs-toggle="pill" data-bs-target="#v-pills-users" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">
+          <i class="bi bi-people me-2"></i><span class="fs-5 d-none d-sm-inline" title="Usuarios"> Usuarios</span>
+        </button>
+      </div>
+      <div class="m-1 px-0 tab-content d-flex justify-content-center container-fluid" id="v-pills-tabContent">
+        <div class="tab-pane fade w-100 h-100 show active" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-home-tab">
+          <%- include('./edit/config', {files: config, prefix: 'config'}); %>
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
+          <%- include('./edit/activities') %>
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-view" role="tabpanel" aria-labelledby="v-pills-view-tab">
+          <%- include('./edit/views') %>
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-controller" role="tabpanel" aria-labelledby="v-pills-controller-tab">
+          <%- include('./edit/controllers') %>
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-users" role="tabpanel" aria-labelledby="v-pills-users-tab">
+          <%- include('./edit/users'); %>
+        </div>
+      </div>
+    </div>
   <body>
 </html>

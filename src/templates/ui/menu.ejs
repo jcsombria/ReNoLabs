@@ -12,19 +12,10 @@
           </button>
           <ul class="dropdown-menu" aria-labelledby="activitiesMenu">
           <% activities.forEach(a => { %>
-            <li><a class="dropdown-item fw-bold btn btn-danger btn-outline" href="activity"><i class="mx-1 bi bi-hammer"></i><%= a.name %></a></li>
+            <li><a class="dropdown-item fw-bold btn btn-danger btn-outline" href="activity?name=<%= a.name %>"><i class="mx-1 bi bi-hammer"></i><%= a.name %></a></li>
           <% }); %>
           </ul>
         </div>
-        <!-- <li class="nav-item">
-          <a class="nav-link<% if(locals.active=='help') { %> active<% } %>" aria-current="page" href="help"><i class="mx-1 bi bi-info-circle"></i>Descripción</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link<% if(locals.active=='experiment') { %> active<% } %>" href="remotelab"><i class="mx-1 bi bi-hammer"></i>Experimento</a>
-        </li> -->
-        <!-- <li class="nav-item">
-          <a class="nav-link<% if(locals.active=='data') { %> active<% } %>" href="data"><i class="mx-1 bi bi-download"></i>Datos</a>
-        </li> -->
         <% if (user.isAdmin) { %>
         <li class="nav-item">
           <a class="nav-link<% if(locals.active=='admin') { %> active<% } %>" href="admin"><i class="mx-1 bi bi-gear"></i>Administración</a>

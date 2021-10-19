@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<%- include('ui/header', { csrfToken: '' }  ); %>
+		<%- include('../ui/header', { csrfToken: '' }  ); %>
     <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
 	</head>
 	<body>
@@ -21,39 +21,83 @@
       var editor = ace.edit('editor');
       editor.setTheme("ace/theme/monokai");
       editor.session.setMode("ace/mode/javascript");
-      
-      var grammar = "{ function makeInteger(o) { return parseInt(o.join(''), 10); } }\n"
-        + "start\n"
-        + "  = _ head:instruction tail:(_ @instruction _)* { return [head, ...tail]; } \n"
-        + "begin_point = '['\n"
-        + "end_point   = ']'\n"
-        + "instruction\n"
-        + "  =\n"
-        + "    I:assignment /\n"
-        + "    I:instr_0op { return [I]; } /\n"
-        + "    I:instr_1op _ A:operand { return [I, A]; } /\n"
-        + "    I:instr_2op _ A:operand _ B:operand { return [I, A, B]; }\n\n"
-        + " _ 'whitespace'\n"
-        + "  = [ \\t\\n\\r]*\n\n"
-        + "assignment\n"
-        + "  = A:identifier _ '=' _ B:point {return ['=', A, B]}\n\n"
-        + "identifier\n"
-        + "  = [A-Z]\n\n"
-        + "point\n"
-        + "  = begin_point _ X:number _ ',' _ Y:number _ ',' _ Z:number _ ',' _ R:number _ end_point { return [X,Y,Z,R]; }\n\n"
-        + "instr_0op\n"
-        + "  = 'open'i / 'close'i\n\n"
-        + "instr_1op\n"
-        + "  = 'mov'i\n\n"
-        + "instr_2op\n"
-        + "  = 'add'i\n\n"
-        + "operand\n"
-        + "  = identifier / point\n\n"
-        + "number\n"
-        + "  = digits:[0-9]+ { return makeInteger(digits); }\n";
+      editor.setValue(`A = [3.8, 3, 3, 3]
+MOV [2, 2, 2, 2]
+MOV A
+A = [3.8, 38, 3, 3]
+MOV A
+MOV B
+IF ( A == B ) {
+  MOV B
+}`);
+      var grammar = `
+        { function makeNumber(sign, integer, decimal) {
+            var number =  ((sign != null) ? sign : '') 
+                        + ((integer != null) ? integer.join('') : '')
+                        + ((decimal != null) ? decimal.join('') : '');
+            return Number.parseFloat(number);
+          } 
+        }
+        instruction_list
+          = _* head:instruction tail:(_* @instruction _*)* { return [head, ...tail]; }
+
+        begin_point     = '['
+        end_point       = ']'
+        begin_condition = '('
+        end_condition   = ')'
+        begin_body      = '{'
+        end_body        = '}'
+        operator        = '<' / '<=' / '>' / '>=' / '=='
+
+
+        instruction
+          =
+            I:assignment /
+            I:instr_0op { return [I]; } /
+            I:instr_1op _ A:operand { return [I, A]; } /
+            I:instr_2op _ A:operand _ B:operand { return [I, A, B]; } /
+            I:if
+
+         _ 'whitespace'
+          = [ \\t\\n\\r]+
+
+        assignment
+          = A:identifier _* '=' _* B:point _* {return ['=', A, B]}
+
+        identifier
+          = [A-Z]
+
+        point
+          = begin_point _* X:number _* ',' _* Y:number _* ',' _* Z:number _* ',' _* R:number _* end_point { return [X,Y,Z,R]; }
+
+        instr_0op
+          = 'open'i / 'close'i
+
+        instr_1op
+          = 'mov'i
+
+        instr_2op
+          = 'add'i
+
+        if
+          = 'IF' _* begin_condition _* condition _* end_condition _* begin_body _* instruction_list _* end_body 
+
+        condition
+          = operand _* operator _* operand
+
+        operand
+          = identifier / point
+
+        for
+          = 'FOR' _* begin_condition _* condition _* end_condition _* begin_body _* instruction_list _* end_body 
+
+        number
+          = sign:([+-]?)integer:('0' / [1-9][0-9]*)decimal:(\.[0-9]+)? { return makeNumber(sign, integer, decimal); }
+      `;
       var parser = peggy.generate(grammar);
 
       function play() {
+        var interpreter = new Interpreter();
         var input = editor.getValue();
         var logger = $("#logger")[0];
         var result;
@@ -62,6 +106,7 @@
           result.forEach(element => {
             logger.value += element + '\n';
           });
+          interpreter.execute(result);
         } catch(e) {
           logger.value += e;
         } finally {
@@ -74,22 +119,41 @@
       function load() {};
       function save() {};
 
-      function interpreter(code) {
-        
-        var output = [];
-        var state = {};
-        var error = [];
+      class Interpreter {
+        constructor() {
+          this.output = [];
+          this.state = {};
+          this.error = [];
+        }
 
-        code.forEach(i => {
-          switch(i) {
-            case '=':
-              
-              break;
-            case 'MOV':
-              break;
-          }
-        })
-      };
+        mov(point) {
+          console.log('Moving to ' + point);
+        }
+
+        execute(code) {
+          code.forEach(i => {
+            switch(i[0]) {
+              case '=':
+                this.state[i[1]] = i[2];
+                break;
+              case 'MOV':
+                var point;
+                if (typeof i[1] == 'string') {
+                  var point = this.state[i[1]];
+                  if (!point) {
+                    console.error('Unknown identifier: ' + i[1]);
+                    return;
+                  }
+                } else {
+                  point = i[1];
+                }
+                this.mov(point);
+                break;
+            }
+          });
+        };
+
+      }
   </script>
 
   </body>

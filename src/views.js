@@ -51,17 +51,13 @@ module.exports = {
     try {
       var user = await db.users.getUser(req.user.username);
       var activities = await models.Activity.findAll();
-      var activity = await models.Activity.findOne({
-        where: { name: "Sistemas Lineales: 1" },
-        include: models.View
-      });
     } catch(e) {
       logger.debug('Invalid Activity');
-      res.send('Activity not correctly configured.');
     }
     res.render('activity', {
       user: user,
-      activities: activities
+      activities: activities,
+      activity: req.query.name
     });
   },
   
@@ -69,7 +65,7 @@ module.exports = {
     try {
       var user = await db.users.getUser(req.user.username);
       var activity = await models.Activity.findOne({
-        where: { name: "Sistemas Lineales: 1" },
+        where: { name: req.query.name },
         include: models.View
       });
       var view = activity.View;
@@ -109,6 +105,7 @@ module.exports = {
     //     SessionManager.start(credentials);
     // }
     try {
+      var user = await db.users.getUser(req.user.username);
       var activity = (await models.Activity.findOne({
         where: { name: "Sistemas Lineales: 1" }
       }));
@@ -123,13 +120,27 @@ module.exports = {
     } catch(e) {
       session = { token:token };
     }
-    var user = await db.users.getUser(req.user.username);
     if(token) {
-      models.View.findAll({
-        where: {
-          id: activity.ViewId
-        }
-      }).then(v => {
+      // models.View.findAll({
+      //   where: {
+      //     id: activity.ViewId
+      //   }
+      // }).then(v => {
+      //   res.render('remote_lab.ejs', {
+      //     user: user,
+      //     key: token,
+      //     ip: Config.WebServer.ip,
+      //     port: Config.WebServer.port,
+      //     view: v[0].id + '/' + v[0].path,
+      //     state: false
+      //   });
+      // }).catch(error => {
+      //   res.send('View is not configured');      
+      // });
+      try {
+        var v = models.View.findAll({
+          where: { id: activity.ViewId }
+        });
         res.render('remote_lab.ejs', {
           user: user,
           key: token,
@@ -138,9 +149,9 @@ module.exports = {
           view: v[0].id + '/' + v[0].path,
           state: false
         });
-      }).catch(error => {
-        res.send('View is not configured');      
-      });
+      } catch(e) {
+        res.send('View is not configured');
+      }
     } else {
       res.render('home', {
         user: user,
@@ -234,9 +245,6 @@ module.exports.admin = {
   //   res.render('admin/controller', { user: db.users.getUser('admin') });
   // },
 
-  experiences: function(req, res) {
-    res.render('admin/experiences', { user: db.users.getUser('admin') });
-  }
 };
 
 module.exports.api = {
@@ -320,14 +328,14 @@ module.exports.api = {
       res.json(response);
     },
 
+    // data = { 
+    //     username: req.user.username,
+    //     language: req.query.language || 'C',
+    //     version: req.query.version || 'default',
+    // }
     set: function(req, res) {
       logger.info('Maintenance - Receiving code...');
       data = req.body;
-      // let data = { 
-      //     username: req.user.username,
-      //     language: req.query.language || 'C',
-      //     version: req.query.version || 'default',
-      // }
       Updater.setController(data, result => {
         var response;
         try { 
@@ -349,7 +357,8 @@ module.exports.api = {
         res.send(response);
       });
     }
-  }
+  },
+
 };
 
 

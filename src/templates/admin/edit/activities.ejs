@@ -1,0 +1,40 @@
+  <div class="container-fluid d-flex justify-content-center" id="activities">
+  <!-- Content is dinamically updated -->
+</div>
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalActivity">
+  Añadir actividad...
+</button>
+
+<div class="modal fade" id="modalActivity" tabindex="-1" aria-labelledby="modalActivity" aria-hidden="true">
+  <div class="modal-dialog container">
+    <div class="modal-content">
+      <form action="/admin/controller/set" method="post" encType="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= csrfToken  %>">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalActivityLabel">Añadir actividad.</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="activity" class="form-label">Nombre:</label>
+            <input type="text" class="form-control" name="activity">
+            <label for="view" class="form-label">Vista:</label>
+            <input type="file" class="form-control" name="view">
+            <!-- <div id="viewList" class="overflow-scroll" style="height: 200pt">
+
+            </div> -->
+            <label for="view" class="form-label">Controlador:</label>
+            <input type="file" class="form-control" name="controller">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" value="Submit">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- <script>load('/admin/table/get/views', 'viewList')</script> -->
