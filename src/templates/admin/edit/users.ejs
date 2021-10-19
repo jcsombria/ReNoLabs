@@ -55,7 +55,7 @@
     var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     $.ajax({
       type: 'POST',
-      url: '/admin/users/set',
+      url: '/api/users/set',
       headers: {
         'CSRF-Token': token,
         'Content-Type': 'application/json'

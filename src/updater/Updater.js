@@ -33,7 +33,7 @@ class Updater {
     var extension = '.zip';
     var source = Settings.VIEWS + '/' + view.id + extension;
     var target = Settings.VIEWS_SERVE + '/' + view.id;
-    let activity = data.activity;
+    let activity = data.name;
     var code_stream = fs.createWriteStream(source);
     code_stream.write(data.view, null, async () => {
       const zip = new AdmZip(source);

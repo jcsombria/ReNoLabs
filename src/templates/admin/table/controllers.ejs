@@ -3,8 +3,8 @@
   <thead class="table-primary">
     <tr>
       <th scope="col" class="align-middle"><input type="checkbox"></input></th>
-      <th scope="col">Id</th>
       <th scope="col">Nombre</th>
+      <th scope="col">Ruta</th>
       <th scope="col">Lenguaje</th>
     </tr>
   </thead>
@@ -12,9 +12,9 @@
     <% result.forEach(function(c){ %>
       <tr>
         <td class="align-middle"><input type="checkbox"></input></td>
-        <th scope="row"><%= c.dataValues.id %></th>
-        <td><%= c.dataValues.name %></td>
-        <td></td>
+        <th scope="row"><%= c.dataValues.name %></td>
+        <td><%= c.dataValues.path %></td>
+        <td><%= c.dataValues.type %></td>
       </tr>
     <% }); %>
   </tbody>

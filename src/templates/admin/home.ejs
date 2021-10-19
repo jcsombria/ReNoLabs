@@ -5,7 +5,7 @@
     <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
     <script>
       function initEditors(prefix) {
-        var n = (prefix == 'config') ? <%= config.length %> : <%= controller.length %>;
+        var n = (prefix == 'config') ? <%= config.length %> : 0; <!--%= controller.length %-->
         for (var i=0; i<n; i++) {
           var editor = ace.edit('editor-'+prefix+'-'+i);
           editor.setTheme("ace/theme/monokai");

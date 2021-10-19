@@ -10,7 +10,7 @@
 					<div class="container">
 						<h1 class="display-6">Actividades Disponibles</h1>
 						<% activities.forEach(a => { %>
-							<a href="activity"><%= a.name %></a>
+							<a href="activity?name=<%= a.name %>"><%= a.name %></a>
 						<% }) %>
 					</div>
 
@@ -19,19 +19,5 @@
 						<div class="container" id="data"></div>
 					</div>
 				</div>
-		<!-- <div class="select">
-			<div class="select-block"> 
-				<h1>Actividades</h1>
-				<p align="center"> <a href="/help"> <img src="/images/help_question_4509.png" alt="REAL" height="160" width="180"> </a> </p>
-			</div>
-			<div class="select-block">
-				<h1>Experimento</h1>
-				<p align="center">  <a href="/remotelab"> <img src="/images/Op-amp.png" alt="REAL" height="160" width="180"> </a> </p>
-			</div> 
-			<div class="select-block"> 
-				<h1>Datos</h1>
-				<p align="center">  <a href="/data"> <img src="/images/carpeta_transp.png" alt="REAL" height="160" width="180"> </a> </p>
-			</div> 
-		</div> -->
 	</body>
 </html>
