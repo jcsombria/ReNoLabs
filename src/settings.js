@@ -9,4 +9,5 @@ module.exports = {
   VIEWS: BASE + '/var/views',
   DATA: BASE + '/var/data',
   VIEWS_SERVE: PUBLIC + '/views',
+  LOG: '/var/log',
 };
