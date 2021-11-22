@@ -1,7 +1,8 @@
 <table class="table table-sm table-striped table-hover table-borderless caption-top" id="activitiesTable">
-  <caption>Vistas disponibles</caption>
+  <caption>Actividades disponibles</caption>
   <thead class="table-primary">
     <tr>
+      <th scope="col" class="align-middle"><input type="checkbox"></input></th>
       <th scope="col">Nombre</th>
       <th scope="col">Vista</th>
       <th scope="col">Controlador</th>
@@ -9,13 +10,16 @@
     </tr>
   </thead>
   <tbody>
-      <% result.forEach(function(a){ %>
-          <tr>
-            <th scope="row"><%= a.dataValues.name %></th>
-            <td><%= a.dataValues.ViewId %></td>
-            <td><%= a.dataValues.ControllerName %></td>
-            <td><i class="bi bi-hand-index-thumb"></i></td>
-          </tr>
-      <% }); %>
+    <% result.forEach(function(a){ %>
+      <tr id="activity-<%= a.name %>">
+        <td class="align-middle"><input type="checkbox"></input></td>
+        <th scope="row"><%= a.name %></th>
+        <td><%= a.View.name %></td>
+        <td><%= a.Controller.name %></td>
+        <td><i class="bi bi-hand-index-thumb"></i></td>
+      </tr>
+    <% }); %>
   </tbody>
+  <tfoot class="table-primary">
+  </tfoot>
 </table>

@@ -77,7 +77,7 @@ class BehaviorMaintenance extends Behavior {
   upload_controller(data) {
     logger.info('Maintenance - Receiving code...');
     let sender = this.sender;
-    Updater.setController(data, (result)=>{
+    Updater.addController(data, (result)=>{
       logger.debug(result.stderr);
       sender.emit('controller.set', result);
     });
@@ -112,7 +112,7 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
 
   finish_upload(data) {
     logger.info('Upload completed! Updating view...');
-    Updater.setView(Buffer.from(this.labCode, 'base64'));
+    Updater.addView(Buffer.from(this.labCode, 'base64'));
     logger.info('View updated.');
     this.sender.emit('codeCompleted', {});
   }

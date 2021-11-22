@@ -161,6 +161,7 @@ class SessionManager {
       this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.activity.sessionTimeout);
       this.running = true;
       session.start();
+      session.token = this.token;
       logger.info(`Session started: user ${this.active_user} - ${new Date()}`);
       return session;
     } else {
@@ -217,7 +218,6 @@ class SessionManager {
 
   getToken(credentials) {
     var user = this.validate(credentials);
-    console.log(user)
     if (!user) return;
     let isActive = (this.active_user == user.username);
     let isSupervisor = db.users.isSupervisor(user);

@@ -5,69 +5,78 @@
     <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
     <script>
       function initEditors(prefix) {
-        var n = (prefix == 'config') ? <%= config.length %> : 0; <!--%= controller.length %-->
-        for (var i=0; i<n; i++) {
-          var editor = ace.edit('editor-'+prefix+'-'+i);
-          editor.setTheme("ace/theme/monokai");
-          editor.session.setMode("ace/mode/javascript");
-        }
+        post(`/_api/${prefix}/get`, null, config => {
+          for (var i=0; i<config.data.length; i++) {
+            var editor = ace.edit('editor-'+prefix+'-'+i);
+            editor.setTheme("ace/theme/monokai");
+            editor.session.setMode("ace/mode/javascript");
+            editor.setValue(config.data[i].code);
+          }
+        });
       }
-        
-      function save(target, filename, url) {
-        var editor = ace.edit(target);
-        var data = { files: [{
-            filename: filename,
-            code: editor.getValue(),
-          }]
-        };
 
+      function post(url, data, callback) {
         var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         $.ajax({
           'url': url,
           'method': 'post',
-          'data': JSON.stringify(data),
-          'contentType': "application/json",
+          'data': data,
           'processData': false,
           'headers': { 'CSRF-Token': token},
-          'success': function(result) {
-            var options = { backdrop: true };
-            var myModal = new bootstrap.Modal(document.getElementById('configModal'), options)
-            myModal.show();
-          },
-        });
-      };
-      
-      function refreshTable(table) {
-        var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        $.ajax({
-          'url': '/admin/table/get/' + table,
-          'method': 'get',
-          'headers': { 'CSRF-Token': token},
-          'success': function(result) {
-            $('#'+table).append(result);
-          },
+          'success': callback
         });
       }
 
-      function load(url, tab) {
-        // var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      function save(target, filename, url) {
+        post(url, { files: [{ filename: filename, code: ace.edit(target).getValue() }] },
+          result => {
+            var options = { backdrop: true };
+            var myModal = new bootstrap.Modal(document.getElementById('configModal'), options);
+            myModal.show();
+          }
+        );
+      };
+      
+      function refreshTable(table) {
+        get('/admin/table/get/' + table,
+          result => {
+            $('#'+table).append(result);
+            addInteractions();
+          },
+        );
+      };
+      
+      function get(url, callback) {
+        var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         $.ajax({
           'url': url,
           'method': 'get',
-          'processData': false,
-          // 'headers': { 'CSRF-Token': token},
-          'success': function(result) {
-            $('#'+tab).empty();
-            $('#'+tab).append(result);
-          },
+          'headers': { 'CSRF-Token': token},
+          'success': callback
         });
+      }
+
+      function addInteractions() {
+        var rows = $('#activities').find("[id^=activity-]");
+        for (var i=0; i<rows.length; i++) {
+          let id = rows[i].id.substring(9);
+          rows[i].onclick = function() {
+            get(`/admin/activity?name=${id}`, result => { load(result, 'v-pills-activity'); });
+          };
+        }
+      }
+
+      function load(content, tab) {
+        let component = $('#'+tab);
+        if (component.length > 0) {
+          component.empty();
+          component.append(content);
+        }
       }
 
       $(function() {
         let tables = ['controllers', 'activities', 'views', 'users'];
-        tables.forEach(t => {
-          refreshTable(t);
-        });
+        tables.forEach(t => { refreshTable(t); });
         initEditors('config');
       // initEditors('controller');
       })

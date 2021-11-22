@@ -1,4 +1,4 @@
-  <div class="container-fluid d-flex justify-content-center" id="activities">
+<div class="container-fluid d-flex justify-content-center" id="activities">
   <!-- Content is dinamically updated -->
 </div>
 
@@ -9,7 +9,7 @@
 <div class="modal fade" id="modalActivity" tabindex="-1" aria-labelledby="modalActivity" aria-hidden="true">
   <div class="modal-dialog container">
     <div class="modal-content">
-      <form action="/admin/controller/set" method="post" encType="multipart/form-data">
+      <form action="/admin/activity/add" method="post" encType="multipart/form-data">
         <input type="hidden" name="_csrf" value="<%= csrfToken  %>">
         <div class="modal-header">
           <h5 class="modal-title" id="modalActivityLabel">Añadir actividad.</h5>
@@ -17,13 +17,10 @@
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label for="activity" class="form-label">Nombre:</label>
-            <input type="text" class="form-control" name="activity">
+            <label for="name" class="form-label">Nombre:</label>
+            <input type="text" class="form-control" name="name">
             <label for="view" class="form-label">Vista:</label>
             <input type="file" class="form-control" name="view">
-            <!-- <div id="viewList" class="overflow-scroll" style="height: 200pt">
-
-            </div> -->
             <label for="view" class="form-label">Controlador:</label>
             <input type="file" class="form-control" name="controller">
           </div>
@@ -36,5 +33,3 @@
     </form>
   </div>
 </div>
-
-<!-- <script>load('/admin/table/get/views', 'viewList')</script> -->

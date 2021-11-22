@@ -1,4 +1,5 @@
-const BASE = __dirname + '/..';
+const path = require('path');
+const BASE = process.env.BASE || path.normalize(__dirname + '/..');
 const PUBLIC = BASE + '/public';
 
 module.exports = {

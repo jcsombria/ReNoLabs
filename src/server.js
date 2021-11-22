@@ -67,6 +67,17 @@ function onlyAdmin(req, res, next) {
     });
 }
 
+app.post('/_api/info/get', login.ensureLoggedIn('/'), views.api.info.get);
+app.get('/_api/users/get', login.ensureLoggedIn('/'), views.api.users.get);
+app.post('/_api/users/set', login.ensureLoggedIn('/'), views.api.users.set);
+app.post('/_api/controllers/get', login.ensureLoggedIn('/'), views.api.controller.get);
+app.post('/_api/controllers/set', login.ensureLoggedIn('/'), views.api.controller.set);
+app.post('/_api/config/get', login.ensureLoggedIn('/'), views.api.config.get);
+app.post('/_api/config/set', login.ensureLoggedIn('/'), views.api.config.set);
+// app.post('/api/view/get', login.ensureLoggedIn('/'), views.api.view.get);
+app.post('_/api_/view/set', login.ensureLoggedIn('/'), views.api.view.set);
+
+
 app.get('/', views.index);
 app.post('/', passport.authenticate('local', {
   successRedirect: '/home',
@@ -86,19 +97,16 @@ app.get('/admin', login.ensureLoggedIn('/'), onlyAdmin, views.admin.home);
 app.get('/admin/table/get/:table', login.ensureLoggedIn('/'), onlyAdmin, views.admin.getTable);
 app.post('/admin/table/get/:table', login.ensureLoggedIn('/'), onlyAdmin, views.admin.getTable);
 
-// app.get('/admin/users/get', login.ensureLoggedIn('/'), onlyAdmin, views.admin.users.get);
-// app.get('/admin/controller/get', login.ensureLoggedIn('/'), onlyAdmin, views.admin.controller.get);
-// app.get('/admin/config/get', login.ensureLoggedIn('/'), onlyAdmin, views.admin.config.get);
-// app.get('/admin/views/get', login.ensureLoggedIn('/'), onlyAdmin, views.admin.views.get);
-// app.get('/admin/activities/get', login.ensureLoggedIn('/'), onlyAdmin, views.admin.activities.get);
+app.get('/admin/activity', login.ensureLoggedIn('/'), onlyAdmin, views.admin.getActivity);
 
 // app.post('/admin/users/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.users.set);
-// app.get('/admin/controller', login.ensureLoggedIn('/'), onlyAdmin, views.admin.controller.edit);
-// app.post('/admin/controller/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.controller.set);
+// app.get('/admin/controller', login.ensureLoggenpm install vue@nextdIn('/'), onlyAdmin, views.admin.controller.edit);
+app.post('/admin/controller/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.controller.set);
 // app.get('/admin/config/edit', login.ensureLoggedIn('/'), onlyAdmin, views.admin.config.edit);
 app.post('/admin/config/set', login.ensureLoggedIn('/'), onlyAdmin, views.api.config.set);
 // app.get('/admin/views', login.ensureLoggedIn('/'), onlyAdmin, views.admin.views.edit);
 app.post('/admin/views/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.views.set);
+app.post('/admin/activity/add', login.ensureLoggedIn('/'), onlyAdmin, views.admin.activity.add);
 
 // HTTP Server
 var httpServer = app.listen(Config.WebServer.port, Config.WebServer.ip, function () {

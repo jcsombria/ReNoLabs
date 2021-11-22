@@ -7,10 +7,11 @@ const path = require('path');
 const spawn = require('child_process').spawn;
 const AdmZip = require('adm-zip');
 const SessionManager = require('../sessions').SessionManager;
-const models = require('../models');
-const { User, Activity } = require('../models');
-const { username } = require('../hardware/env');
+const { Controller, User, Activity, View } = require('../models');
 const Settings = require('../settings');
+const tmp = require('tmp');
+const extract = require('extract-zip');
+const { controller } = require('../config/LabConfig');
 
 const CONTROLLER_USER_PATH = "users/";
 
@@ -25,47 +26,41 @@ class Updater {
       name => { name.endsWith('.js')},
   }
   
-  setView(data) {
-    let view = models.View.build({
+  async addActivity(data) {
+    var view = await this.addView({view: data.view});
+    var controller = await this.addController({controller: data.controller});
+    return await Activity.create({
       name: data.name,
-      comment: data.comment
-    })
-    var extension = '.zip';
-    var source = Settings.VIEWS + '/' + view.id + extension;
-    var target = Settings.VIEWS_SERVE + '/' + view.id;
-    let activity = data.name;
-    var code_stream = fs.createWriteStream(source);
-    code_stream.write(data.view, null, async () => {
-      const zip = new AdmZip(source);
-      zip.extractAllTo(target);
-      code_stream.end();
-      // Read metadata
-      try {
-        var metadata = zip.getEntry('_metadata.txt');
-        var data = metadata.getData();
-        var lines = Buffer.from(data).toString();
-        var main = lines.match(/main-simulation:\s(\S.*)\n/);
-        var description = lines.match(/html-description:\s(\S.*)\n/);
-        if (description) {
-          view.description = description[1];
-        }
-        if (main) {
-          view.path = main[1];
-        }
-      } catch(e) {
-          logger.error('Cannot extract view from EJS file.');
-      }
-      try {
-        await view.save();
-        var a = await models.Activity.findOne({
-          where: { name: activity }
-        });
-        a.ViewId = view.id;
-        await a.save({ fields: ['ViewId'] });
-      } catch(e) {
-        logger.debug('Cannot add view to activity.')
-      }
+      disconnectTimeout: 10,
+      sessionTimeout: 5,
+      ViewId: view.id,
+      ControllerId: controller.id
     });
+  }
+
+  async addView(data) {
+    try {
+      var bundle = new Bundle(data.view);
+      var view = View.build({
+        name: data.name || bundle.get('title'),
+        comment: data.comment
+      });
+      bundle.setName(Settings.VIEWS + '/' + view.id + '.zip');
+      bundle.extractTo(Settings.VIEWS_SERVE + '/' + view.id);
+      view.description = bundle.get('html-description');
+      view.path = bundle.get('main-simulation');
+      await view.save();
+      // try {
+      //   var activity = await Activity.findOne({where: {name: data.name}});
+      //   activity.ViewId = view.id;
+      //   await activity.save({ fields: ['ViewId'] });
+      // } catch(e) {
+      //   logger.debug('Activity not defined.');
+      // }
+      return view;
+    } catch(e) {
+      logger.debug('Cannot save view file.');
+    }
   }
 
   getView() {
@@ -84,15 +79,35 @@ class Updater {
         version: 'private' | 'default',
         username: <any valid user>,
         language: <any supported language> ('C' | 'Python' | ... ),
+        controller: <zip file content>,
+        files: <JSON encoded - controller files>
       }
    * @return the controller files if exist, otherwise undefined. 
    */
-  setController(data, callback) {
-    let username = data.username, language = data.language;
-    let path = this._get_controller_path(data);
-    this._prepare_dev_folder(username, language);
-    this._copy_files(data.files, path);
-    SessionManager.hardware.compile(path, callback);
+  async addController(data) {
+    let version = data.version,
+        username = data.username,
+        type = data.language,
+        name = data.name;
+    // if(data.controller) {
+    //   let path = this._get_controller_path(data);
+    //   this._prepare_dev_folder(username, type);
+    //   this._copy_files(data.files, path);
+    //   SessionManager.hardware.compile(path, callback);
+    //   return;
+    // }
+    try {
+      var bundle = new Bundle(data.controller);
+      var controller = Controller.build({
+        name: bundle.get('name') || name, 
+        type: bundle.get('type') || type,
+      });
+      bundle.setName(Settings.CONTROLLERS + '/' + controller.id + '.zip');
+      bundle.extractTo(Settings.CONTROLLERS + '/' + controller.id);
+      return await controller.save();
+    } catch(e) {
+      logger.debug('Cannot save controller file.');
+    }
   }
 
   _get_controller_path(data) {
@@ -121,7 +136,7 @@ class Updater {
       try {
         logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
         var fileNames = fs.readdirSync(default_path);
-        fs.mkdirSync(user_path, {recursive: true});
+        fs.mkdirSync(user_path, { recursive: true });
         for (var i = 0; i < fileNames.length; i++) {
           var name = fileNames[i];
           var content = fs.readFileSync(default_path + name);
@@ -246,6 +261,53 @@ class Updater {
   getConfig() {
     return this._get_files(Settings.CONFIG, this._is_js_file);
   }
+}
+
+class Bundle {
+
+  constructor(content) {
+    this.save(content);
+  }
+
+  save(content) {
+    const tmpfile = tmp.fileSync({ 'tmpdir': Settings.CONTROLLERS + '/' });
+    fs.writeFileSync(tmpfile.name, content);
+    this.name = tmpfile.name;
+    this.metadata = this._getMetadata();
+  }
+
+  setName(name) {
+    fs.renameSync(this.name, name);
+    this.name = name;
+  }
+
+  _getMetadata() {
+    const zipfile = new AdmZip(this.name);
+    var metadata = zipfile.getEntry('_metadata.txt');
+    var data = metadata.getData();
+    var content = Buffer.from(data).toString();
+    const lines = content.split(/\r?\n/);
+    var result = {};
+    lines.forEach(l => {
+      try {
+        var pair = l.match(/([^:]*):\s(\S.*)/);
+        result[pair[1]] = pair[2];
+      } catch(e) {
+        // logger.warn("Can't parse metadata pair.");
+      }
+    });
+    return result;
+  }
+
+  get(key) {
+    return this.metadata[key];
+  }
+  
+  extractTo(target) {
+    const zip = new AdmZip(this.name);
+    zip.extractAllTo(target);
+  }
+
 }
 
 module.exports = new Updater();

@@ -134,23 +134,15 @@ var handles = {
 // Encapsulates the interaction with TwinCAT
 class TwinCATAdapter {
 	constructor(options) {
-		this.connected = false;
-		this.conn = null;
     this.handles = handles;
-    this.toNotify = ['config', 'evolution', 'reference', 'controller'];
     this.toRequest = ['UserUpdate'];
-    this.listeners = [];
     this.state = new State();
-    this.options = (options !== undefined) ? options : config_default;
   }
 
-  addListener(o) {
-    if(!(o in this.listeners)) {
-      this.listeners.push(o);
-    }
-  }
-
-	start() {
+  /**
+   * Start the controller.
+   */
+   start() {
 		// Store the reference to this in that, we will need it inside the callbacks
 		let that = this;
     logger.silly('TwinCAT Adapter: Starting PLC Channel');
@@ -198,14 +190,6 @@ class TwinCATAdapter {
       this.listeners[i].emit(ev, data);
     }
   }
-
-  onerror(error) {
-    logger.debug('TwinCAT Adapter: User error handle is not defined.');
-  }
-
-	read(handle) {
-    logger.error('TwinCAT Adapter: Method read not implemented.');
-	}
 
 	write(variable, value, callback) {
     try {

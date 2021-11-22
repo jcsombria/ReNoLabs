@@ -1,24 +1,9 @@
-// class Variable {
-//   constructor(name, description='Variable', type_='float', min_=0, max_=1, precision=0) {
-//     this.name = name;
-//     this.description = description;
-//     this.type = type_;
-//     this.min = min_;
-//     this.max = max_;
-//     this.precision = precision;
-//   }
-// }
-
 const { Sequelize, DataTypes, Model, DATE, where } = require('sequelize');
-const { loggers } = require('winston');
-const { controller } = require('./config/LabConfig');
-const { password } = require('./hardware/env');
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: 'db/database.sqlite',
+  storage: process.env.SQLITE_DB_FILE || 'db/database.sqlite',
   logging: false, 
 });
-const logger = require('winston').loggers.get('log');
 
 class User extends Model {}
 User.init({
@@ -80,35 +65,17 @@ Activity.init({
   sequelize, modelName: 'Activity'
 });
 
-// class ControllerTemplate extends Model {}
-// ControllerTemplate.init({
-//   id: {
-//     type: DataTypes.UUID, defaultValue: Sequelize.UUIDV4, primaryKey: true
-//   },
-//   name: {
-//     type: DataTypes.STRING, allowNull: false
-//   },
-//   type: {
-//     type: DataTypes.STRING, allowNull: false
-//   },
-// });
-
-// class Config extends Model {}
-// Config.init({
-//   name: {
-//     type: DataTypes.STRING, allowNull: false, primaryKey: true
-//   },
-//   type: {
-//     type: DataTypes.STRING, allowNull: false, primaryKey: true
-//   }
-// }, {
-//   sequelize, modelName: 'Config'
-// });
 
 class Controller extends Model {}
 Controller.init({
+  id: {
+    type: DataTypes.UUID, defaultValue: Sequelize.UUIDV4, primaryKey: true
+  },
   name: {
-    type: DataTypes.STRING, allowNull: false, primaryKey: true
+    type: DataTypes.STRING, allowNull: false
+  },
+  date: {
+    type: DataTypes.DATE, defaultValue: Sequelize.NOW, primaryKey: true
   },
   type: {
     type: DataTypes.STRING, allowNull: false,
@@ -121,40 +88,14 @@ Activity.belongsTo(View);
 Activity.belongsTo(Controller);
 View.hasMany(Activity);
 Controller.hasMany(Activity);
-// ControllerTemplate.hasMany(Activity);
 
-// Controller.create({
-//   name: 'C Controller',
-//   type: 'C'
-// })
-// .catch(e => {
-// })
+User.belongsToMany(Activity, { through: 'UserActivities' });
+Activity.belongsToMany(User, { through: 'UserActivities' });
 
-// Activity.create({
-//   name: 'Sistemas Lineales: 1',
-//   sessionTimeout: 15,
-//   disconnectTimeout: 20,
-//   ViewId: '766659be-5fd0-4efb-bb72-5607ad14a96b',
-//   ControllerName: 'C Controller',
-// })
-//   .then(activity => {
-//     logger.debug('Activity created');
-//   })
-//   .catch(error => {
-//     logger.debug(`model.js: Cannot create activity.`);
-//     logger.debug(`model.js: ${error.message}`);
-// });
-
-// sequelize.sync({ force: true });
-// User.create({
-//   username: 'admin',
-//   displayName: 'Administrator',
-//   emails: 'jeschaco@ucm.es',
-//   password: 'admin_circuit',
-//   permissions: 'ADMIN;RO'
-// });
+sequelize.sync();
 
 module.exports = {
+  sequelize: sequelize,
   User: User,
   View: View,
   Activity: Activity,

@@ -26,8 +26,7 @@ MOV [2, 2, 2, 2]
 MOV A
 A = [3.8, 38, 3, 3]
 MOV A
-MOV B
-IF ( A == B ) {
+IF ( A != B ) {
   MOV B
 }`);
       var grammar = `
@@ -47,7 +46,7 @@ IF ( A == B ) {
         end_condition   = ')'
         begin_body      = '{'
         end_body        = '}'
-        operator        = '<' / '<=' / '>' / '>=' / '=='
+        operator        = '<' / '<=' / '>' / '>=' / '==' / '!='
 
 
         instruction
@@ -95,17 +94,17 @@ IF ( A == B ) {
           = sign:([+-]?)integer:('0' / [1-9][0-9]*)decimal:(\.[0-9]+)? { return makeNumber(sign, integer, decimal); }
       `;
       var parser = peggy.generate(grammar);
+      var logger = $("#logger")[0];
 
       function play() {
         var interpreter = new Interpreter();
         var input = editor.getValue();
-        var logger = $("#logger")[0];
         var result;
         try {
           result = parser.parse(input);
-          result.forEach(element => {
-            logger.value += element + '\n';
-          });
+          // result.forEach(element => {
+          //   logger.value += element + '\n';
+          // });
           interpreter.execute(result);
         } catch(e) {
           logger.value += e;
@@ -127,13 +126,22 @@ IF ( A == B ) {
         }
 
         mov(point) {
-          console.log('Moving to ' + point);
+          logger.value += `Move to ${point}\n`;
+        }
+
+        open() {
+          logger.value += `Open grip\n`;
+        }
+
+        close() {
+          logger.value += 'Close grip\n';
         }
 
         execute(code) {
           code.forEach(i => {
             switch(i[0]) {
               case '=':
+                logger.value += `Assign ${i[2]} to ${i[1]}\n`;
                 this.state[i[1]] = i[2];
                 break;
               case 'MOV':
@@ -149,10 +157,17 @@ IF ( A == B ) {
                 }
                 this.mov(point);
                 break;
+              case 'OPEN':
+                this.open();
+                break;
+              case 'CLOSE':
+                this.close();
+                break;
+              case 'IF':
+                console.log('IF');
             }
           });
         };
-
       }
   </script>
 

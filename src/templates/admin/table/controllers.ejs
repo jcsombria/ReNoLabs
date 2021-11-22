@@ -12,9 +12,9 @@
     <% result.forEach(function(c){ %>
       <tr>
         <td class="align-middle"><input type="checkbox"></input></td>
-        <th scope="row"><%= c.dataValues.name %></td>
-        <td><%= c.dataValues.path %></td>
-        <td><%= c.dataValues.type %></td>
+        <th scope="row"><%= c.name %></td>
+        <td><%= c.path %></td>
+        <td><%= c.type %></td>
       </tr>
     <% }); %>
   </tbody>
