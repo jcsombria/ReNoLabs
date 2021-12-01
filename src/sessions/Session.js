@@ -156,16 +156,21 @@ class SessionManager {
   }
 
   // Connects a client to an opened session, if and only if is supervisor or the active user (owns the previous session).
-  connect(id, socket, credentials, activity) {
+  async connect(activity, credentials, socket, id) {
     var user = this.validate(credentials);
     if (!user) return;
-    var session = new Session(activity, user, id, this);
+    var theActivity = await models.Activity.findOne({
+      where: { name: activity },
+      include: models.Controller
+    })
+    if (!theActivity) return;
+    var session = new Session(theActivity, user, id, this);
     if(id != null) {
       this.clients[id] = socket;
     }
-    if (this.idle && activity) {
+    if (this.idle) {
       this.active_user = user.username;
-      this.activity = activity;
+      this.activity = theActivity;
       this.token = Math.floor((Math.random() * 1000000) + 1);
       this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.activity.sessionTimeout*60*1000);
       this.sessionStartTime = new Date();

@@ -119,7 +119,7 @@ module.exports = {
       return;
     }
     var credentials = { 'username': req.user.username, 'password': req.user.password};
-    var session = SessionManager.connect(null, res.socket, credentials, activity);
+    var session = SessionManager.connect(activity, credentials, res.socket, null);
     if(!session) {
       res.render('home', {user: user});
       return;
@@ -130,6 +130,7 @@ module.exports = {
       ip: Config.WebServer.ip,
       port: Config.WebServer.port,
       view: activity.View.id + '/' + activity.View.path,
+      activity: activity.name
     });
   },
   

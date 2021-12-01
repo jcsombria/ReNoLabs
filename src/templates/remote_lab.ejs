@@ -1,5 +1,6 @@
 <script type="text/javascript">
-  var LAB_KEY = <%- JSON.stringify(key) %>;
-  var LAB_ADDRESS = "http://<%- ip %>:<%- port -%>";
+  const LAB_KEY = <%- JSON.stringify(key) %>;
+  const LAB_ADDRESS = "/";
+  const LAB_ACTIVITY = "<%- activity %>";
 </script>
 <iframe class="container-fluid vh-100" seamless="true" src="views/<%= view %>"></iframe>

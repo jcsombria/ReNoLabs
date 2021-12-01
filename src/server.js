@@ -118,9 +118,10 @@ var httpServer = app.listen(Config.WebServer.port, Config.WebServer.ip, function
 // This section enables socket.io communications
 const { EventGenerator } = require('./behavior/events');
 const { Server } = require('socket.io');
+const models = require('./models');
 const io = new Server(httpServer, { cors: {
-  origin: "*",
-  methods: ["GET", "POST"]
+  origin: "null",
+  // methods: ["GET", "POST"]
 }});
 var eg = new EventGenerator(io);
 SessionManager.hardware.addListener(eg);
@@ -134,19 +135,21 @@ io.on('connection', socket => {
   }
   var activity = socket.handshake.query.activity;
   logger.debug(`Request from user: ${credentials['username']}`);
-  var session = SessionManager.connect(id, socket, credentials, activity);
-  if(!session) {
-    socket.emit('login_error', {'text':'Invalid credentials'});
-    socket.disconnect();
-    return;
-  }
-  logger.debug(`User ${credentials['username']} authenticated`);
-  // Behave as a normal user
-  if (session.isActive()) {
-    logger.info('Entering user mode...');
-    logger.debug('Registering common services...');
-    new behavior.Normal(session).register(socket);
-  }
+  SessionManager.connect(activity, credentials, socket, id)
+    .then(session => {
+      if(!session) { return; }
+      logger.debug(`User ${credentials['username']} authenticated`);
+      // Behave as a normal user
+      if (session.isActive()) {
+        logger.info('Entering user mode...');
+        logger.debug('Registering common services...');
+        new behavior.Normal(session).register(socket);
+      }    
+    })
+    .catch(() => {
+      socket.emit('login_error', {'text':'Invalid credentials'});
+      socket.disconnect();  
+    });
 });
 
 // This section adds RIP support (if enabled in AppConfig.js)
@@ -198,7 +201,7 @@ io.on('connection', socket => {
 //       if(SessionManager.idle) {
 //         SessionManager.start(credentials);
 //       } 
-//       var session = SessionManager.connect(id, ripBroker, credentials);
+//       var session = SessionManager.connect(activity, credentials, ripBroker, id);
 //       var expId = req.query['expId'];
 //       if(session != undefined){
 //         logger.info('new connection to SSE, user:' + username);
