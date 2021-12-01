@@ -9,6 +9,7 @@ const models = require(`${BASE_DIR}/models`);
 const { where } = require('sequelize');
 const { Updater, Bundle } = require(`${BASE_DIR}/updater`);
 const AdmZip = require('adm-zip');
+const { SessionManager } = require(`${BASE_DIR}/sessions`);
 
 describe('Test Updater', () => {
   beforeAll(async () => {
@@ -105,4 +106,29 @@ describe('Test Updater', () => {
       'name': 'Sistemas Lineales',
     });
   });
+
+
+  test('Can start activity.', async () => {
+    await Updater.addActivity({
+      'name': 'Test',
+      'view': fs.readFileSync('test/fixtures/View_Sistemas Lineales.zip'),
+      'controller': fs.readFileSync('test/fixtures/Controller_C.zip')
+    });
+    var activity = await models.Activity.findOne({
+      where: { name: 'Test' },
+      include: 'Controller'
+    });
+    var user = await models.User.findOne({
+      where: { username: 'admin'}
+    });
+    console.log(activity.Controller)
+    var credentials = { 'username': user.username, 'password': user.password };
+    var session = SessionManager.connect("test_user", null, credentials, activity);
+    expect(session).not.toBeNull();
+    console.log(session.hardware)
+
+    session.end()
+
+  });
+
 });

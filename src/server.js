@@ -6,7 +6,7 @@ const logger = winston.loggers.get('log');
 const behavior = require('./behavior');
 const Config = require('./config/AppConfig');
 const db = require('./db');
-const SessionManager = require('./sessions').SessionManager;
+const { SessionManager } = require('./sessions');
 const views = require ('./views');
 // Express modules.
 const express = require('express');

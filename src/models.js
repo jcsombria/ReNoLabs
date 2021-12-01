@@ -74,8 +74,11 @@ Controller.init({
   name: {
     type: DataTypes.STRING, allowNull: false
   },
+  path: {
+    type: DataTypes.STRING
+  },
   date: {
-    type: DataTypes.DATE, defaultValue: Sequelize.NOW, primaryKey: true
+    type: DataTypes.DATE, defaultValue: Sequelize.NOW
   },
   type: {
     type: DataTypes.STRING, allowNull: false,

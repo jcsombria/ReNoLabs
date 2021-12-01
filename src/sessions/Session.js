@@ -1,30 +1,31 @@
 // Sessions Management
+const logger = require('winston').loggers.get('log');
 const Config = require('../config/AppConfig');
 const db = require('../db');
-const logger = require('winston').loggers.get('log');
 const rules = require('../behavior/rules')
 const { EventProcessor, EventDispatcher } = require('../behavior/events');
 const models = require('../models');
+const hardware = require('../hardware');
 
 /* Session model. */
 class Session {
 
   /*
-   * @param {User}           user    The user that opened the session.
-   * @param {string}         id      The id of the channel (socket) associated to the session.
-   * @param {SessionManager} manager The session manager.
+   * @param {Activity}       activity  The activity.
+   * @param {User}           user      The user that opened the session.
+   * @param {string}         id        The id of the channel (socket) associated to the session.
+   * @param {SessionManager} manager   The session manager.
    */
-  constructor (user, id, manager) {
-    this.id = id;
+  constructor (activity, user, id, manager) {
+    this.activity = activity;
     this.user = user;
+    this.id = id;
     this.manager = manager;
-    this.hardware = manager.hardware;
     this.logger = manager.hwlogger;
+    this.createHardwareAdapter(this.activity.Controller);
     this.rules = {};
     this.eventProcessor = new EventProcessor(this);
     this.eventDispatcher = new EventDispatcher(this.eventProcessor);
-    logger.debug(`Session is ${user.username}`);
-
     // # Dispatching Rules
     // - Enqueue if extern references, otherwise process immediately
     this.eventDispatcher.addRoutingRule('enqueue_if_extern_process_otherwise', 
@@ -41,6 +42,15 @@ class Session {
         logger.warn('Cannot import event processing rule.')
       }
     }
+  }
+
+  createHardwareAdapter(controller) {
+    if (!controller.type in hardware) {
+      throw new Error('Unknown hardware adapter.');
+    }
+    const Adapter = hardware[controller.type].Adapter;
+    this.hardware = new Adapter(controller);
+    this.hardware.addListener(this.logger);    
   }
   
   /*
@@ -62,26 +72,27 @@ class Session {
     // this.hardware.stop();
     // this.logger.end();
   }
-  
+
   start() {
+    logger.debug(`User ${this.user.username} starts ${this.activity.name}.`);
     var user = this.user.username;
     this.logger.start(user);
     this.hardware.start(user);
     this.hardware.play();    
   }
-  
+
   play() {
     // this.hardware.play();
   }
-  
+
   pause() {
     // this.hardware.pause();
   }
-  
+
   reset() {
     // this.hardware.reset();
   }
-  
+
   /*
    * Finish the session.
    */
@@ -148,7 +159,7 @@ class SessionManager {
   connect(id, socket, credentials, activity) {
     var user = this.validate(credentials);
     if (!user) return;
-    var session = new Session(user, id, this);
+    var session = new Session(activity, user, id, this);
     if(id != null) {
       this.clients[id] = socket;
     }
@@ -178,7 +189,7 @@ class SessionManager {
         logger.debug(`User ${user.username} not allowed to connect to session ${id}.`);
         socket.disconnect();
         delete this.clients[id];
-        return ;
+        return;
       }
     }
   }
@@ -279,5 +290,7 @@ class SessionManager {
   }
 }
 
-module.exports.SessionManager = new SessionManager();
-module.exports.Session = Session;
+module.exports = {
+  SessionManager: new SessionManager(),
+  Session: Session
+}

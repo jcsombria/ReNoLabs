@@ -14,8 +14,8 @@ const Adapter = require('../Adapter');
  * - start, play, pause, reset, end
  */
 class DobotAdapter extends Adapter {
-   constructor(options) {
-    super(options);
+   constructor(controller, options) {
+    super(controller, options);
     this.state = new DobotState();
   }
 
@@ -30,8 +30,7 @@ class DobotAdapter extends Adapter {
     if(this.connected) return;
     /* Start user or default controller */
     logger.info('Dobot Adapter: Starting default controller...');
-    var filename = this._getDefaultFolder('Dobot') + LabConfig.controller;
-    this.conn = spawn('sudo',['python3', filename]);
+    this.conn = spawn('sudo',['python3', this.controller.path]);
     this.conn.on('error', function(error) {
       console.log(error);
     });

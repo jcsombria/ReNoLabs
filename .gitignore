@@ -63,10 +63,10 @@ typings/
 # Experiment logs
 data/
 
-# User database
+# User data
 db/records.js
 controllers/C/users/
 docker/volumes
-
-# User data
 var/
+database.sqlite
+public/

@@ -1,10 +1,8 @@
 const logger = require('winston').loggers.get('log');
+const spawn = require('child_process').spawn;
 const HWConfig = require('./Config');
-const LabConfig = require('../../config/LabConfig');
-var spawn = require('child_process').spawn;
 const Adapter = require('../Adapter');
-const Settings = require('../../settings');
-var State = require('../State');
+const State = require('../State');
 
 /**
  * Encapsulates the interaction with the C Server
@@ -13,8 +11,8 @@ var State = require('../State');
  * - start, play, pause, reset, end
  */
 class CAdapter extends Adapter {
-  constructor(options) {
-    super(options);
+  constructor(controller, options) {
+    super(controller, options);
     this.state = new CState();
   }
 
@@ -26,16 +24,11 @@ class CAdapter extends Adapter {
    */
   start(username) {
     logger.debug(`User ${username} request to start C controller`);
-    if(this.connected) return;
-    /* Start user or default controller */
-    //if (!username) {
-      logger.info('C Adapter: Starting default controller...');
-      this.conn = spawn('sudo', [this._getDefaultFolder('C') + LabConfig.controller]);
-    //} else {
-    //  logger.info(`C Adapter: Starting user controller (${username})...`);
-    //  this._prepareUserFolder(username, 'C');
-    //  this.conn = spawn('sudo', [this._getUserFolder(username, 'C') + LabConfig.controller]);
-    //}
+    if(this.connected) {
+      return; 
+    }
+    logger.info('C Adapter: Starting default controller...');
+    this.conn = spawn('sudo', [this.controller.path]);
     // I commented this code and the method definition below because it was never reached
     // I have to check why the event 'spawn' is not being notified
     //this.conn.on('spawn', this.onstart.bind(this));
@@ -115,7 +108,7 @@ class CState extends State {
 
   set config(value) {
     this._config = value;
-    this.notify(['config:' + value]);
+    this.notify([`config:${value}`]);
   }
 
   get config() {
@@ -124,7 +117,7 @@ class CState extends State {
 
   set reference(value) {
     this._reference = value;
-    this.notify(['reference:' + value]);
+    this.notify([`reference:${value}`]);
   }
 
   get reference() {
@@ -148,7 +141,7 @@ class CState extends State {
 
   set controller(value) {
     this._controller = value;
-    this.notify(['controller:' + value]);
+    this.notify([`controller:${value}`]);
   }
 
   get controller() {

@@ -1,12 +1,13 @@
-const db = require('./db');
-const SessionManager = require('./sessions').SessionManager;
+const fs = require('fs');
 const logger = require('winston').loggers.get('log');
+const { where, include } = require('sequelize');
+
+const db = require('./db');
+const { Updater } = require('./updater');
+const { SessionManager } = require('./sessions');
 const Config = require('./config/AppConfig');
 const LabConfig = require('./config/LabConfig');
-const { Updater } = require('./updater');
 const models = require('./models');
-const fs = require('fs');
-const { where, include } = require('sequelize');
 const Settings = require('./settings');
 
 const MODELS = {
@@ -110,7 +111,7 @@ module.exports = {
       var user = await db.users.getUser(req.user.username);
       var activity = await models.Activity.findOne({
         where: {name: req.query.name},
-        include: models.View
+        include: [models.View, models.Controller]
       });
     } catch(e) {
       logger.debug('Invalid activity');
@@ -147,23 +148,14 @@ module.exports.admin = {
     try {
       var user = await db.users.getUser(req.user.username);
       var activities = await models.Activity.findAll();
+      res.render('admin/home', {
+        user: user,
+        activities: activities
+      });
     } catch(e) {
       logger.debug('Invalid Activity');
       res.send('Activity not correctly configured.');
     }
-    var data = {
-      version: 'private' | 'default',
-      username: user.username,
-      language: 'C',
-    };
-    let users = await db.users.getUsers();
-    res.render('admin/home', {
-      user: user,
-      config: Updater.getConfig(),
-      controller: Updater.getController(data),
-      users: users,
-      activities: activities
-    });
   },
 
   getTable: async function(req, res) {
@@ -209,7 +201,7 @@ module.exports.admin = {
         res.status(400).send(error);
       });
     },
-    
+
     set: function(req, res) {
       logger.info('Uploading view...A great power comes with a great responsibility!');
       if (!req.files || Object.keys(req.files).length === 0) {
@@ -222,7 +214,7 @@ module.exports.admin = {
       });
       res.redirect('/admin');
     },
-    
+
     // edit: function(req, res) {
     //   var user = db.users.getUser(req.user.username);
     //   res.render('admin/views', {user: user})
@@ -257,8 +249,14 @@ module.exports.admin = {
         name: req.body.name,
         view: req.files.view.data,
         controller: req.files.controller.data
-      });
-      res.redirect('/admin');
+      })
+        .catch(e => {
+          return res.status(500).send('No files were uploaded.');
+        })
+        .then(()=>{
+          return res.redirect('/admin');
+        });
+
     }
   }
 };

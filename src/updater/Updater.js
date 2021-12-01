@@ -1,17 +1,15 @@
-const Config = require('../config/AppConfig');
-const LabConfig = require('../config/LabConfig');
-const logger = require('winston').loggers.get('log');
 const DateFormat = require('dateformat');
+const AdmZip = require('adm-zip');
+const logger = require('winston').loggers.get('log');
+const spawn = require('child_process').spawn;
 const fs = require('fs');
 const path = require('path');
-const spawn = require('child_process').spawn;
-const AdmZip = require('adm-zip');
-const SessionManager = require('../sessions').SessionManager;
+const tmp = require('tmp');
+
+const Config = require('../config/AppConfig');
+const LabConfig = require('../config/LabConfig');
 const { Controller, User, Activity, View } = require('../models');
 const Settings = require('../settings');
-const tmp = require('tmp');
-const extract = require('extract-zip');
-const { controller } = require('../config/LabConfig');
 
 const CONTROLLER_USER_PATH = "users/";
 
@@ -85,11 +83,9 @@ class Updater {
    * @return the controller files if exist, otherwise undefined. 
    */
   async addController(data) {
-    let version = data.version,
-        username = data.username,
-        type = data.language,
+    let type = data.language,
         name = data.name;
-    // if(data.controller) {
+    // if(data.controller) {-
     //   let path = this._get_controller_path(data);
     //   this._prepare_dev_folder(username, type);
     //   this._copy_files(data.files, path);
@@ -101,9 +97,10 @@ class Updater {
       var controller = Controller.build({
         name: bundle.get('name') || name, 
         type: bundle.get('type') || type,
+        path: bundle.get('main-script')
       });
-      bundle.setName(Settings.CONTROLLERS + '/' + controller.id + '.zip');
-      bundle.extractTo(Settings.CONTROLLERS + '/' + controller.id);
+      bundle.setName(`${Settings.CONTROLLERS}/${controller.id}.zip`);
+      bundle.extractTo(`${Settings.CONTROLLERS}/${controller.id}`);
       return await controller.save();
     } catch(e) {
       logger.debug('Cannot save controller file.');

@@ -1,7 +1,6 @@
 const logger = require('winston').loggers.get('log');
-// const LabConfig = require('../config/LabConfig');
-const State = require('./State');
 const spawn = require('child_process').spawn;
+const State = require('./State');
 const Settings = require('../settings');
 
 /**
@@ -11,13 +10,18 @@ const Settings = require('../settings');
  * - start, play, pause, reset, end
  */
 class Adapter {
-  constructor(options) {
+
+  /**
+   * @param {Controller} controller The controller info.
+   */
+  constructor(controller, options) {
     this.listeners = [];
     this.connected = false;
     this.conn = null;
     this.toNotify = ['config', 'evolution', 'reference', 'controller'];
     this.state = new State();
     this.options = options; //(options !== undefined) ? options : HWConfig;
+    this.controller = controller;
   }
 
   // Interface listener
@@ -44,10 +48,6 @@ class Adapter {
    */
   start(username) {
     logger.error('Adapter: start is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
-    // logger.debug(`User ${username} request to start controller`);
-    // if(this.connected) return;
-    // logger.info('Dobot Adapter: Starting default controller...');
-    // this.conn = spawn('sudo', [this._getDefaultFolder('Dobot') + LabConfig.controller]);
   }
 
   _getDefaultFolder(language) {
@@ -60,14 +60,6 @@ class Adapter {
    */
   ondata(ev) {
     logger.error('Adapter: ondata is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
-    // this.connected = true;
-    // this.state.update(ev);
-    // for(var i=0; i<this.toNotify.length; i++) {
-    //   var name = this.toNotify[i], value = this.state[name];
-    //   var data = {'variable': name, 'value': value};
-    //   this.notify('signals.get', data);
-    //   logger.silly(`${name}->${value}`);
-    // }
   }
 
   /*
@@ -86,14 +78,14 @@ class Adapter {
    * @param {string} error The information about the error.
    */
   onerror(error) {
-    logger.error(`Forcing controller stop: ${error}`);
+    logger.error('Adapter: stop is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
   }
 
   /* Handles errors in stderr.
    * @param {string} error The information about the error.
    */
   onerrordata(error) {
-    logger.error(`Adapter: ${error}`);
+    logger.error('Adapter: onerrordata is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
   }
 
   /* Read the cached value of a variable of the C controller.
@@ -161,9 +153,9 @@ class Adapter {
     try {
       var stats = fs.statSync(user_path);
     } catch (e) {
-      logger.debug('Updater: Folder not found!');
+      logger.debug('Folder not found!');
       let default_path = this._getDefaultFolder(language);
-      logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
+      logger.debug(`Copying default controller ${default_path}->${user_path}`);
       var fileNames = fs.readdirSync(default_path);
       logger.debug(fileNames);
       fs.mkdirSync(user_path, {recursive: true});
@@ -178,7 +170,7 @@ class Adapter {
 
   /** Copy files to userpath */
   _copyFiles(files, userpath, is_selectable) {
-    logger.debug('Updater: Copying files!');
+    logger.debug('Copying files!');
     for (var f in files) {
       var filename = files[f].filename;
       var content = files[f].code;

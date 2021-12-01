@@ -1,1 +1,3 @@
-module.exports.Updater = require('./Updater');
+module.exports = {
+  Updater: require('./Updater')
+} 

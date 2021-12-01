@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<%- include('../ui/header', { csrfToken: '' }  ); %>
-    <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
+    <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>
 	</head>
 	<body>
     <div class="container-fluid d-flex">
@@ -21,91 +21,33 @@
       var editor = ace.edit('editor');
       editor.setTheme("ace/theme/monokai");
       editor.session.setMode("ace/mode/javascript");
-      editor.setValue(`A = [3.8, 3, 3, 3]
-MOV [2, 2, 2, 2]
-MOV A
-A = [3.8, 38, 3, 3]
-MOV A
-IF ( A != B ) {
-  MOV B
-}`);
-      var grammar = `
-        { function makeNumber(sign, integer, decimal) {
-            var number =  ((sign != null) ? sign : '') 
-                        + ((integer != null) ? integer.join('') : '')
-                        + ((decimal != null) ? decimal.join('') : '');
-            return Number.parseFloat(number);
-          } 
-        }
-        instruction_list
-          = _* head:instruction tail:(_* @instruction _*)* { return [head, ...tail]; }
-
-        begin_point     = '['
-        end_point       = ']'
-        begin_condition = '('
-        end_condition   = ')'
-        begin_body      = '{'
-        end_body        = '}'
-        operator        = '<' / '<=' / '>' / '>=' / '==' / '!='
-
-
-        instruction
-          =
-            I:assignment /
-            I:instr_0op { return [I]; } /
-            I:instr_1op _ A:operand { return [I, A]; } /
-            I:instr_2op _ A:operand _ B:operand { return [I, A, B]; } /
-            I:if
-
-         _ 'whitespace'
-          = [ \\t\\n\\r]+
-
-        assignment
-          = A:identifier _* '=' _* B:point _* {return ['=', A, B]}
-
-        identifier
-          = [A-Z]
-
-        point
-          = begin_point _* X:number _* ',' _* Y:number _* ',' _* Z:number _* ',' _* R:number _* end_point { return [X,Y,Z,R]; }
-
-        instr_0op
-          = 'open'i / 'close'i
-
-        instr_1op
-          = 'mov'i
-
-        instr_2op
-          = 'add'i
-
-        if
-          = 'IF' _* begin_condition _* condition _* end_condition _* begin_body _* instruction_list _* end_body 
-
-        condition
-          = operand _* operator _* operand
-
-        operand
-          = identifier / point
-
-        for
-          = 'FOR' _* begin_condition _* condition _* end_condition _* begin_body _* instruction_list _* end_body 
-
-        number
-          = sign:([+-]?)integer:('0' / [1-9][0-9]*)decimal:(\.[0-9]+)? { return makeNumber(sign, integer, decimal); }
-      `;
-      var parser = peggy.generate(grammar);
-      var logger = $("#logger")[0];
+      editor.setValue(`SETPVC A=[3.8, 3, 3, 3]
+MOVE [2, 2, 2, 2]
+MOVE A
+SETPVC A=[3.8, 38, 3, 3]
+MOVE A
+SETPVC B=[3.8, 38, 3, 3]
+SETPVC C=[5, 1, 1, 2.97]
+IF A <> B
+  MOVE B
+  MOVE C
+ELSE
+  MOVE C
+ENDIF
+FOR i=1 TO 5
+  MOVE B
+ENDFOR
+`);
+      var module = {};
+      const logger = $("#logger")[0];
 
       function play() {
-        var interpreter = new Interpreter();
-        var input = editor.getValue();
-        var result;
         try {
-          result = parser.parse(input);
-          // result.forEach(element => {
-          //   logger.value += element + '\n';
-          // });
-          interpreter.execute(result);
+          var interpreter = new Interpreter();
+          var program = interpreter.compile(editor.getValue());
+          var result = interpreter.execute(program);
+          console.log(program.getInstructions());
+          logger.value += interpreter.log.join('\n');
         } catch(e) {
           logger.value += e;
         } finally {
@@ -117,59 +59,8 @@ IF ( A != B ) {
       function stop() {};
       function load() {};
       function save() {};
+    </script>
 
-      class Interpreter {
-        constructor() {
-          this.output = [];
-          this.state = {};
-          this.error = [];
-        }
-
-        mov(point) {
-          logger.value += `Move to ${point}\n`;
-        }
-
-        open() {
-          logger.value += `Open grip\n`;
-        }
-
-        close() {
-          logger.value += 'Close grip\n';
-        }
-
-        execute(code) {
-          code.forEach(i => {
-            switch(i[0]) {
-              case '=':
-                logger.value += `Assign ${i[2]} to ${i[1]}\n`;
-                this.state[i[1]] = i[2];
-                break;
-              case 'MOV':
-                var point;
-                if (typeof i[1] == 'string') {
-                  var point = this.state[i[1]];
-                  if (!point) {
-                    console.error('Unknown identifier: ' + i[1]);
-                    return;
-                  }
-                } else {
-                  point = i[1];
-                }
-                this.mov(point);
-                break;
-              case 'OPEN':
-                this.open();
-                break;
-              case 'CLOSE':
-                this.close();
-                break;
-              case 'IF':
-                console.log('IF');
-            }
-          });
-        };
-      }
-  </script>
-
+    <script src="/scripts/parser.js"></script>
   </body>
 </html>
