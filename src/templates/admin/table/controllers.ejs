@@ -4,8 +4,10 @@
     <tr>
       <th scope="col" class="align-middle"><input type="checkbox"></input></th>
       <th scope="col">Nombre</th>
-      <th scope="col">Ruta</th>
+      <th scope="col">Fecha</th>
       <th scope="col">Lenguaje</th>
+      <th scope="col">Ruta</th>
+      <th scope="col">Id</th>
     </tr>
   </thead>
   <tbody>
@@ -13,8 +15,10 @@
       <tr>
         <td class="align-middle"><input type="checkbox"></input></td>
         <th scope="row"><%= c.name %></td>
-        <td><%= c.path %></td>
+        <th scope="row"><%= c.date %></th>
         <td><%= c.type %></td>
+        <td><%= c.path %></td>
+        <td class="align-middle"><%= c.id %></td>
       </tr>
     <% }); %>
   </tbody>

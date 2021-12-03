@@ -37,15 +37,34 @@
         );
       };
       
+      
       function refreshTable(table) {
         get('/admin/table/get/' + table,
-          result => {
-            $('#'+table).append(result);
-            addInteractions();
-          },
-        );
+        result => {
+          $(`#${table}`).append(result);
+          addInteractions[table]();
+        },  
+        );  
       };
       
+      const addInteractions = {
+        'activities': () => {
+          var rows = $('#activities').find('[id^=activity-]');
+          for (var i=0; i<rows.length; i++) {
+            let id = rows[i].id.substring(9);
+            rows[i].onclick = function() {
+              get(`/admin/activity?name=${id}`, result => { load(result, 'activities'); });
+            };
+          }
+        },
+        'views' : () => {
+          let actions = $('#viewsActions')[0];
+          actions.onclick = event => { console.log(actions.value) }
+        },
+        'controllers' : () => {},
+        'users' : () => {},
+      };
+
       function get(url, callback) {
         var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         $.ajax({
@@ -53,19 +72,8 @@
           'method': 'get',
           'headers': { 'CSRF-Token': token},
           'success': callback
-        });
-      }
-
-      function addInteractions() {
-        var rows = $('#activities').find("[id^=activity-]");
-        for (var i=0; i<rows.length; i++) {
-          let id = rows[i].id.substring(9);
-          rows[i].onclick = function() {
-            get(`/admin/activity?name=${id}`, result => { load(result, 'v-pills-activity'); });
-          };
-        }
-      }
-
+        });  
+      }  
       function load(content, tab) {
         let component = $('#'+tab);
         if (component.length > 0) {
@@ -77,7 +85,7 @@
       $(function() {
         let tables = ['controllers', 'activities', 'views', 'users'];
         tables.forEach(t => { refreshTable(t); });
-        initEditors('config');
+        // initEditors('config');
       // initEditors('controller');
       })
     </script>

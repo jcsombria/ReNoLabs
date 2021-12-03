@@ -30,7 +30,7 @@ class DobotAdapter extends Adapter {
     if(this.connected) return;
     /* Start user or default controller */
     logger.info('Dobot Adapter: Starting default controller...');
-    this.conn = spawn('sudo',['python3', this.controller.path]);
+    this.conn = spawn('sudo',['python3', `../var/controllers/${this.controller.id}/${this.controller.path}`]);
     this.conn.on('error', function(error) {
       console.log(error);
     });

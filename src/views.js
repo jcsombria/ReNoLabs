@@ -68,7 +68,7 @@ module.exports = {
       logger.debug('Invalid Activity');
     }
   },
-  
+
   help: async function(req, res) {
     try {
       var user = await db.users.getUser(req.user.username);
@@ -119,21 +119,25 @@ module.exports = {
       return;
     }
     var credentials = { 'username': req.user.username, 'password': req.user.password};
-    var session = SessionManager.connect(activity, credentials, res.socket, null);
-    if(!session) {
-      res.render('home', {user: user});
-      return;
-    }
-    res.render('remote_lab.ejs', {
-      user: user,
-      key: session.token,
-      ip: Config.WebServer.ip,
-      port: Config.WebServer.port,
-      view: activity.View.id + '/' + activity.View.path,
-      activity: activity.name
-    });
+    SessionManager.connect(activity.name, credentials, res.socket, null)
+      .then(session => {
+        if(!session) {
+          return res.render('home', {user: user});
+        }
+        return res.render('remote_lab.ejs', {
+          user: user,
+          key: session.token,
+          ip: Config.WebServer.ip,
+          port: Config.WebServer.port,
+          view: `${activity.View.id}/${activity.View.path}`,
+          activity: activity.name
+        });
+      }).catch(e => {
+        console.log(e);
+        return res.status(500).send('Can\'t load activity');
+      });
   },
-  
+
   download: function(req, res) {
     res.download('./data/' + req.params[0]);
   },
@@ -178,7 +182,8 @@ module.exports.admin = {
   getActivity: async function(req, res) {
     try {
       var activity = await models.Activity.findOne({
-        where: { name: req.query.name }
+        where: { name: req.query.name },
+        include: [models.View, models.Controller]
       });
       var users = activity.getUsers();
       if (users != undefined) { users = []; }

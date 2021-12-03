@@ -1,13 +1,13 @@
 <table class="table table-sm table-striped table-hover table-borderless caption-top" id="viewsTable">
-  <caption>Vistas</caption>
+  <caption>Vistas disponibles</caption>
   <thead class="table-primary">
       <tr>
         <th class="align-middle" scope="col"><input type="checkbox"></input></th>
-        <th scope="col">Id</th>
         <th scope="col">Nombre</th>
+        <th scope="col">Fecha</th>
+        <th scope="col">Id</th>
         <th scope="col">Ruta Principal</th>
         <th scope="col">Ruta Descripcion</th>
-        <th scope="col">Fecha</th>
       </tr>
   </thead>
   <tbody>
@@ -22,11 +22,11 @@
       <%  } %>
         <tr>
           <td class="align-middle"><input type="checkbox"></input></td>
-          <th scope="row"><%= v.id %></th>
-          <td><%= v.name %></td>
-          <td><%= v.path %></td>
-          <td><%= v.description %></td>
-          <td><%= v.date %></td>
+          <th class="align-middle" scope="row"><%= v.name %></th>
+          <th class="align-middle" scope="row"><%= v.date %></td>
+          <td class="align-middle"><%= v.id %></td>
+          <td class="align-middle"><%= v.path %></td>
+          <td class="align-middle"><%= v.description %></td>
         </tr>
       <%  if (i == n) { %>
       </div>

@@ -50,16 +50,16 @@ class Session {
     }
     const Adapter = hardware[controller.type].Adapter;
     this.hardware = new Adapter(controller);
-    this.hardware.addListener(this.logger);    
+    this.hardware.addListener(this.logger);
   }
-  
+
   /*
    * Process user data. If data contains action command, executte. Otherwise, forward to hardware.
    * @param {object} data The received data.
    */
   process(event) {
-    if(!Array.isArray(event)) {event = [event]} 
-    for (i in event) {
+    if(!Array.isArray(event)) {event = [event]}
+    for (var i in event) {
       try {
         this.eventDispatcher.dispatch(event[i]);
       } catch(e) {
@@ -78,7 +78,7 @@ class Session {
     var user = this.user.username;
     this.logger.start(user);
     this.hardware.start(user);
-    this.hardware.play();    
+    this.hardware.play();
   }
 
   play() {
@@ -159,6 +159,8 @@ class SessionManager {
   async connect(activity, credentials, socket, id) {
     var user = this.validate(credentials);
     if (!user) return;
+console.log('dddd');
+    console.log(activity);
     var theActivity = await models.Activity.findOne({
       where: { name: activity },
       include: models.Controller
