@@ -76,10 +76,10 @@ module.exports = {
         where: { name: req.query.name },
         include: models.View
       });
-      var view = activity.View;
+      var view = await getView(activity);
       res.render('help', {
         user: user,
-        view: view.id + '/' + view.description
+        view: `${view.id}/${view.description}`
       });
     } catch(e) {
       logger.debug('Invalid Activity');
@@ -87,14 +87,14 @@ module.exports = {
     }
   },
 
+  // Read current user's files
   data: async function(req, res) {
-    // Read current user's files
     var files = fs.readdirSync(Settings.DATA)
       .filter(e => { if (e.split('_')[0] == req.user.username) { return e; } })
-      .sort((a, b) => { return fs.statSync(Settings.DATA + '/' + b).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
+      .sort((a, b) => { return fs.statSync(`${Settings.DATA}/b`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
     let f = [];
     for (i = 0; i < files.length; i++) {
-      var name = Settings.DATA + '/' + files[i];
+      var name = `${Settings.DATA}/${files[i]}`;
       var stats = fs.statSync(name);
       f.push({
         'name': name,
@@ -113,29 +113,30 @@ module.exports = {
         where: {name: req.query.name},
         include: [models.View, models.Controller]
       });
+      var view = await getView(activity);
+      var credentials = { 'username': req.user.username, 'password': req.user.password};
+      SessionManager.connect(activity.name, credentials, res.socket, null)
+        .then(session => {
+          if(!session) {
+            return res.render('home', {user: user});
+          }
+          return res.render('remote_lab.ejs', {
+            user: user,
+            key: session.token,
+            ip: Config.WebServer.ip,
+            port: Config.WebServer.port,
+            view: `${view.id}/${view.path}`,
+            activity: activity.name
+          });
+        }).catch(e => {
+          console.log(e);
+          return res.status(500).send('Can\'t load activity');
+        });
     } catch(e) {
       logger.debug('Invalid activity');
       res.send('Activity is not correctly configured.');
       return;
     }
-    var credentials = { 'username': req.user.username, 'password': req.user.password};
-    SessionManager.connect(activity.name, credentials, res.socket, null)
-      .then(session => {
-        if(!session) {
-          return res.render('home', {user: user});
-        }
-        return res.render('remote_lab.ejs', {
-          user: user,
-          key: session.token,
-          ip: Config.WebServer.ip,
-          port: Config.WebServer.port,
-          view: `${activity.View.id}/${activity.View.path}`,
-          activity: activity.name
-        });
-      }).catch(e => {
-        console.log(e);
-        return res.status(500).send('Can\'t load activity');
-      });
   },
 
   download: function(req, res) {
@@ -166,10 +167,19 @@ module.exports.admin = {
   getTable: async function(req, res) {
     const table = req.params.table;
     const QUERY = {
-      'activities': {include: [models.View, models.Controller]},
-      'views': {},
-      'controllers': {},
-      'users': {},
+      'activities': {
+        include: [models.View, models.Controller],
+        order: [[ 'createdAt', 'DESC' ]]
+      },
+      'views': {
+        order: [[ 'createdAt', 'DESC' ]]       
+      },
+      'controllers': {
+        order: [[ 'createdAt', 'DESC' ]]
+      },
+      'users': {
+        order: [[ 'createdAt', 'DESC' ]]
+      },
     };
     try {
       const result = (req.method == 'POST') ? req.body.data : await MODELS[table].findAll(QUERY[table]);
@@ -196,6 +206,17 @@ module.exports.admin = {
     } catch(error) {
       res.status(400).send(error);
     }
+  },
+
+  query: function (req, res) {
+    var q = {
+      'action': req.params.action,
+      'model': req.params.model,
+    };
+    if (req.body.where) { q['where'] = req.body.where; }
+    Updater.query(q)
+      .then(result => { res.send(result); })
+      .catch(error => { res.status(400).send(error); });
   },
 
   views: {
@@ -247,20 +268,35 @@ module.exports.admin = {
 
   activity: {
     add: function(req, res) {
-      logger.info('Uploading controller...A great power comes with a great responsibility!');
-      if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).send('No files were uploaded.');
+      logger.info('Uploading activity...A great power comes with a great responsibility!');
+      if(!req.body.name) {
+        return res.status(400).send('Invalid name');
       }
-      Updater.addActivity({
+      if(req.files && !req.files.controller && !req.body.controllerName) {
+        return res.status(400).send('Invalid controller');
+      }
+      if(req.files && !req.files.view && !req.body.viewName) {
+        return res.status(400).send('Invalid view');
+      }
+      var activity = {
         name: req.body.name,
-        view: req.files.view.data,
-        controller: req.files.controller.data
-      })
-        .catch(e => {
-          return res.status(500).send('No files were uploaded.');
-        })
+        viewName: req.body.viewName,
+        controllerName: req.body.controllerName,
+      };
+      if(req.files && req.files.view) {
+        activity['view'] = req.files.view.data;
+      }
+      if(req.files && req.files.controller) {
+        activity['controller'] = req.files.controller.data;
+      }
+      Updater.addActivity(activity)
         .then(()=>{
           return res.redirect('/admin');
+        })
+        .catch(e => {
+          console.log(e)
+          console.log(e.message)
+          return res.status(500).send(e.message);
         });
 
     }
@@ -394,4 +430,13 @@ module.exports.test = {
   vue: function(req, res) {
     res.render(`tests/vue.ejs`, { 'model': LabConfig.model, 'viewmodel': LabConfig.view });
   }
+}
+
+
+function getView(activity) {
+  if(activity.View) { return activity.View; }
+  return models.View.findOne({
+    where: { name: activity.viewName },
+    order: [[ 'createdAt', 'DESC' ]]
+  });
 }

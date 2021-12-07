@@ -10,6 +10,8 @@ const { hostname } = require('os')
 const writeApi = new InfluxDB({url, token}).getWriteApi(org, bucket, 'ns')
 writeApi.useDefaultTags({location: hostname()})
 
+const Settings = require('../settings');
+
 class Logger extends EventEmitter {
 	constructor() {
 		super();
@@ -54,10 +56,9 @@ class Logger extends EventEmitter {
 
 	start(username) {
 		this.username = username;
-		var logfilename = this._getFolder() + this._getFilename(username);
 		this.logfile = new transports.File({
 			format: format.printf((info) => { return `${info.message}`; }),
-			filename: logfilename,
+			filename: this._getFilename(username),
 			level: 'silly',
 		});
 		datalogger.clear().add(this.logfile);
@@ -67,13 +68,9 @@ class Logger extends EventEmitter {
 		datalogger.remove(this.logfile);
 	}
 
-	_getFolder() {
-		return 'data/';
-	}
-
 	_getFilename(name) {
 		var date = DateFormat(new Date(), "yyyymmdd_HHMMss");
-		return name + '_' + date + '.txt';
+		return `${Settings.DATA}/${name}_${date}.txt`;
 	}
 }
 

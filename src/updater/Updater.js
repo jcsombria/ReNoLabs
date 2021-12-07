@@ -10,30 +10,89 @@ const Config = require('../config/AppConfig');
 const LabConfig = require('../config/LabConfig');
 const { Controller, User, Activity, View } = require('../models');
 const Settings = require('../settings');
+const { model } = require('../config/LabConfig');
 
 const CONTROLLER_USER_PATH = "users/";
+
+class InvalidActivityError extends Error {}
+class InvalidControllerError extends Error {}
+class InvalidViewError extends Error {}
 
 class Updater {
 
   FILTERS = {
-    'C':
-      name => { return name.endsWith('.c') || name == "Makefile"; },
-    'Python':
-      name => { return name.endsWith('.py'); },
-    'Javascript':
-      name => { name.endsWith('.js')},
+    'C': name => {
+      return name.endsWith('.c') || name == "Makefile";
+    },
+    'Python': name => {
+      return name.endsWith('.py');
+    },
+    'Javascript': name => {
+      name.endsWith('.js')
+    },
   }
-  
+
+  ACTIONS = {
+    // 'add': async (q) => { return this.add(q); },
+    'delete': async (q) => { return this.delete(q); },
+    // 'set': async (q) => { return this.set(q); },
+    'get': async (q) => { return this.get(q); },
+  };
+
+  MODELS = {
+    'view': View,
+    'controller': Controller,
+    'activity': Activity,
+    'user': User,
+  }
+
+  RESOURCES = {
+    'view': where => {
+      return [
+        `${Settings.VIEWS_SERVE}/${where.id}`,
+        `${Settings.VIEWS}/${where.id}.zip`
+      ]
+    },
+    'controller': where => {
+      return [
+        `${Settings.CONTROLLERS}/${where.id}`,
+        `${Settings.CONTROLLERS}/${where.id}.zip`
+      ]
+    },
+    'user': where => { return []; },
+    'activity': where => { return []; }
+  }
+
   async addActivity(data) {
-    var view = await this.addView({view: data.view});
-    var controller = await this.addController({controller: data.controller});
-    return await Activity.create({
-      name: data.name,
-      disconnectTimeout: 10,
-      sessionTimeout: 5,
-      ViewId: view.id,
-      ControllerId: controller.id
-    });
+    try {
+      var activity = {
+        name: data.name,
+        disconnectTimeout: data.disconnectTimeout || 10,
+        sessionTimeout: data.sessionTimeout || 5,
+        viewName: data.viewName,
+        controllerName: data.controllerName,
+      }
+      if (data.view) {
+        var view = await this.addView({view: data.view});
+        activity.ViewId = view.id;
+        activity.viewName = view.name;
+      }
+      if (data.controller) {
+        var controller = await this.addController({controller: data.controller});
+        activity.ControllerId = controller.id;
+        activity.controllerName = controller.name;
+      }
+      if(!activity.viewName) {
+        throw new InvalidActivityError('Invalid view'); 
+      }
+      if(!activity.controllerName) {
+        throw new InvalidActivityError('Invalid controller'); 
+      }
+      console.log(activity)
+      return await Activity.create(activity);
+    } catch(e) {
+      throw new InvalidActivityError(e.message);
+    }
   }
 
   async addView(data) {
@@ -41,34 +100,19 @@ class Updater {
       var bundle = new Bundle(data.view);
       var view = View.build({
         name: data.name || bundle.get('title'),
-        comment: data.comment
+        comment: data.comment,
       });
-      bundle.setName(Settings.VIEWS + '/' + view.id + '.zip');
-      bundle.extractTo(Settings.VIEWS_SERVE + '/' + view.id);
+      bundle.setName(`${Settings.VIEWS}/${view.id}.zip`);
+      bundle.extractTo(`${Settings.VIEWS_SERVE}/${view.id}`);
       view.description = bundle.get('html-description');
       view.path = bundle.get('main-simulation');
-      await view.save();
-      // try {
-      //   var activity = await Activity.findOne({where: {name: data.name}});
-      //   activity.ViewId = view.id;
-      //   await activity.save({ fields: ['ViewId'] });
-      // } catch(e) {
-      //   logger.debug('Activity not defined.');
-      // }
-      return view;
+    return await view.save();
     } catch(e) {
       logger.debug('Cannot save view file.');
+      fs.unlinkSync(`${Settings.VIEWS}/${view.id}.zip`);
+      fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });      
+      throw new InvalidViewError('Cannot save view file.')
     }
-  }
-
-  getView() {
-    // try {
-    //   var filename = Settings.VIEWS + LabConfig.GUI;
-    //   var view = fs.readFileSync(filename);
-    //   return view;
-    // } catch (e) {
-    //   logger.debug('Updater: views folder not found!');
-    // }
   }
 
   /* Update the controller.
@@ -83,27 +127,23 @@ class Updater {
    * @return the controller files if exist, otherwise undefined. 
    */
   async addController(data) {
-    let type = data.language,
-        name = data.name;
-    // if(data.controller) {-
-    //   let path = this._get_controller_path(data);
-    //   this._prepare_dev_folder(username, type);
-    //   this._copy_files(data.files, path);
-    //   SessionManager.hardware.compile(path, callback);
-    //   return;
-    // }
     try {
       var bundle = new Bundle(data.controller);
       var controller = Controller.build({
-        name: bundle.get('name') || name, 
-        type: bundle.get('type') || type,
+        name: data.name || bundle.get('name'), 
+        type: data.language || bundle.get('type'),
         path: bundle.get('main-script')
       });
       bundle.setName(`${Settings.CONTROLLERS}/${controller.id}.zip`);
       bundle.extractTo(`${Settings.CONTROLLERS}/${controller.id}`);
+      // const adapter = SessionManager.createHardwareAdapter(controller).adapter;
+      // adapter.compile();
       return await controller.save();
     } catch(e) {
       logger.debug('Cannot save controller file.');
+      fs.unlinkSync(`${Settings.CONTROLLERS}/${controller.id}.zip`);
+      fs.rmdirSync(`${Settings.CONTROLLERS}/${controller.id}`, { recursive: true });      
+      throw new InvalidControllerError('Cannot save controller file.')
     }
   }
 
@@ -171,11 +211,19 @@ class Updater {
       }
    * @return the controller files if exist, otherwise undefined. 
    */
-  getController(data) {
-    let path = this._get_controller_path(data);
-    let controllerExists = this._prepare_dev_folder(data.username, data.language);
-    if (controllerExists) {
-      return this._get_files(path, this.FILTERS[data.language]);
+  async getController(query) {
+    try {
+      var controller = await Controller.findOne({ where: { name: query.name } });
+      if (!query.format || query.format != 'zip') {
+        return this._get_files(`${Settings.CONTROLLERS}/${controller.id}`, this.FILTERS[query.language]);
+      }
+      var filename = `${Settings.CONTROLLERS}/${controller.id}.zip`;
+      return [{
+        filename: filename,
+        code: fs.readFileSync(filename, {encoding: 'utf8'})
+      }];
+    } catch(e) {
+      throw new InvalidControllerError();
     }
   }
 
@@ -200,8 +248,32 @@ class Updater {
     return files;
   }
 
+  /* Retrieve a view.
+   * @param {object}   data a dictionary like object:
+      {
+        name:,
+        format: 'zip' (optional),
+      }
+   * @return the controller files if exist, otherwise undefined. 
+   */
+  async getView(query) {
+    try {
+      var view = await View.findOne({ where: { name: query.name } });
+      if (!query.format || query.format != 'zip') {
+        return this._get_files(`${Settings.VIEWS_SERVE}/${view.id}`, this.FILTERS[query.language]);
+      }
+      var filename = `${Settings.VIEWS}/${view.id}.zip`;
+      return [{
+        filename: filename,
+        code: fs.readFileSync(filename, {encoding: 'utf8'})
+      }];
+    } catch(e) {
+      throw new InvalidViewError();
+    }
+  }
+
   /** Update the users database.
-   * @param {object}   data a dictionary-like object with users' data: { users: [ user1, ..., userN ] }
+   * @param {object}   users a dictionary-like object with users' data: { users: [ user1, ..., userN ] }
    */
   setUsers(users) {
     var userList = JSON.parse(users);
@@ -248,7 +320,7 @@ class Updater {
     var files = fs.readdirSync(Settings.CONFIG);
     for (var i = 0; i < files.length; i++) {
       if(this.FILTERS['Javascript'](files[i])) {
-        var filename = Settings.CONFIG + '/' + files[i];
+        var filename = `${Settings.CONFIG}'/'files[i]`;
         this._archive(filename, Settings.CONFIG + '/backup');
       }
     }
@@ -257,6 +329,81 @@ class Updater {
 
   getConfig() {
     return this._get_files(Settings.CONFIG, this._is_js_file);
+  }
+
+  async deleteActivity(query) {
+    try {
+      await this._delete({
+        'model': Activity,
+        'where': { 'name': query.name },
+        'resources': []
+      });
+    } catch(e) {
+      throw new InvalidActivityError();
+    }
+  }
+
+  async deleteController(query) {
+    try {
+      await this._delete({
+        'model': Controller,
+        'where': { 'id': query.id },
+        'resources': [
+          `${Settings.CONTROLLERS}/${query.id}`,
+          `${Settings.CONTROLLERS}/${query.id}.zip`
+        ]
+      });
+    } catch(e) {
+      throw new InvalidControllerError();
+    }
+  }
+
+  async deleteView(query) {
+    try {
+      await this._delete({
+        'model': View,
+        'where': { 'id': query.id },
+        'resources': [
+          `${Settings.VIEWS_SERVE}/${query.id}`,
+          `${Settings.VIEWS}/${query.id}.zip`
+        ]
+      })
+    } catch(e) {
+      throw new InvalidViewError();
+    }
+  }
+
+  async _delete(query) {
+    var element = await query['model'].findOne({ where: query.where });
+    query['resources'].forEach(r => {
+      fs.rmdirSync(r, { recursive: true });
+    })
+    element.destroy();
+  }
+
+  async delete(query) {
+    // this._delete({
+    //   'model': this.MODELS[query.model],
+    //   'where': query.where,
+    //   'resources': this.RESOURCES[query.model](query.where)
+    // });
+    console.log(query)
+    var element = await this.MODELS[query.model].findOne({ where: query.where });
+    this.RESOURCES[query.model](query.where).forEach(r => {
+      fs.rmdirSync(r, { recursive: true });
+    })
+    element.destroy();
+  }
+
+  async get(query) {
+    if (!query.where) {
+      return this.MODELS[query.model].findAll();
+    }
+    return this.MODELS[query.model].findAll({ where: query.where });
+  }
+
+  async query(q) {
+    return this.ACTIONS[q.action](q);
   }
 }
 
@@ -267,7 +414,7 @@ class Bundle {
   }
 
   save(content) {
-    const tmpfile = tmp.fileSync({ 'tmpdir': Settings.CONTROLLERS + '/' });
+    const tmpfile = tmp.fileSync({ 'tmpdir': `${Settings.CONTROLLERS}/` });
     fs.writeFileSync(tmpfile.name, content);
     this.name = tmpfile.name;
     this.metadata = this._getMetadata();
@@ -304,7 +451,6 @@ class Bundle {
     const zip = new AdmZip(this.name);
     zip.extractAllTo(target);
   }
-
 }
 
 module.exports = new Updater();

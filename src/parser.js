@@ -1,6 +1,3 @@
-const { IllegalArgumentError } = require("@influxdata/influxdb-client");
-const { BIconThreeDotsVertical } = require("bootstrap-vue");
-
 const grammar = `{
   function makeNumber(sign, integer, decimal) {
     var number =  (sign ? sign : '') 

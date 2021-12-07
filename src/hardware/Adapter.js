@@ -26,9 +26,15 @@ class Adapter {
 
   // Interface listener
   // {
-  addListener(o) {
-    if(!(o in this.listeners)) {
-      this.listeners.push(o);
+  addListeners(o) {
+    o.forEach(l => {
+      if(!(l in this.listeners)) { this.listeners.push(l); }
+    });
+  }
+
+  addListener(l) {
+    if(!(l in this.listeners)) {
+      this.listeners.push(l);
     }
   }
 

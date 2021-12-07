@@ -8,22 +8,90 @@
         post(`/_api/${prefix}/get`, null, config => {
           for (var i=0; i<config.data.length; i++) {
             var editor = ace.edit('editor-'+prefix+'-'+i);
-            editor.setTheme("ace/theme/monokai");
-            editor.session.setMode("ace/mode/javascript");
+            editor.setTheme('ace/theme/monokai');
+            editor.session.setMode('ace/mode/javascript');
             editor.setValue(config.data[i].code);
           }
         });
       }
 
-      function post(url, data, callback) {
+      function refreshTable(table) {
+        get(`/admin/table/get/${table}`,
+          result => {
+            load(result, table);
+            addInteractions[table]();
+          },
+        );
+      };
+
+      function get(url, callback) {
         var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         $.ajax({
           'url': url,
-          'method': 'post',
-          'data': data,
-          'processData': false,
+          'method': 'get',
           'headers': { 'CSRF-Token': token},
           'success': callback
+        });  
+      }
+
+      function load(content, tab) {
+        console.log(`#${tab}`)
+        let component = $(`#${tab}`);
+        console.log(component)
+        if (component.length > 0) {
+          component.empty();
+          component.append(content);
+        }
+      }
+
+      const addInteractions = {
+        'activities': () => { addInteractionsTo('activities', 'activity', 'name'); },
+        'views' : () => { addInteractionsTo('views', 'view', 'id'); },
+        'controllers' : () => { addInteractionsTo('controllers', 'controller', 'id'); },
+        'users' : () => {},
+      };
+
+      function addInteractionsTo(table, component, idName) {
+        var rows = $(`[id^=${component}-]`);
+        for (var r of rows) {
+          let id = r.id.substring(component.length + 1);
+          let data = { 'where': {} };
+          data.where[idName] = id;
+          $(`[id="${r.id}"] .bi-trash`)[0].onclick = function() {
+            post(`/admin/q/${component}/delete`, 
+              JSON.stringify(data),
+              success => {
+                refreshTable(table);
+                showMessage(`${component} deleted`, 'modalGenericMessage');
+              },
+              error => {
+                showMessage(`${component} not deleted.`, 'modalGenericMessage');
+              }
+            )
+          };
+          $(`[id="${r.id}"] .bi-pencil`)[0].onclick = function() {
+            get(`/admin/${component}?name=${id}`, result => {
+              load(result, table);
+            });
+          }
+        }
+      }
+
+      function showMessage(message, modal) {
+        var m = document.getElementById(modal);
+        $(`#${modal}`).find('.alert')[0].innerHTML = message;
+        new bootstrap.Modal(m).show();
+      }
+
+      function submitForm(url, data, success, error) {
+        $.ajax({
+          'url': url,
+          'method': 'post',
+          'contentType': false,
+          'processData': false,
+          'data': data,
+          'success': success,
+          'error': error
         });
       }
 
@@ -36,57 +104,26 @@
           }
         );
       };
-      
-      
-      function refreshTable(table) {
-        get('/admin/table/get/' + table,
-        result => {
-          $(`#${table}`).append(result);
-          addInteractions[table]();
-        },  
-        );  
-      };
-      
-      const addInteractions = {
-        'activities': () => {
-          var rows = $('#activities').find('[id^=activity-]');
-          for (var i=0; i<rows.length; i++) {
-            let id = rows[i].id.substring(9);
-            rows[i].onclick = function() {
-              get(`/admin/activity?name=${id}`, result => { load(result, 'activities'); });
-            };
-          }
-        },
-        'views' : () => {
-          let actions = $('#viewsActions')[0];
-          actions.onclick = event => { console.log(actions.value) }
-        },
-        'controllers' : () => {},
-        'users' : () => {},
-      };
 
-      function get(url, callback) {
+      function post(url, data, success, error) {
         var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         $.ajax({
           'url': url,
-          'method': 'get',
+          'method': 'post',
+          'contentType': 'application/json',
+          'data': data,
+          'processData': false,
           'headers': { 'CSRF-Token': token},
-          'success': callback
-        });  
-      }  
-      function load(content, tab) {
-        let component = $('#'+tab);
-        if (component.length > 0) {
-          component.empty();
-          component.append(content);
-        }
+          'success': success,
+          'error': error
+        });
       }
 
       $(function() {
         let tables = ['controllers', 'activities', 'views', 'users'];
         tables.forEach(t => { refreshTable(t); });
         // initEditors('config');
-      // initEditors('controller');
+        // initEditors('controller');
       })
     </script>
   </head>
@@ -97,7 +134,7 @@
         <!-- <button class="nav-link container-fluid d-flex active" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
           <i class="fs-5 bi bi-gear me-2"></i><span class="fs-5 d-none d-sm-inline" title="Configuración"> Configuración</span>
         </button> -->
-        <button class="nav-link container-fluid d-flex" id="v-pills-activity-tab" data-bs-toggle="pill" data-bs-target="#v-pills-activity" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+        <button class="nav-link container-fluid d-flex active" id="v-pills-activity-tab" data-bs-toggle="pill" data-bs-target="#v-pills-activity" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
           <i class="fs-5 bi bi-tools me-2"></i><span class="fs-5 d-none d-sm-inline" title="Actividades"> Actividades</span>
         </button>
         <button class="nav-link container-fluid d-flex" id="v-pills-view-tab" data-bs-toggle="pill" data-bs-target="#v-pills-view" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
@@ -114,7 +151,7 @@
         <!-- <div class="tab-pane fade w-100 h-100 show active" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-home-tab">
           < %- include('./edit/config', {files: config, prefix: 'config'}); % >
         </div> -->
-        <div class="tab-pane fade w-100 h-100" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
+        <div class="tab-pane fade w-100 h-100 show active" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
           <%- include('./edit/activities') %>
         </div>
         <div class="tab-pane fade w-100 h-100" id="v-pills-view" role="tabpanel" aria-labelledby="v-pills-view-tab">
@@ -128,5 +165,27 @@
         </div>
       </div>
     </div>
+
+
+    <div class="modal fade" id="modalGenericMessage" tabindex="-1" aria-labelledby="modalGenericMessageLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalGenericMessageMessage">Aviso</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <div class="alert alert-warning mt-3" role="alert"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Send message</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   <body>
 </html>

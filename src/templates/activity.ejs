@@ -36,14 +36,15 @@
       load('help', 'description');
       function load(url, tab) {
         // var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        console.log(`${url}?name=<%= activity %>`)
         $.ajax({
-          'url': url + '?name=<%= activity %>',
+          'url': `${url}?name=<%= activity %>`,
           'method': 'get',
           'processData': false,
           // 'headers': { 'CSRF-Token': token},
           'success': function(result) {
-            $('#'+tab).empty();
-            $('#'+tab).append(result);
+            $(`#${tab}`).empty();
+            $(`#${tab}`).append(result);
           },
         });
       }

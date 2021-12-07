@@ -1,7 +1,8 @@
+const Settings = require('./settings');
 const { Sequelize, DataTypes, Model, DATE, where } = require('sequelize');
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: process.env.SQLITE_DB_FILE || 'db/database.sqlite',
+  storage: Settings.SQLITE_DB_FILE,
   logging: false, 
 });
 
@@ -60,6 +61,12 @@ Activity.init({
   },
   disconnectTimeout: {
     type: DataTypes.DECIMAL, allowNull: false, defaultValue: 5 
+  },
+  controllerName: {
+    type: DataTypes.STRING, allowNull: false
+  },
+  viewName: {
+    type: DataTypes.STRING, allowNull: false
   }
 }, {
   sequelize, modelName: 'Activity'

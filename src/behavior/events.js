@@ -1,29 +1,46 @@
 var events = require('events');
+const logger = require('winston').loggers.get('log');
 
 /*
  * Decide which information, and when, will be transmitted to the clients.
  */
 class EventGenerator extends events.EventEmitter {
 
-  constructor(listener) {
+  constructor() {
     super();
     this.period = 500;
     this.periodHeartbeat = 5000;
     this.buffer = [];
-    this.listener = listener;
+    this.listener = [];
     this.state = {};
     this.EVENT = 'signals.get';
+    this.start();
+  }
 
+  start() {
     setInterval(this._withProcessing(this.flush.bind(this)), this.period);
     setInterval(this._withProcessing(this.heartbeat.bind(this)), this.periodHeartbeat);
     this.on(this.EVENT, this._withProcessing(this.onEvolution.bind(this)));
   }
 
+  addListener(l) {
+    this.listener.push(l);
+  }
+
   _withProcessing(f) {
     return (data => {
-      var processedData = f(data);
-      if(processedData) {
-        this.listener.emit(this.EVENT, processedData);
+      try {
+        var processedData = f(data);
+        if (!processedData) { return };
+        this.listener.forEach(l => {
+          try {
+            l.emit(this.EVENT, processedData);
+          } catch(e) {
+            logger.debug('Cannot notify listener');
+          }
+        });
+      } catch(e) {
+        logger.debug('Cannot process data.');
       }
     }).bind(this);
   }
@@ -43,7 +60,7 @@ class EventGenerator extends events.EventEmitter {
         return data;
       }  
     }  
-  }  
+  }
 
   /*
    * Transmit the content of the buffered. 
@@ -100,14 +117,21 @@ class EventDispatcher {
   }
 
   dispatch(event) {
-    for (var r in this.rules) {
-      const classify = this.rules[r]['classify'];
-      var type = classify(event);
-      if (type != 'unmatched') { //EventDispatcher.UNMATCHED) {
-        this.handle[type](event);
-        return;
-      }
-    }
+    if(!Array.isArray(event)) { event = [event] }
+    event.forEach(e => {
+      try {
+        for (var r in this.rules) {
+          const classify = this.rules[r]['classify'];
+          var type = classify(event);
+          if (type != 'unmatched') { //EventDispatcher.UNMATCHED) {
+            this.handle[type](event);
+            return;
+          }
+        }
+      } catch(e) {
+        logger.error('Can\'t process event.');
+      }      
+    });
   }
 }
 

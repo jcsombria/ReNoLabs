@@ -3,6 +3,7 @@ const spawn = require('child_process').spawn;
 const HWConfig = require('./Config');
 const Adapter = require('../Adapter');
 const State = require('../State');
+const Settings = require('../../settings');
 
 /**
  * Encapsulates the interaction with the C Server
@@ -24,14 +25,10 @@ class CAdapter extends Adapter {
    */
   start(username) {
     logger.debug(`User ${username} request to start C controller`);
-    if(this.connected) {
-      return; 
-    }
+    if(this.connected) { return; }
     logger.info('C Adapter: Starting default controller...');
-    this.conn = spawn('sudo', [this.controller.path]);
-    // I commented this code and the method definition below because it was never reached
-    // I have to check why the event 'spawn' is not being notified
-    //this.conn.on('spawn', this.onstart.bind(this));
+    logger.debug(`sudo ${Settings.CONTROLLERS}/${this.controller.id}/${this.controller.path}`)
+    this.conn = spawn('sudo', [`${Settings.CONTROLLERS}/${this.controller.id}/${this.controller.path}`]);
     this.conn.on('error', this.onerror.bind(this));
     this.conn.on('close', function() {this.connected = false;}.bind(this));
     /* En caso de fallo del controlador resetea las variables config y evolucion. */
@@ -58,6 +55,7 @@ class CAdapter extends Adapter {
     this.state.update(ev);
     for(var i=0; i<this.toNotify.length; i++) {
       var name = this.toNotify[i], value = this.state[name];
+      if(!value) continue;
       var data = {'variable': name, 'value': value};
       this.notify('signals.get', data);
       logger.silly(`${name}->${value}`);

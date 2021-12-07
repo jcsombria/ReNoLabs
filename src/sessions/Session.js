@@ -3,32 +3,58 @@ const logger = require('winston').loggers.get('log');
 const Config = require('../config/AppConfig');
 const db = require('../db');
 const rules = require('../behavior/rules')
-const { EventProcessor, EventDispatcher } = require('../behavior/events');
+const { EventGenerator, EventProcessor, EventDispatcher } = require('../behavior/events');
 const models = require('../models');
 const hardware = require('../hardware');
+const { authorize } = require('passport');
+
+class HardwarePool {
+  constructor() {
+    this.hardware = {};
+    this.available = {};
+  }
+
+  getHardwareFor(controller) {
+    if (!(controller.type in hardware)) {
+      throw new Error('Unknown hardware adapter.');
+    }
+    if (!(controller.type in this.available)) {
+      this.available[controller.type] = {
+        'adapter': new hardware[controller.type].Adapter(controller),
+        'logger': new hardware[controller.type].Logger(),
+        'eventGenerator': new EventGenerator(),
+      };
+      this.available[controller.type].adapter.addListeners([
+        this.available[controller.type].logger,
+        this.available[controller.type].eventGenerator
+      ]);
+    }
+    return this.available[controller.type];
+  }
+}
+
+const hardwarePool = new HardwarePool();
 
 /* Session model. */
 class Session {
-
   /*
    * @param {Activity}       activity  The activity.
    * @param {User}           user      The user that opened the session.
    * @param {string}         id        The id of the channel (socket) associated to the session.
    * @param {SessionManager} manager   The session manager.
    */
-  constructor (activity, user, id, manager) {
+  constructor (activity, user, id, manager, hardware) {
     this.activity = activity;
     this.user = user;
     this.id = id;
+    this.active = false;
     this.manager = manager;
-    this.logger = manager.hwlogger;
-    this.createHardwareAdapter(this.activity.Controller);
-    this.rules = {};
+    this.hardware = hardware;
     this.eventProcessor = new EventProcessor(this);
     this.eventDispatcher = new EventDispatcher(this.eventProcessor);
     // # Dispatching Rules
     // - Enqueue if extern references, otherwise process immediately
-    this.eventDispatcher.addRoutingRule('enqueue_if_extern_process_otherwise', 
+    this.eventDispatcher.addRoutingRule('enqueue_if_extern_process_otherwise',
       event => {
         let isExtern = (event.variable == 'reference' && event.value[0] == 4);
         return isExtern ? 'enqueue' : 'process'; // EventDispatcher.ENQUEUE : EventDispatcher.PROCESS;
@@ -44,60 +70,45 @@ class Session {
     }
   }
 
-  createHardwareAdapter(controller) {
-    if (!controller.type in hardware) {
-      throw new Error('Unknown hardware adapter.');
-    }
-    const Adapter = hardware[controller.type].Adapter;
-    this.hardware = new Adapter(controller);
-    this.hardware.addListener(this.logger);
-  }
-
   /*
    * Process user data. If data contains action command, executte. Otherwise, forward to hardware.
    * @param {object} data The received data.
    */
   process(event) {
-    if(!Array.isArray(event)) {event = [event]}
-    for (var i in event) {
-      try {
-        this.eventDispatcher.dispatch(event[i]);
-      } catch(e) {
-        logger.error('Can\'t process event.');
-      }
-    }
+    this.eventDispatcher.dispatch(e);
   }
 
   stop() {
-    // this.hardware.stop();
-    // this.logger.end();
+    this.hardware.adapter.stop();
+    this.hardware.logger.end();
   }
 
   start() {
     logger.debug(`User ${this.user.username} starts ${this.activity.name}.`);
-    var user = this.user.username;
-    this.logger.start(user);
-    this.hardware.start(user);
-    this.hardware.play();
+    this.active = true;
+    this.hardware.logger.start(this.user.username);
+    this.hardware.adapter.start(this.user.username);
+    this.hardware.adapter.play();
   }
 
   play() {
-    // this.hardware.play();
+    this.hardware.adapter.play();
   }
 
   pause() {
-    // this.hardware.pause();
+    this.hardware.adapter.pause();
   }
 
   reset() {
-    // this.hardware.reset();
+    this.hardware.adapter.reset();
   }
 
   /*
    * Finish the session.
    */
-  end() {
-    this.manager.disconnect(this.id);
+  async end() {
+    this.active = false;
+    return await this.manager.disconnect(this.id);
   }
 
   /*
@@ -122,13 +133,22 @@ class Session {
   }
 
   /*
-   * @return {object} Information about the current session.
-   */
+  * @return {object} Information about the current session.
+  */
   info() {
     return {
       user: this.user.username,
       timeout: this.manager.getEndTime(),
     }
+  }
+
+  get expired() {
+    var now = new Date().getTime();
+    return this.manager.getEndTime() < now;
+  }
+
+  get finished() {
+    return !this.active;
   }
 }
 
@@ -137,9 +157,6 @@ class SessionManager {
   constructor() {
     this.clients = {};
     this.active_user = null;
-    this.hwlogger = new Config.Hardware.Logger();
-    this.hardware = new Config.Hardware.Adapter();
-    this.hardware.addListener(this.hwlogger);
     this.running = false;
   }
   
@@ -155,50 +172,49 @@ class SessionManager {
     return (Object.keys(this.clients).length > 0);
   }
 
-  // Connects a client to an opened session, if and only if is supervisor or the active user (owns the previous session).
+  /** Connects a client to an activity
+   *  - If the activity has no opened session, a new one is created.
+   *  - If there is an openeed session, the connection is successful 
+   *  if and only if the user is supervisor or owns the previous session.
+   */
   async connect(activity, credentials, socket, id) {
-    var user = this.validate(credentials);
+    var user = await this.validate(credentials);
     if (!user) return;
-console.log('dddd');
-    console.log(activity);
     var theActivity = await models.Activity.findOne({
       where: { name: activity },
       include: models.Controller
     })
     if (!theActivity) return;
-    var session = new Session(theActivity, user, id, this);
-    if(id != null) {
-      this.clients[id] = socket;
-    }
+    var controller = await getController(theActivity);
+    this.hardware = hardwarePool.getHardwareFor(controller);
+    var session = new Session(theActivity, user, id, this, this.hardware);
+    if(id != null) { this.clients[id] = socket; }
     if (this.idle) {
       this.active_user = user.username;
       this.activity = theActivity;
       this.token = Math.floor((Math.random() * 1000000) + 1);
       this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.activity.sessionTimeout*60*1000);
       this.sessionStartTime = new Date();
-      this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.activity.sessionTimeout);
+      this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.activity.sessionTimeout*60*1000);
       this.running = true;
       session.start();
-      session.token = this.token;
       logger.info(`Session started: user ${this.active_user} - ${new Date()}`);
-      return session;
     } else {
       let isActive = (this.active_user == user.username || !this.active_user);
       let isSupervisor = db.users.isSupervisor(user);
-      if (isActive || isSupervisor) {
-        logger.debug(`User ${user.username} connected to session ${id}.`);
-        if (isActive) {
-          this._clearDisconnectTimeout();
-        }
-        session.token = this.token;
-        return session;
-      } else {
+      if (!isActive && !isSupervisor) {
         logger.debug(`User ${user.username} not allowed to connect to session ${id}.`);
         socket.disconnect();
         delete this.clients[id];
         return;
       }
+      if (isActive) { this._clearDisconnectTimeout(); }
     }
+    logger.debug(`User ${user.username} connected to session ${id}.`);
+    session.token = this.token;
+    this.hardware.eventGenerator.addListener(socket);
+    return session;
+
   }
 
   async validate(credentials) {
@@ -217,6 +233,17 @@ console.log('dddd');
     } catch(e) {}
   }
 
+  // createHardwareAdapter(controller) {
+  //   if (!controller.type in hardware) {
+  //     throw new Error('Unknown hardware adapter.');
+  //   }
+  //   const hw = hardware[controller.type];
+  //   return {
+  //     'adapter': new hw.Adapter(controller),
+  //     'logger': new hw.Logger()
+  //   }
+//  }
+
   disconnect(id) {
     logger.debug(`Disconnecting client ${id}`);
     try {
@@ -226,11 +253,16 @@ console.log('dddd');
     }
     delete this.clients[id];
     logger.debug("clients:" + Object.keys(this.clients));
-    if(!this.hasClients() && !this.disconnectTimer) {
-    logger.debug(`No clients left, starting disconnection timeout`)
-      if(this.running) {
-        this.disconnectTimer = setTimeout(this._disconnectTimeout.bind(this), this.activity.disconnectTimeout*1000);
-      }
+    if(!this.hasClients() && !this.disconnectTimer && this.running) {
+      logger.debug(`No clients left, starting disconnection timeout`)
+      return new Promise((resolve, reject) => {
+        this.disconnectTimer = setTimeout(function() {
+          this.end();
+          logger.info(`Disconnection Timeout - ${new Date()}`);
+          resolve(`Session expired - ${new Date()}`);
+        }.bind(this), this.activity.disconnectTimeout*1000);
+          // this._disconnectTimeout.bind(this), this.activity.disconnectTimeout*1000);
+      });
     };
   }
 
@@ -259,8 +291,8 @@ console.log('dddd');
     this._clearDisconnectTimeout();
     this.running = false;
     this._disconnectAll();
-    this.hardware.stop();
-    this.hwlogger.end();
+    this.hardware.adapter.stop();
+    this.hardware.logger.end();
     this.active_user = null;
   }
 
@@ -297,7 +329,16 @@ console.log('dddd');
   }
 }
 
+function getController(activity) {
+  if(activity.Controller) { return activity.Controller; }
+  return models.Controller.findOne({
+    where: { name: activity.controllerName },
+    order: [[ 'createdAt', 'DESC' ]]
+  });
+}
+
 module.exports = {
   SessionManager: new SessionManager(),
-  Session: Session
+  HardwarePool: hardwarePool,
+  Session: Session,
 }

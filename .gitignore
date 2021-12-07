@@ -70,3 +70,4 @@ docker/volumes
 var/
 database.sqlite
 public/
+test/

@@ -29,7 +29,7 @@ app.set('view engine', 'ejs');
 app.use(express.static(Settings.PUBLIC));
 app.use(cookie_parser());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ type: 'application/json', limit: '10mb'  }));
+app.use(express.json({ type: 'application/json', limit: '10mb' }));
 app.use(express_session);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -79,7 +79,7 @@ app.post('_/api_/view/set', login.ensureLoggedIn('/'), views.api.view.set);
 
 
 app.get('/', views.index);
-app.post('/', passport.authenticate('local', {
+  app.post('/', passport.authenticate('local', {
   successRedirect: '/home',
   failureRedirect: '/',
   failureFlash: 'El usuario o la contraseña es incorrecto.'
@@ -108,6 +108,8 @@ app.post('/admin/config/set', login.ensureLoggedIn('/'), onlyAdmin, views.api.co
 app.post('/admin/views/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.views.set);
 app.post('/admin/activity/add', login.ensureLoggedIn('/'), onlyAdmin, views.admin.activity.add);
 
+app.post('/admin/q/:model/:action/', login.ensureLoggedIn('/'), onlyAdmin, views.admin.query);
+
 // HTTP Server
 var httpServer = app.listen(Config.WebServer.port, Config.WebServer.ip, function () {
   var host = httpServer.address().address;
@@ -116,15 +118,10 @@ var httpServer = app.listen(Config.WebServer.port, Config.WebServer.ip, function
 });
 
 // This section enables socket.io communications
-const { EventGenerator } = require('./behavior/events');
 const { Server } = require('socket.io');
-const models = require('./models');
 const io = new Server(httpServer, { cors: {
   origin: "null",
-  // methods: ["GET", "POST"]
 }});
-var eg = new EventGenerator(io);
-SessionManager.hardware.addListener(eg);
 
 io.on('connection', socket => {
   var id = 'socket_' + socket.id;
@@ -134,11 +131,10 @@ io.on('connection', socket => {
     'password': socket.handshake.query.password,
   }
   var activity = socket.handshake.query.activity;
-  logger.debug(`Request from user: ${credentials['username']}`);
   SessionManager.connect(activity, credentials, socket, id)
     .then(session => {
       if(!session) { return; }
-      logger.debug(`User ${credentials['username']} authenticated`);
+      logger.debug(`User ${session.user.username} authenticated`);
       // Behave as a normal user
       if (session.isActive()) {
         logger.info('Entering user mode...');
@@ -146,7 +142,8 @@ io.on('connection', socket => {
         new behavior.Normal(session).register(socket);
       }    
     })
-    .catch(() => {
+    .catch(e => {
+      console.log(e)
       socket.emit('login_error', {'text':'Invalid credentials'});
       socket.disconnect();  
     });
