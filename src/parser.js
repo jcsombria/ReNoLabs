@@ -1,4 +1,44 @@
+const { controller } = require("./config/LabConfig");
+
 const grammar = `{
+  var KEYWORDS = [
+    'moved',
+    'move',
+    'open',
+    'close',
+    'home',
+    'test',
+    'here',
+    'teach',
+    'delvar',
+    'setpvc',
+    'setpv',
+    'setp', 
+    'set',
+    'if',
+    'else',
+    'endif',
+    'for',
+    'endfor',
+    'print',
+    'println'
+  ];
+
+  var PROTECTED = [
+    'din',
+    'dout',
+    'enco',
+    'speed'
+  ]
+
+  function isKeyword(word) {
+    return KEYWORDS.includes(word.toLowerCase());
+  };
+
+  function isProtected(word) {
+    return PROTECTED.includes(word.toLowerCase());
+  };
+
   function makeNumber(sign, integer, decimal) {
     var number =  (sign ? sign : '') 
                 + (integer ? integer.join('') : '')
@@ -21,34 +61,59 @@ operation_1op   = 'not'i / 'sin'i / 'cos'i
 operation_2op   = '+' / '-' / '*' / '/'
 
 instruction
-  = movement / assignment / flow / management
+  = movement / assignment / flow / user
 
  _ 'whitespace'
   = [ \\t\\n\\r]+
 
-movement 'Commands to move the robot'
+KEYWORD
+  = 'moved'i /
+    'move'i /
+    'speed'i /
+    'open'i /
+    'close'i /
+    'home'i /
+    'test'i /
+    'here'i /
+    'teach'i /
+    'delvar'i /
+    'setpvc'i /
+    'setpv'i /
+    'setp'i / 
+    'set'i /
+    'if'i /
+    'else'i /
+    'endif'i /
+    'for'i /
+    'endfor'i /
+    'print'i /
+    'println'i
+
+movement
   = I:('moved'i / 'move'i) _+ A:(point / identifier) _* { return [I.toUpperCase(), A]; } /
-    I:'speed'i _+ A:integer _* { return ['SPEED', A]; } /
+    I:'speed'i _+ A:integer _* { return [I.toUpperCase(), A]; } /
     I:('open'i / 'close'i / 'home'i / 'test'i) _* { return [I.toUpperCase()]; }
 
-assignment 'Commands to define and manipulate positions and variables' 
-  = I:('here'i / 'teach'i / 'delvar'i) _+ A:identifier _* { return [I.toUpperCase(), A]; } /
-    I:('setpvc'i / 'setpv'i) _+ A:identifier '=' B:point _* { return [I.toUpperCase(), A, B]; } /
-    'setp'i _+ A:identifier '=' B:identifier _* { return ['SETP', A, B]; } /
-    'set'i _+ A:identifier '=' B:(identifier / number) _* OP:operation_2op _* C:(identifier / number) _* { return ['SET', A, [OP, B, C]]; } /
-    'set'i _+ A:identifier '=' OP:operation_1op _* B:(identifier / number) _* { return ['SET', A, [OP, B]]; } /
-    'set'i _+ A:identifier '=' B:(identifier / number) _* { return ['SET', A, B]; }
+assignment
+  = I:('here'i / 'teach'i / 'delvar'i) _ A:identifier _ { return [I.toUpperCase(), A]; } /
+    I:('setpvc'i / 'setpv'i) _ A:identifier '=' B:point _ { return [I.toUpperCase(), A, B]; } /
+    'setp'i _ A:identifier _* '=' _* B:identifier _ { return ['SETP', A, B]; } /
+    'set'i  _ A:identifier _* '=' _* B:(identifier / number) _* OP:operation_2op _* C:(identifier / number) _ { return ['SET', A, [OP, B, C]]; } /
+    'set'i  _ A:identifier _* '=' _* OP:operation_1op _* B:(identifier / number) _ { return ['SET', A, [OP, B]]; } /
+    'set'i  _ A:identifier _* '=' _* B:(identifier / number) _ { return ['SET', A, B]; }
 
-flow 'Flow control commands'
-  = 'if'i _* C:if_condition _* I_T:instruction_list _* 'else'i _* I_E:instruction_list _* 'endif'i { return ['IF', C, I_T, I_E]; } /
-    'for'i _* C:for_condition _* I:instruction_list _* 'endfor'i _* { return ['FOR', C, I]; }
+flow
+  = 'if'i _ C:if_condition _* I_T:instruction_list _* 'else'i _* I_E:instruction_list _* 'endif'i _ { return ['IF', C, I_T, I_E]; } /
+    'for'i _ C:for_condition _* I:instruction_list _* 'endfor'i _ { return ['FOR', C, I]; } /
+    I:('delay'i) _ A:integer _ { return [I.toUpperCase(), A]; }
 
-management 'Management and user I/O commands'
-  = 'print'i _* '"' msg:[^"]* '"' _+  { return ['PRINT', msg.join('')]; } /
-    'println'i _* '"' msg:[^"]* '"' _* A:identifier? _* { return ['PRINT', msg.join(''), A]; }
+user
+  = I:'print'i _ '"' msg:[^"]* '"' _ A:(@identifier _)? { return A ? [I, msg.join(''), A]: [I, msg.join('')]; } /
+    I:'println'i _ '"' msg:[^"]* '"' _ A:identifier? _ { return [I, msg.join(''), A]; } /
+    I:'show'i _ A:identifier &{ return isProtected(A); } _ { return [I.toUpperCase(), A]; }
     
 identifier
-  = ID:[A-Z|a-z]+ { return ID.join(''); }
+  = ID:[A-Z|a-z]+ &{ return !isKeyword(ID.join('')); } { return ID.join(''); }
 
 point
   = begin_point _* X:number _* ',' _* Y:number _* ',' _* Z:number _* ',' _* R:number _* end_point { return [X,Y,Z,R]; }
@@ -86,14 +151,14 @@ class Instruction {
     return this.args;
   }
 
-  execute(context) {}
+  async execute(context) {}
 }
 
 /**
  * Set a variable  
  */
 class SetInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     var state = context.getState();
     state.set(this.args[0], state.compute(this.args[1]));
     context.getLog().push(`Assign ${this.args[0]} to ${this.args[1]}`);
@@ -104,7 +169,7 @@ class SetInstruction extends Instruction {
  * Set a variable  
  */
 class SetpvcInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     context.getState().set(this.args[0], this.args[1]);
     context.getLog().push(`Assign ${this.args[0]} to ${this.args[1]}`);
   }
@@ -114,7 +179,7 @@ class SetpvcInstruction extends Instruction {
  * Set a variable  
  */
 class SetpInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     context.getState().set(this.args[0], context.getState().get(this.args[1]));
     context.getLog().push(`Assign ${this.args[0]} to ${this.args[1]}`);
   }
@@ -124,7 +189,7 @@ class SetpInstruction extends Instruction {
  * Move the robot to a posiion in cartesian coordinates
  */
 class MoveInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     var point;
     if (typeof this.args[0] == 'string') {
       var point = context.getState().get(this.args[0]);
@@ -154,7 +219,7 @@ class MovedInstruction extends Instruction {
  * Set the robot speed  
  */
 class SpeedInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     if (this.args[0] < 0 || this.args[0] > 100) {
       throw new RangeError("SPEED must be in the range (0, 100)");
     }
@@ -164,10 +229,30 @@ class SpeedInstruction extends Instruction {
 }
 
 /**
+ * Stores the position of the robot (in cartesian coordinates) in a variable 
+ */
+class HereInstruction extends Instruction {
+  async execute(context) {
+    context.getState().set(this.args[0], context.getController().getEffectorPosition());
+    context.getLog().push(`Storing Cartesian position in ${this.args[0]}`);
+  }
+}
+
+/**
+ * Stores the position of the robot in (joints coordinates) in a variable 
+ */
+class TeachInstruction extends Instruction {
+  async execute(context) {
+    context.getState().set(this.args[0], context.getController().getJointsPosition());
+    context.getLog().push(`Storing Cartesian position in ${this.args[0]}`);
+  }
+}
+
+/**
  * Open the robot grip  
  */
 class OpenInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     context.getState().setGlobal('GRIP', false);
     context.getLog().push(`Open grip`);
   }
@@ -177,7 +262,7 @@ class OpenInstruction extends Instruction {
  * Close the robot grip  
  */
 class CloseInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     context.getState().setGlobal('GRIP', true);
     context.getLog().push('Close grip');
   }
@@ -187,7 +272,7 @@ class CloseInstruction extends Instruction {
  * If statement
  */
 class IfInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     if(!this.check(this.args[0], context)) {
       context.advance(this.args[1]);
     } 
@@ -250,7 +335,7 @@ class IfInstruction extends Instruction {
  * Advance program counter 
  */
 class AdvanceInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     context.advance(this.args[0]);
   }
 }
@@ -259,7 +344,10 @@ class AdvanceInstruction extends Instruction {
  * Print a message in the context output 
  */
 class PrintInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
+    if(this.args.length > 1) {
+      return this.args[0].replace('%s', this.args[1]);
+    }
     context.print(this.args[0]);
   }
 }
@@ -267,8 +355,32 @@ class PrintInstruction extends Instruction {
 /**
  * Print a message in the context output 
  */
+ class PrintlnInstruction extends PrintInstruction {
+  async execute(context) {
+    this.args[0] += '\n';
+    super.execute(context);
+  }
+}
+
+/**
+ * Print a protected variable in the context output and 
+ * stores its value in the execution context.
+ */
+class ShowInstruction extends Instruction {
+  async execute(context) {
+    console.log('SHOW'); 
+    console.log(this.args[0]); 
+    var value = context.getController().get(this.args[0]);
+    context.getState().setGlobal(this.args[0], value);
+    context.print(`[${value}]`);
+  }
+}
+
+/**
+ * Print a message in the context output 
+ */
 class DelvarInstruction extends Instruction {
-  execute(context) {
+  async execute(context) {
     context.getState().unset(this.args[0]);
   }
 }
@@ -278,7 +390,35 @@ class DelvarInstruction extends Instruction {
  */
 class HomeInstruction extends Instruction {
   async execute(context) {
-    await context.getController().home();
+    context.getController().home();
+  }
+}
+
+/**
+ * Home the robot 
+ */
+class AbortInstruction extends Instruction {
+  async execute(context) {
+    context.getController().stop();
+    context.stop();
+  }
+}
+
+/**
+ * Home the robot 
+ */
+class StopInstruction extends Instruction {
+  async execute(context) {
+    context.getController().stop();
+  }
+}
+
+/**
+ * Home the robot 
+ */
+class DelayInstruction extends Instruction {
+  async execute(context) {
+    await context.getController().sleep(this.args[0]);
   }
 }
 
@@ -419,26 +559,43 @@ class ForStatement extends Statement {
     body.forEach(v => {instructions.push(v)});
     instructions.push(['SET', index, ['+', index, 1] ]);
     instructions.push(['ADV', -(body.length + 3)]);
-    // instructions.push(['DELVAR', index]);
+    instructions.push(['DELVAR', index]);
     return instructions.map(ACLVirtualMachine.createInstruction);
   }
 }
 
 class ACLVirtualMachine {
   static INSTRUCTIONS = {
-    'SET': SetInstruction,
-    'SETPVC': SetpvcInstruction,
-    'SETP': SetpInstruction,
+    // Movement
     'MOVE': MoveInstruction,
     'MOVED': MovedInstruction,
+    'SPEED': SpeedInstruction,
     'OPEN': OpenInstruction,
     'CLOSE': CloseInstruction,
-    'SPEED': SpeedInstruction,
+    'HOME': HomeInstruction,
+    // 'TEST': TestInstruction,
+    // Variables
+    'HERE': HereInstruction,
+    'TEACH': TeachInstruction,
+    // 'SETPV': SetpvInstruction,
+    'SETPVC': SetpvcInstruction,
+    'SETP': SetpInstruction,
+    'SET': SetInstruction,
+    'DELVAR': DelvarInstruction,
+    // Flow
     'IF': IfInstruction,
     'ADV': AdvanceInstruction,
+    // 'LABEL': LabelInstruction,
+    // 'GOTO': GotoInstruction,
+    // 'ABORT': AbortInstruction,
+    // 'STOP': StopInstruction,
+    'DELAY': DelayInstruction,
+    // User I/O
     'PRINT': PrintInstruction,
-    'HOME': HomeInstruction,
-    'DELVAR': DelvarInstruction
+    'PRINTLN': PrintlnInstruction,
+    'SHOW': ShowInstruction,
+    // 'READ': ReadInstruction,
+    // 'GET': GetInstruction,
   };
 
   static STATEMENTS = {
@@ -482,8 +639,11 @@ class ACLVirtualMachine {
     return program;
   };
 
-  async execute(program, controller) {
-    this.state = new State();
+  async execute(runnable, controller, clearStateBeforeRun) {
+    var program = typeof runnable === 'string' ? this.compile(runnable) : runnable;
+    if (clearStateBeforeRun) {
+      this.getState().clear();
+    }
     let context = new Context(program, controller, this.state, this.output);
     while (context.hasInstructions()) {
       var instruction = context.getNextInstruction();
@@ -491,7 +651,7 @@ class ACLVirtualMachine {
       context.advance(1);
     }
     return true;
-  };
+  }
 
   getState() {
     return this.state;
@@ -523,7 +683,7 @@ class State {
 
   constructor() {
     this.state = {};
-    this.protected = [ 'SPEED', 'GRIP' ];
+    this.protected = [ 'SPEED', 'GRIP', 'DIN', 'DOUT' ];
   }
 
   get(key) {
@@ -589,12 +749,17 @@ class State {
     }
     delete this.state[key];
   }
+
+  clear() {
+    this.state = {};
+  }
 }
 
 class Controller {
-  async move(point) {
-    
+  async sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
+  async move(point) {}
   async moved(point) {}
   async speed() {}
   async open() {}
@@ -604,6 +769,8 @@ class Controller {
   async setInput(i, value) {}
   async setOutput(i, value) {}
   async abort() {}
+  getEffectorPosition() {}
+  getJointsPosition() {}
 }
 
 

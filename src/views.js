@@ -1,3 +1,4 @@
+const AdmZip = require('adm-zip');
 const fs = require('fs');
 const logger = require('winston').loggers.get('log');
 const { where, include } = require('sequelize');
@@ -129,7 +130,7 @@ module.exports = {
             activity: activity.name
           });
         }).catch(e => {
-          console.log(e);
+          logger.debug(e.message);
           return res.status(500).send('Can\'t load activity');
         });
     } catch(e) {
@@ -221,7 +222,7 @@ module.exports.admin = {
 
   views: {
     get: function(req, res) {
-      logger.info('Sending view...A great power comes with a great responsibility!');
+      logger.info('Sending view...With great power comes great responsibility!');
       const v = models.View.findAll().then((result) => {
         res.render('admin/table/views', {result: result});
       }).catch((error) => {
@@ -230,7 +231,7 @@ module.exports.admin = {
     },
 
     set: function(req, res) {
-      logger.info('Uploading view...A great power comes with a great responsibility!');
+      logger.info('Uploading view...With great power comes great responsibility!');
       if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
       }
@@ -241,19 +242,11 @@ module.exports.admin = {
       });
       res.redirect('/admin');
     },
-
-    // edit: function(req, res) {
-    //   var user = db.users.getUser(req.user.username);
-    //   res.render('admin/views', {user: user})
-    // }
   },
 
-  // edit: function(req, res) {
-  //   res.render('admin/controller', { user: db.users.getUser('admin') });
-  // },
   controller: {
     set: function(req, res) {
-      logger.info('Uploading controller...A great power comes with a great responsibility!');
+      logger.info('Uploading controller...With great power comes great responsibility!');
       if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).send('No files were uploaded.');
       }
@@ -268,7 +261,7 @@ module.exports.admin = {
 
   activity: {
     add: function(req, res) {
-      logger.info('Uploading activity...A great power comes with a great responsibility!');
+      logger.info('Uploading activity...With great power comes great responsibility!');
       if(!req.body.name) {
         return res.status(400).send('Invalid name');
       }
@@ -294,8 +287,7 @@ module.exports.admin = {
           return res.redirect('/admin');
         })
         .catch(e => {
-          console.log(e)
-          console.log(e.message)
+          logger.debug(e.message);
           return res.status(500).send(e.message);
         });
 
@@ -320,7 +312,7 @@ module.exports.api = {
 
   config: {
     get: function(req, res) {
-      logger.info('Sending config...A great power comes with a great responsibility!');
+      logger.info('Sending config...With great power comes great responsibility!');
       var response;
       try { 
         result = Updater.getConfig();
@@ -331,7 +323,7 @@ module.exports.api = {
       res.send(response);
     },
     set: function(req, res) {
-      logger.info('Updating config...A great power comes with a great responsibility!');
+      logger.info('Updating config...With great power comes great responsibility!');
       let data = req.body;
       Updater.setConfig(data);
       res.send({ status: 'OK', data: {DefaultConfig: Config}});
@@ -340,14 +332,14 @@ module.exports.api = {
 
   users: {
     get: async function(req, res) {
-      logger.info('Sending list of users...A great power comes with a great responsibility!');
+      logger.info('Sending list of users...With great power comes great responsibility!');
       let users = await db.users.getUsers();
       res.send(users);
     },
     set: function(req, res) {
       let data = JSON.stringify(req.body);
       Updater.setUsers(data);
-      logger.info('Updating list of users...A great power comes with a great responsibility!');
+      logger.info('Updating list of users...With great power comes great responsibility!');
       res.send(data);
     },
   },
@@ -360,57 +352,65 @@ module.exports.api = {
         view: Buffer.from(req.body.view, 'base64'),
         activity: req.body.activity,
       };
-      Updater.addView(data);
-      res.send({ status: "OK", data: {}});
+      Updater.addView(data)
+        .then(v => {
+          res.send({ status: "OK", data: {}});
+        })
+        .catch(e => {
+          res.send({ status: "ERROR", data: {}});
+        })
     }
   },
 
   controller: {
-    get: function(req, res) {
+    get: async function(req, res) {
       logger.info('Maintenance - Sending code...');
       let data = { 
         username: req.user.username,
+        name: req.body.name, 
         language: req.query.language || 'C',
         version: req.query.version || 'default',
       }
-      var files = Updater.getController(data);
+      var files = await Updater.getController(data);
       if (files) {
         logger.info('Maintenance - Code transferred.');
-        response = {status: 'ok', data: files};
+        response = {status: 'OK', data: files};
       } else {
         logger.info('Maintenance - Code not transferred.');
-        response = {status: 'error', data: 'Missing controller'};
+        response = {status: 'ERROR', data: 'Missing controller'};
       }
       res.json(response);
     },
 
-    // data = { 
-    //     username: req.user.username,
-    //     language: req.query.language || 'C',
-    //     version: req.query.version || 'default',
-    // }
     set: function(req, res) {
       logger.info('Maintenance - Receiving code...');
-      data = req.body;
-      Updater.addController(data, result => {
-        var response;
-        try { 
-          logger.info('Maintenance - Controller updated.');
-          response = {
-            status: 'OK',
-            data: {
-              output: result.stdout,
-              error: result.stderr
-            }
-          };
-        } catch(e) {
-          logger.info('Maintenance - Controller updated with errors.');
-          response = {
-            status: 'ERROR',
-            data: 'Server Error'
-          };
-        } 
-        res.send(response);
+      var zip = new AdmZip();
+      req.body.files.forEach(f => {
+        zip.addFile(f.filename, Buffer.from(f.code, "utf8"));
+      });
+      Updater.addController({
+        name: req.body.name,
+        controller: zip.toBuffer(),
+        callback: result => {
+          var response;
+          try { 
+            logger.info('Maintenance - Controller updated.');
+            response = {
+              status: 'OK',
+              data: {
+                output: result.stdout,
+                error: result.stderr
+              }
+            };
+          } catch(e) {
+            logger.info('Maintenance - Controller updated with errors.');
+            response = {
+              status: 'ERROR',
+              data: 'Server Error'
+            };
+          } 
+          res.send(response);
+        }
       });
     }
   },

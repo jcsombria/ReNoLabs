@@ -66,15 +66,13 @@ class CAdapter extends Adapter {
    * @patam {string}   userpath the folder that contains the files that will be compiled
    * @patam {function} callback Invoked with the result of the compilation
    */
-  compile(userpath, callback) {
-    logger.debug(userpath);
-    var p = spawn('make', ['-C', userpath, '-f', 'Makefile', 'c_controller'], {shell:true});
+  compile(callback) {
+    logger.debug(`make -C ${Settings.CONTROLLERS}/${this.controller.id}/ -f Makefile ${this.controller.path}`);
+    var p = spawn('make', ['-C', `${Settings.CONTROLLERS}/${this.controller.id}/`, '-f', 'Makefile', this.controller.path, {shell:true}]);
     // Stores the compiler output & errors
     let compiler_stdout = '';
     p.stdout.setEncoding('utf8');
-    p.stdout.on('data', function(data) {
-      compiler_stdout += data;
-    });
+    p.stdout.on('data', function(data) { compiler_stdout += data; });
     let compiler_stderr = '';
     p.stderr.setEncoding('utf8');
     p.stderr.on('data', function(data) { compiler_stderr += data; });

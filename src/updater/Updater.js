@@ -10,7 +10,7 @@ const Config = require('../config/AppConfig');
 const LabConfig = require('../config/LabConfig');
 const { Controller, User, Activity, View } = require('../models');
 const Settings = require('../settings');
-const { model } = require('../config/LabConfig');
+const { HardwarePool } = require('../sessions');
 
 const CONTROLLER_USER_PATH = "users/";
 
@@ -22,13 +22,13 @@ class Updater {
 
   FILTERS = {
     'C': name => {
-      return name.endsWith('.c') || name == "Makefile";
+      return name.endsWith('.c') || name == "Makefile" || name.endsWith('.txt') || name.endsWith('.md');
     },
     'Python': name => {
       return name.endsWith('.py');
     },
     'Javascript': name => {
-      name.endsWith('.js')
+      return name.endsWith('.js') || name.endsWith('.txt') || name.endsWith('.md');
     },
   }
 
@@ -88,7 +88,6 @@ class Updater {
       if(!activity.controllerName) {
         throw new InvalidActivityError('Invalid controller'); 
       }
-      console.log(activity)
       return await Activity.create(activity);
     } catch(e) {
       throw new InvalidActivityError(e.message);
@@ -136,9 +135,9 @@ class Updater {
       });
       bundle.setName(`${Settings.CONTROLLERS}/${controller.id}.zip`);
       bundle.extractTo(`${Settings.CONTROLLERS}/${controller.id}`);
-      // const adapter = SessionManager.createHardwareAdapter(controller).adapter;
-      // adapter.compile();
-      return await controller.save();
+      controller.save();
+      HardwarePool.getHardwareFor(controller)['adapter'].compile(data.callback);
+      return controller;
     } catch(e) {
       logger.debug('Cannot save controller file.');
       fs.unlinkSync(`${Settings.CONTROLLERS}/${controller.id}.zip`);
@@ -195,7 +194,7 @@ class Updater {
       var content = files[f].code;
       logger.debug(`file: ${filename}`);
       if(!is_selectable || is_selectable(filename)) {
-        var code_stream = fs.createWriteStream(userpath + filename);
+        var code_stream = fs.createWriteStream(`${userpath}/${filename}`);
         code_stream.write(content);
         code_stream.end();
       }
@@ -223,12 +222,13 @@ class Updater {
         code: fs.readFileSync(filename, {encoding: 'utf8'})
       }];
     } catch(e) {
+      logger.debug(e.message)
       throw new InvalidControllerError();
     }
   }
 
   _get_files(path, is_selectable) {
-    let defaultFilter = (()=>{ return true; });
+    let defaultFilter = [() => { return true; }];
     var filter = is_selectable || defaultFilter;
     var fileNames = fs.readdirSync(path);
     var files = [];
@@ -238,7 +238,7 @@ class Updater {
         var fileInfo = {};
         fileInfo.filename = name;
         try {
-          fileInfo.code = fs.readFileSync(path + '/' + name, {encoding: 'utf8'});
+          fileInfo.code = fs.readFileSync(`${path}/${name}`, {encoding: 'utf8'});
           files.push(fileInfo);
         } catch(e) {
           logger.debug(`Cannot read ${fileInfo.filename}`);
@@ -328,7 +328,7 @@ class Updater {
   }
 
   getConfig() {
-    return this._get_files(Settings.CONFIG, this._is_js_file);
+    return this._get_files(Settings.CONFIG, this.FILTERS['Javascript']);
   }
 
   async deleteActivity(query) {
@@ -382,12 +382,6 @@ class Updater {
   }
 
   async delete(query) {
-    // this._delete({
-    //   'model': this.MODELS[query.model],
-    //   'where': query.where,
-    //   'resources': this.RESOURCES[query.model](query.where)
-    // });
-    console.log(query)
     var element = await this.MODELS[query.model].findOne({ where: query.where });
     this.RESOURCES[query.model](query.where).forEach(r => {
       fs.rmdirSync(r, { recursive: true });

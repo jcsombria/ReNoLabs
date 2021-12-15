@@ -1,3 +1,0 @@
-name: Circuitos PC
-type: C
-main: circuitos

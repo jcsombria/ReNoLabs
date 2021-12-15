@@ -48,6 +48,7 @@ app.post('/api/config/get', passport.authenticate('basic', { session: false }), 
 app.post('/api/config/set', passport.authenticate('basic', { session: false }), views.api.config.set);
 // app.post('/api/view/get', passport.authenticate('basic', { session: false }), views.api.view.get);
 app.post('/api/view/set', passport.authenticate('basic', { session: false }), views.api.view.set);
+app.post('/api/q/:model/:action/', passport.authenticate('basic', { session: false }), onlyAdmin, views.admin.query);
 
 app.use(csrfProtection);
 app.use((req, res, next) => {

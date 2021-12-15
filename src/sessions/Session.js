@@ -6,7 +6,6 @@ const rules = require('../behavior/rules')
 const { EventGenerator, EventProcessor, EventDispatcher } = require('../behavior/events');
 const models = require('../models');
 const hardware = require('../hardware');
-const { authorize } = require('passport');
 
 class HardwarePool {
   constructor() {
