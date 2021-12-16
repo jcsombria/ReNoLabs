@@ -21,7 +21,7 @@ class State {
   }
 
   notify(variables) {
-     for (var i=0; i<this.listeners.length; i++) {
+    this.listeners.forEach(l => {
        try {
          for (var j=0; j<variables.length; j++) {
            this.listeners[i].write(variables[j], ()=>{});
@@ -29,7 +29,7 @@ class State {
        } catch(error) {
          logger.warn(`Cannot notify listener.`);
        }
-     }
+    });
   }
 
   // Parse the notification and update the state
@@ -47,6 +47,40 @@ class State {
       logger.warn('Can\'t parse controller data.');
     }
   }
+
+  set config(value) {
+    this._config = value;
+    this.notify([`config:${value}`]);
+  }
+
+  get config() {
+    return this._config;
+  }
+
+  set reference(value) {
+    this._reference = value;
+    this.notify([`reference:${value}`]);
+  }
+
+  get reference() {
+    return this._reference;
+  }
+
+  set evolution(value) {
+    try {
+      let changed = ((!this._evolution && value) || Math.abs(this._evolution[0] - value[0])>1e-3);
+      if(this.config == 2 && changed) {
+        this._evolution = value;
+      }
+    } catch(e) {
+      logger.warn('C Adapter: Cannot set evolution');
+    }
+  }
+
+  get evolution() {
+    return this._evolution;
+  }
+
 }
 
 module.exports = State;

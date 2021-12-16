@@ -84,7 +84,7 @@ class EventGenerator extends events.EventEmitter {
 
 
 /* 
- * Dispatch incoming events.
+ * Decides which and when will process the incoming events.
  */
 class EventDispatcher {
   //static PROCESS = 'process';
@@ -113,7 +113,7 @@ class EventDispatcher {
    * @param {function} classify A function that accepts an event and returns a dispatching label ('Process', 'Enqueue', 'Discard').
    */
   addRoutingRule(name, classify) {
-    this.rules[name] = { 'classify': classify };
+    this.rules[name] = classify;
   }
 
   dispatch(event) {
@@ -121,14 +121,16 @@ class EventDispatcher {
     event.forEach(e => {
       try {
         for (var r in this.rules) {
-          const classify = this.rules[r]['classify'];
-          var type = classify(event);
+          const classify = this.rules[r];
+          var type = classify(e);
           if (type != 'unmatched') { //EventDispatcher.UNMATCHED) {
-            this.handle[type](event);
+            console.log(this.handle[type])
+            this.handle[type](e);
             return;
           }
         }
       } catch(e) {
+        console.log(e)
         logger.error('Can\'t process event.');
       }      
     });

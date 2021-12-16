@@ -25,7 +25,7 @@ module.exports = {
         },
         action: function(event) { // Rule action
             logger.debug('Forwarding message to hardware.');
-            this.hardware.write(event.variable, event.value);
+            this.hardware.adapter.write(event.variable, event.value);
         }
     }
 }

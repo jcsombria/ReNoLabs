@@ -98,28 +98,6 @@ class CAdapter extends Adapter {
 
 /* Encapsulate the state of the C controller */
 class CState extends State {
-  constructor() {
-    super();
-  }
-
-  set config(value) {
-    this._config = value;
-    this.notify([`config:${value}`]);
-  }
-
-  get config() {
-    return this._config;
-  }
-
-  set reference(value) {
-    this._reference = value;
-    this.notify([`reference:${value}`]);
-  }
-
-  get reference() {
-    return this._reference;
-  }
-
   set evolution(value) {
     try {
       let changed = ((!this._evolution && value) || Math.abs(this._evolution[0] - value[0])>1e-3);
@@ -129,10 +107,6 @@ class CState extends State {
     } catch(e) {
       logger.warn('C Adapter: Cannot set evolution');
     }
-  }
-
-  get evolution() {
-    return this._evolution;
   }
 
   set controller(value) {

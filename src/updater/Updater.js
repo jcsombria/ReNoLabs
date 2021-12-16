@@ -25,7 +25,10 @@ class Updater {
       return name.endsWith('.c') || name == "Makefile" || name.endsWith('.txt') || name.endsWith('.md');
     },
     'Python': name => {
-      return name.endsWith('.py');
+      return name.endsWith('.py') || name.endsWith('.txt') || name.endsWith('.md');
+    },
+    'Dobot': name => {
+      return name.endsWith('.py') || name.endsWith('.txt') || name.endsWith('.md');
     },
     'Javascript': name => {
       return name.endsWith('.js') || name.endsWith('.txt') || name.endsWith('.md');

@@ -1,5 +1,3 @@
-const { controller } = require("./config/LabConfig");
-
 const grammar = `{
   var KEYWORDS = [
     'moved',
@@ -105,7 +103,8 @@ assignment
 flow
   = 'if'i _ C:if_condition _* I_T:instruction_list _* 'else'i _* I_E:instruction_list _* 'endif'i _ { return ['IF', C, I_T, I_E]; } /
     'for'i _ C:for_condition _* I:instruction_list _* 'endfor'i _ { return ['FOR', C, I]; } /
-    I:('delay'i) _ A:integer _ { return [I.toUpperCase(), A]; }
+    I:('delay'i) _ A:integer _ { return [I.toUpperCase(), A]; } /
+    I:('abort'i / 'stop'i) _ { return [I.toUpperCase()]; }
 
 user
   = I:'print'i _ '"' msg:[^"]* '"' _ A:(@identifier _)? { return A ? [I, msg.join(''), A]: [I, msg.join('')]; } /
@@ -254,6 +253,7 @@ class TeachInstruction extends Instruction {
 class OpenInstruction extends Instruction {
   async execute(context) {
     context.getState().setGlobal('GRIP', false);
+    context.getController().open();
     context.getLog().push(`Open grip`);
   }
 }
@@ -264,6 +264,7 @@ class OpenInstruction extends Instruction {
 class CloseInstruction extends Instruction {
   async execute(context) {
     context.getState().setGlobal('GRIP', true);
+    context.getController().close();
     context.getLog().push('Close grip');
   }
 }
@@ -345,10 +346,14 @@ class AdvanceInstruction extends Instruction {
  */
 class PrintInstruction extends Instruction {
   async execute(context) {
-    if(this.args.length > 1) {
-      return this.args[0].replace('%s', this.args[1]);
-    }
-    context.print(this.args[0]);
+    var message = this.args[0];
+    if (this.args.length > 1) {
+      message = this.args[0].replace(
+        '%s', context.getState().get(this.args[1])
+      );
+    }   
+    context.print(message);
+    context.getController().print(message);
   }
 }
 
@@ -587,8 +592,8 @@ class ACLVirtualMachine {
     'ADV': AdvanceInstruction,
     // 'LABEL': LabelInstruction,
     // 'GOTO': GotoInstruction,
-    // 'ABORT': AbortInstruction,
-    // 'STOP': StopInstruction,
+    'ABORT': AbortInstruction,
+    'STOP': StopInstruction,
     'DELAY': DelayInstruction,
     // User I/O
     'PRINT': PrintInstruction,
@@ -773,5 +778,4 @@ class Controller {
   getJointsPosition() {}
 }
 
-
-module.exports = { ACLVirtualMachine, State, Controller};
+//module.exports = { ACLVirtualMachine, State, Controller};

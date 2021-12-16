@@ -74,7 +74,7 @@ class Session {
    * @param {object} data The received data.
    */
   process(event) {
-    this.eventDispatcher.dispatch(e);
+    this.eventDispatcher.dispatch(event);
   }
 
   stop() {
