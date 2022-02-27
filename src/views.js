@@ -92,7 +92,7 @@ module.exports = {
   data: async function(req, res) {
     var files = fs.readdirSync(Settings.DATA)
       .filter(e => { if (e.split('_')[0] == req.user.username) { return e; } })
-      .sort((a, b) => { return fs.statSync(`${Settings.DATA}/b`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
+      .sort((a, b) => { return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
     let f = [];
     for (i = 0; i < files.length; i++) {
       var name = `${Settings.DATA}/${files[i]}`;
@@ -111,14 +111,17 @@ module.exports = {
     try {
       var user = await db.users.getUser(req.user.username);
       var activity = await models.Activity.findOne({
-        where: {name: req.query.name},
-        include: [models.View, models.Controller]
+        where: { name: req.query.name },
       });
       var view = await getView(activity);
-      var credentials = { 'username': req.user.username, 'password': req.user.password};
+      var credentials = {
+        'username': req.user.username,
+        'password': req.user.password
+      };
       SessionManager.connect(activity.name, credentials, res.socket, null)
         .then(session => {
           if(!session) {
+            logger.debug(`Refused to connect user: ${user}`);
             return res.render('home', {user: user});
           }
           return res.render('remote_lab.ejs', {
@@ -254,8 +257,15 @@ module.exports.admin = {
         name: req.body.name,
         comment: req.body.comment,
         controller: req.files.controller.data
-      });
-      res.redirect('/admin');
+      })
+        .then(() => {
+          res.redirect('/admin');
+        })
+        .catch(error => {
+          console.log(error)
+          logger.debug(error);
+          res.redirect('/admin');
+        });
     }
   },
 

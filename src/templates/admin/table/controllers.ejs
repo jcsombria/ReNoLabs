@@ -19,7 +19,7 @@
         <td class="align-middle"><i class="bi bi-pencil" style="cursor:pointer"></i></td>
         <td class="align-middle"><i class="bi bi-trash" style="cursor:pointer"></i></td>
         <th class="align-middle" scope="row"><%= c.name %></td>
-        <th class="align-middle" scope="row"><%= c.createdAt %></th>
+        <th class="align-middle" scope="row"><%= c.createdAt.toLocaleString() %></th>
         <td class="align-middle"><%= c.type %></td>
         <td class="align-middle"><%= c.path %></td>
         <td class="align-middle"><%= c.id %></td>

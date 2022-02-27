@@ -110,10 +110,13 @@ class Updater {
       view.path = bundle.get('main-simulation');
     return await view.save();
     } catch(e) {
-      logger.debug('Cannot save view file.');
-      fs.unlinkSync(`${Settings.VIEWS}/${view.id}.zip`);
-      fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });      
-      throw new InvalidViewError('Cannot save view file.')
+      logger.debug(`Cannot save view file: ${e.message}`);
+      if (view) {
+        fs.unlinkSync(`${Settings.VIEWS}/${view.id}.zip`);
+        fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });      
+       
+      }
+      throw new InvalidViewError(`Cannot save view file. Reason: ${e.message}`)
     }
   }
 
@@ -139,12 +142,17 @@ class Updater {
       bundle.setName(`${Settings.CONTROLLERS}/${controller.id}.zip`);
       bundle.extractTo(`${Settings.CONTROLLERS}/${controller.id}`);
       controller.save();
-      HardwarePool.getHardwareFor(controller)['adapter'].compile(data.callback);
+      try {
+        HardwarePool.getHardwareFor(controller)['adapter'].compile(data.callback);
+      } catch(error) { logger.debug(error )}
       return controller;
     } catch(e) {
+      console.log(e)
       logger.debug('Cannot save controller file.');
-      fs.unlinkSync(`${Settings.CONTROLLERS}/${controller.id}.zip`);
-      fs.rmdirSync(`${Settings.CONTROLLERS}/${controller.id}`, { recursive: true });      
+      if (controller) {
+        fs.unlinkSync(`${Settings.CONTROLLERS}/${controller.id}.zip`);
+        fs.rmdirSync(`${Settings.CONTROLLERS}/${controller.id}`, { recursive: true });
+      }
       throw new InvalidControllerError('Cannot save controller file.')
     }
   }
@@ -416,16 +424,16 @@ class Bundle {
     this.name = tmpfile.name;
     this.metadata = this._getMetadata();
   }
-
+  
   setName(name) {
     fs.renameSync(this.name, name);
     this.name = name;
   }
-
+  
   _getMetadata() {
     const zipfile = new AdmZip(this.name);
     var metadata = zipfile.getEntry('_metadata.txt');
-    var data = metadata.getData();
+    var data = metadata.  getData();
     var content = Buffer.from(data).toString();
     const lines = content.split(/\r?\n/);
     var result = {};

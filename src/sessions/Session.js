@@ -232,17 +232,6 @@ class SessionManager {
     } catch(e) {}
   }
 
-  // createHardwareAdapter(controller) {
-  //   if (!controller.type in hardware) {
-  //     throw new Error('Unknown hardware adapter.');
-  //   }
-  //   const hw = hardware[controller.type];
-  //   return {
-  //     'adapter': new hw.Adapter(controller),
-  //     'logger': new hw.Logger()
-  //   }
-//  }
-
   disconnect(id) {
     logger.debug(`Disconnecting client ${id}`);
     try {

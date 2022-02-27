@@ -124,7 +124,6 @@ class EventDispatcher {
           const classify = this.rules[r];
           var type = classify(e);
           if (type != 'unmatched') { //EventDispatcher.UNMATCHED) {
-            console.log(this.handle[type])
             this.handle[type](e);
             return;
           }

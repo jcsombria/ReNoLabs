@@ -27,7 +27,7 @@
           <td class="align-middle"><i class="bi bi-pencil" style="cursor:pointer"></i></td>
           <td class="align-middle"><i class="bi bi-trash" style="cursor:pointer"></i></td>
           <th class="align-middle" scope="row"><%= v.name %></th>
-          <th class="align-middle" scope="row"><%= v.date %></td>
+          <th class="align-middle" scope="row"><%= v.createdAt.toLocaleString() %></td>
           <td class="align-middle"><%= v.id %></td>
           <td class="align-middle"><%= v.path %></td>
           <td class="align-middle"><%= v.description %></td>

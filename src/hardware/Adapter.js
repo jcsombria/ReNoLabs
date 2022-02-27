@@ -60,12 +60,11 @@ class Adapter {
     return `${Settings.CONTROLLERS}/${language}/default/`;
   }
 
-  /*
-   * Format the data received from the C controller and forward to the clients
-   * @param {object} ev The event with the data received from the controller.
-   */
-  ondata(ev) {
-    logger.error('Adapter: ondata is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
+  getPathFor(filename) {
+    if (!filename) {
+      return `${Settings.CONTROLLERS}/${this.controller.id}/`;
+    }
+    return `${Settings.CONTROLLERS}/${this.controller.id}/${filename}`;
   }
 
   /*
@@ -78,6 +77,22 @@ class Adapter {
       logger.silly(`notify ${ev} to listener ${i}`);
       this.listeners[i].emit(ev, data);
     }
+  }
+
+  /*
+   * Format the data received from the controller and forward to the clients
+   * @param {object} ev The event with the data received from the controller.
+   */
+  ondata(ev) {
+    this.connected = true;
+    this.state.update(ev);
+    this.toNotify.forEach(v => {
+      this.notify('signals.get', {
+        'variable': v,
+        'value': this.state[v]
+      });
+      logger.silly(`${v}->${this.state[v]}`);
+    });
   }
 
   /* Handles errors in the controller process.
