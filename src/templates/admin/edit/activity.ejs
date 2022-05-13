@@ -1,26 +1,296 @@
+<div id="app">
+  <h1>Administración</h1>
+  <p>
+    <router-view></router-view>
+    <div class="d-flex justify-content-center" id="activitiesNavBar">
+      <router-link to="/" class="btn btn-primary text-light">
+        <i class="bi bi-arrow-left"></i>Volver
+      </router-link>
+      <router-link to="/activity" class="btn btn-primary text-light">
+        Go to Activities
+      </router-link>
+    </div>
+  </p>
+</div>
+
+<script type="module">
+  import Controller from './components/controller.js'
+  import Courses from './components/courses.js'
+  import Views from './components/views.js'
+// 1. Define route components.
+  // These can be imported from other files
+  const Home = { template: `
+<div class="select">
+  <div class="select-block"> 
+    <h1>Actividades</h1>
+    <p align="center">
+      <router-link to="/activity">
+        <i class="bi bi-tools" style="font-size: 5rem;"></i>
+      </router-link>
+    </p>
+  </div> 
+  <div class="select-block"> 
+    <h1>Vista</h1>
+    <p align="center">
+      <router-link to="/view">
+        <i class="bi bi-tv" style="font-size: 5rem;"></i>
+      </router-link>
+    </p>
+  </div> 
+  <div class="select-block"> 
+    <h1>Controlador</h1>
+    <p align="center">
+      <router-link to="/controller">
+        <i class="bi bi-cpu" style="font-size: 5rem;"></i>
+      </router-link>
+    </p>
+  </div> 
+  <div class="select-block"> 
+    <h1>Usuarios</h1>
+    <p align="center">
+      <router-link to="/users">
+        <i class="bi bi-people" style="font-size: 5rem;"></i>
+      </router-link>
+    </p>
+  </div>
+  <div class="select-block"> 
+    <h1>Cursos</h1>
+    <p align="center">
+      <router-link to="/courses">
+        <i class="bi bi-wrench" style="font-size: 5rem;"></i>
+      </router-link>
+    </p>
+  </div> 
+</div>
+    `
+  }
+
+//   const ActivitiesListing = {
+//     template: `
+// <table class="table table-sm table-striped table-hover table-borderless caption-top" id="activitiesTable">
+//   <caption>Actividades disponibles:</caption>
+//   <thead class="table-primary">
+//     <tr>
+//       <th scope="col" class="align-middle"><input type="checkbox" /></th>
+//       <th scope="col" class="align-middle"></th>
+//       <th scope="col" class="align-middle"></th>
+//       <th scope="col" class="align-middle">Nombre</th>
+//       <th scope="col" class="align-middle">Vista</th>
+//       <th scope="col" class="align-middle">Versión de la Vista</th>
+//       <th scope="col" class="align-middle">Controlador</th>
+//       <th scope="col" class="align-middle">Versión del Controlador</th>
+//     </tr>
+//   </thead>
+//   <tbody>
+//     <tr v-for="a in activities" :key="a.name">
+//       <td class="align-middle"><input type="checkbox" /></td>
+//       <td class="align-middle"><i @click="edit(a)" class="bi bi-pencil" style="cursor:pointer"></i></td>
+//       <td class="align-middle"><i class="bi bi-trash" style="cursor:pointer"></i></td>
+//       <th scope="row" class="align-middle">{{ a.name }}</th>
+//       <td class="align-middle">{{ a.viewName }}</td>
+//       <td class="align-middle">{{ a.View ? a.View.createdAt.toLocaleString() : "La más reciente" }}</td>
+//       <td class="align-middle">{{ a.controllerName }}</td>
+//       <td class="align-middle">{{ a.Controller ? a.Controller.createdAt.toLocaleString() : "La más reciente" }}</td>
+//     </tr>
+//   </tbody>
+//   <tfoot class="table-primary">
+//   </tfoot>
+// </table>
+//     `,
+
+//     data() {
+//       return {
+//         activities: [],
+//       }
+//     },
+
+//     methods: {
+//       reloadActivities() {
+//         model = 'activity';
+//         query = {};
+//         post(`/admin/q/${model}/get`,
+//           JSON.stringify(query),
+//           result => { this.activities = result; },
+//           error => {
+//             showMessage(`Cannot load activities from server.`, 'modalGenericMessage');
+//           }
+//         )
+//       },
+
+//       edit(activity) {
+//         this.$router.push(`/activity/${activity.name}`);
+//       }
+//     },
+
+//     mounted() {
+//       this.reloadActivities();
+//     }
+//   }
+
+  const Activity = {
+    template: `
 <div class="container d-flex flex-column overflow-scroll">
   <div class="container-fluid d-flex">
     <div class="container d-flex flex-column">
       <label for="users_allowed">Usuarios con acceso a la actividad:</label>
       <select class="form-select" multiple size="20" name="users_allowed" id="users_allowed">
-        <% if (users) users.forEach(function(u){ %>
-          <option value="<%= u.username %>"><%= u.displayName %></option>
-        <% }); %>
+        <option v-for="u in usersAllowed" :key="u.username" value="u.username">{{ u.displayName }}</option>
       </select>
     </div>
 
     <div class="d-flex flex-column justify-content-center">
-      <button class="btn"><i class="bi bi-arrow-left-circle"></i></button>
-      <button class="btn"><i class="bi bi-arrow-right-circle"></i></button>
+      <button class="btn"><i @click="addUsers()" class="bi bi-arrow-left-circle"></i></button>
+      <button class="btn"><i @click="removeUsers()" class="bi bi-arrow-right-circle"></i></button>
     </div>
 
     <div class="container d-flex flex-column">
       <label for="users_not_allowed">Usuarios sin acceso a la actividad:</label>
       <select class="form-select" multiple size="20" name="users_not_allowed" id="users_not_allowed">
-        <% allUsers.forEach(function(u){ %>
-          <option value="<%= u.username %>"><%= u.displayName %></option>
-        <% }); %>
+        <option v-for="u in usersNotAllowed" :key="u.username" value="u.username">{{ u.displayName }}</option>
       </select>
     </div>
-  </div>  
+  </div>
 </div>
+    `,
+
+    data() {
+      return {
+        usersAllowed: [],
+        usersNotAllowed: []
+      }
+    },
+
+    methods: {
+      reload() {
+        let model = 'user';
+        let query = {
+          include: 'activity',
+        };
+        post(`/admin/q/${model}/get`,
+          JSON.stringify(query),
+          result => { this.usersNotAllowed = result; },
+          error => {
+            showMessage(`Cannot load users from server.`, 'modalGenericMessage');
+          }
+        )
+      },
+
+      addUsers(users) {
+        console.log('aaa')
+      },
+
+      removeUsers(users) {
+        console.log('dddd')
+      }
+    },
+
+    mounted() {
+      this.reload();
+    }
+  }
+
+  const ActivitiesListing = {
+    template: `
+<table class="table table-sm table-striped table-hover table-borderless caption-top" id="viewsTable">
+  <caption>Vistas disponibles</caption>
+  <thead class="table-primary">
+      <tr>
+        <th class="align-middle" scope="col"><input type="checkbox" /></th>
+        <th class="align-middle" scope="col"></th>
+        <th class="align-middle" scope="col"></th>
+        <template v-for="c in columns">
+          <th class="align-middle" scope="col">{{ c }}</th>
+        </template>
+      </tr>
+  </thead>
+  <tbody>
+    <tr v-for="v in model" :key="v.id">
+      <td class="align-middle"><input type="checkbox" /></td>
+      <td class="align-middle"><i @click="edit(v)" class="bi bi-pencil" style="cursor:pointer"></i></td>
+      <td class="align-middle"><i class="bi bi-trash" style="cursor:pointer"></i></td>
+      <template v-for="f in fields">
+        <th v-if="f['strong']" class="align-middle" scope="row">{{ v[f['key']] }}</th>
+        <td v-else class="align-middle">{{ fields_value(v, f['key']) }}</td>
+      </template>
+    </tr>
+  </tbody>
+</table>
+    `,
+
+      data() {
+        return {
+          columns: ['Nombre', 'Vista', 'Versión de la Vista', 'Controlador', 'Versión del Controlador'],
+          fields: [
+            { 'key': 'name', 'strong': true },
+            { 'key': 'viewName', 'strong': true },
+            { 'key': 'View', 'strong': false },
+            { 'key': 'controllerName', 'strong': false },
+            { 'key': 'Controller', 'strong': false },
+          ],
+          model: [],
+          model_name: 'activity',
+          query: {}
+        }
+      },
+
+      methods: {
+        fields_value(row, key) {
+          var f = {
+              'View': (o) => { return o.View ? o.View.createdAt.toLocaleString() : "La más reciente" },
+              'Controller': (o) => { return o.Controller ? o.Controller.createdAt.toLocaleString() : "La más reciente" }
+            }
+          return (key in f) ? f[key](row) : row[key];
+        },
+
+        reloadActivities() {
+          post(`/admin/q/${this.model_name}/get`,
+            JSON.stringify(this.query),
+            result => { this.model = result; },
+            error => {
+              showMessage(`Cannot load ${this.model_name} from server.`, 'modalGenericMessage');
+            }
+          )
+        },
+
+        edit(entity) {
+          this.$router.push(`/${this.model_name}/${entity.name}`);
+        }
+      },
+
+      mounted() {
+        this.reloadActivities();
+      }
+    }
+
+
+
+  // 2. Define some routes
+  // Each route should map to a component.
+  // We'll talk about nested routes later.
+  const routes = [
+    { path: '/', component: Home },
+    { path: '/activity', component: ActivitiesListing },
+    { path: '/activity/:name', component: Activity },
+    { path: '/view', component: Views },
+    { path: '/controller', component: Controller },
+    { path: '/users', component: ActivitiesListing },
+    { path: '/courses', component: Courses },
+  ]
+
+  // 3. Create the router instance and pass the `routes` option
+  // You can pass in additional options here, but let's
+  // keep it simple for now.
+  const router = VueRouter.createRouter({
+    // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
+    history: VueRouter.createWebHashHistory(),
+    routes, // short for `routes: routes`
+  })
+
+  // 5. Create and mount the root instance.
+  const app = Vue.createApp({})
+  // Make sure to _use_ the router instance to make the
+  // whole app router-aware.
+  app.use(router)
+  app.mount('#app')
+// Now the app has started!
+</script>

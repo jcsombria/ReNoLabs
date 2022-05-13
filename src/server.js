@@ -101,7 +101,7 @@ app.post('/admin/table/get/:table', login.ensureLoggedIn('/'), onlyAdmin, views.
 app.get('/admin/activity', login.ensureLoggedIn('/'), onlyAdmin, views.admin.getActivity);
 
 // app.post('/admin/users/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.users.set);
-// app.get('/admin/controller', login.ensureLoggenpm install vue@nextdIn('/'), onlyAdmin, views.admin.controller.edit);
+// app.get('/admin/controller', login.ensureLoggedIn('/'), onlyAdmin, views.admin.controller.edit);
 app.post('/admin/controller/set', login.ensureLoggedIn('/'), onlyAdmin, views.admin.controller.set);
 // app.get('/admin/config/edit', login.ensureLoggedIn('/'), onlyAdmin, views.admin.config.edit);
 app.post('/admin/config/set', login.ensureLoggedIn('/'), onlyAdmin, views.api.config.set);

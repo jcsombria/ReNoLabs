@@ -126,6 +126,7 @@
         // initEditors('controller');
       })
     </script>
+
   </head>
   <body class="bg-light">
     <%- include('../ui/menu', {active: 'admin'}); %>
@@ -146,13 +147,17 @@
         <button class="nav-link container-fluid d-flex" id="v-pills-users-tab" data-bs-toggle="pill" data-bs-target="#v-pills-users" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">
           <i class="bi bi-people me-2"></i><span class="fs-5 d-none d-sm-inline" title="Usuarios"> Usuarios</span>
         </button>
+        <button class="nav-link container-fluid d-flex" id="v-pills-courses-tab" data-bs-toggle="pill"
+          data-bs-target="#v-pills-courses" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">
+          <i class="bi bi-people me-2"></i><span class="fs-5 d-none d-sm-inline" title="Usuarios"> Cursos</span>
+        </button>
       </div>
       <div class="m-1 px-0 tab-content d-flex justify-content-center container-fluid" id="v-pills-tabContent">
         <!-- <div class="tab-pane fade w-100 h-100 show active" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-home-tab">
           < %- include('./edit/config', {files: config, prefix: 'config'}); % >
         </div> -->
         <div class="tab-pane fade w-100 h-100 show active" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
-          <%- include('./edit/activities') %>
+          <%- include('./edit/activity') %>
         </div>
         <div class="tab-pane fade w-100 h-100" id="v-pills-view" role="tabpanel" aria-labelledby="v-pills-view-tab">
           <%- include('./edit/views') %>
@@ -162,6 +167,10 @@
         </div>
         <div class="tab-pane fade w-100 h-100" id="v-pills-users" role="tabpanel" aria-labelledby="v-pills-users-tab">
           <%- include('./edit/users'); %>
+        </div>
+        <div class="tab-pane fade w-100 h-100" id="v-pills-courses" role="tabpanel"
+          aria-labelledby="v-pills-courses-tab">
+          <%- include('./edit/courses') %>
         </div>
       </div>
     </div>

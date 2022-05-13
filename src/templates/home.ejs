@@ -4,20 +4,20 @@
 		<%- include('ui/header'); %>
 	</head>
 	<body>
-        <%- include('ui/menu', {user: user}); %>
+		<%- include('ui/menu', {user: user}); %>
 
-				<div class="container-fluid d-flex m-3 justify-content-center">
-					<div class="container d-flex flex-column align-items-center">
-						<h1 class="display-6">Actividades Disponibles</h1>
-						<% activities.forEach(a => { %>
-							<a href="activity?name=<%= a.name %>"><%= a.name %></a>
-						<% }) %>
-					</div>
+		<div class="container-fluid d-flex m-3 justify-content-center">
+			<div class="container d-flex flex-column align-items-center">
+				<h1 class="display-6">Actividades Disponibles</h1>
+				<% activities.forEach(a => { %>
+					<a href="activity?name=<%= a.name %>"><%= a.name %></a>
+				<% }) %>
+			</div>
 
-					<div class="container d-flex flex-column align-items-center">
-						<h1 class="display-6">Últimos Experimentos</h1>
-						<div class="container" id="data"></div>
-					</div>
-				</div>
+			<div class="container d-flex flex-column align-items-center">
+				<h1 class="display-6">Últimos Experimentos</h1>
+				<div class="container" id="data"></div>
+			</div>
+		</div>
 	</body>
 </html>

@@ -8,7 +8,7 @@ const tmp = require('tmp');
 
 const Config = require('../config/AppConfig');
 const LabConfig = require('../config/LabConfig');
-const { Controller, User, Activity, View } = require('../models');
+const { Controller, User, Activity, View, Course } = require('../models');
 const Settings = require('../settings');
 const { HardwarePool } = require('../sessions');
 
@@ -47,6 +47,7 @@ class Updater {
     'controller': Controller,
     'activity': Activity,
     'user': User,
+    'course': Course,
   }
 
   RESOURCES = {
@@ -63,9 +64,24 @@ class Updater {
       ]
     },
     'user': where => { return []; },
-    'activity': where => { return []; }
+    'activity': where => { return []; },
+    'course': where => { return []; }
   }
 
+  /* Add a new activity.
+   * @param {object}   data a dictionary like object:
+      {
+        name: <any valid user>,
+        sessionTimeout: float,
+        disconnectTimeout: float,
+        view: <zip file content>,
+        controller: <zip file content>,
+        viewName: str,
+        controllerName: str,
+      }
+   * @return the new activity.
+   * @throws InvalidActivityError 
+   */
   async addActivity(data) {
     try {
       var activity = {
@@ -97,6 +113,16 @@ class Updater {
     }
   }
 
+  /* Add a new view.
+   * @param {object}   data a dictionary like object:
+      {
+        name: string,
+        view: <zip file content>,
+        comment: string,
+      }
+   * @return the new view.
+   * @throws InvalidViewError 
+   */
   async addView(data) {
     try {
       var bundle = new Bundle(data.view);
@@ -108,19 +134,18 @@ class Updater {
       bundle.extractTo(`${Settings.VIEWS_SERVE}/${view.id}`);
       view.description = bundle.get('html-description');
       view.path = bundle.get('main-simulation');
-    return await view.save();
+      return await view.save();
     } catch(e) {
       logger.debug(`Cannot save view file: ${e.message}`);
       if (view) {
         fs.unlinkSync(`${Settings.VIEWS}/${view.id}.zip`);
-        fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });      
-       
+        fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });       
       }
       throw new InvalidViewError(`Cannot save view file. Reason: ${e.message}`)
     }
   }
 
-  /* Update the controller.
+  /* Add a new controller.
    * @param {object}   data a dictionary like object:
       {
         version: 'private' | 'default',
@@ -401,10 +426,20 @@ class Updater {
   }
 
   async get(query) {
-    if (!query.where) {
-      return this.MODELS[query.model].findAll();
+    var q = {};
+    if (query['where'] != undefined) {
+      q['where'] = this.MODELS[query['where']]
     }
-    return this.MODELS[query.model].findAll({ where: query.where });
+    if (query['include'] != undefined) {
+      q['include'] = this.MODELS[query['include']]
+    }
+    // for (var k of ['where', 'include']) {
+    //   if (query[k] != undefined) { q[k] = query[k]; }
+    // }
+    console.log(q);
+    r = await this.MODELS[query.model].findAll(q)
+    console.log()
+    return this.MODELS[query.model].findAll(q);
   }
 
   async query(q) {

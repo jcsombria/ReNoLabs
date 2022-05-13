@@ -16,6 +16,7 @@ const MODELS = {
   'views': models.View,
   'controllers': models.Controller,
   'users': models.User,
+  'courses': models.Course,
 };
 
 module.exports = {
@@ -213,11 +214,9 @@ module.exports.admin = {
   },
 
   query: function (req, res) {
-    var q = {
-      'action': req.params.action,
-      'model': req.params.model,
-    };
-    if (req.body.where) { q['where'] = req.body.where; }
+    var q = req.body;
+    q['action'] = req.params.action,
+    q['model'] = req.params.model,
     Updater.query(q)
       .then(result => { res.send(result); })
       .catch(error => { res.status(400).send(error); });

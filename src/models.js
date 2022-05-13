@@ -94,6 +94,21 @@ Controller.init({
   sequelize, modelName: 'Controller'
 });
 
+class Course extends Model {}
+Course.init({
+  id: {
+    type: DataTypes.UUID, defaultValue: Sequelize.UUIDV4, primaryKey: true
+  },
+  name: {
+    type: DataTypes.STRING, allowNull: false
+  },
+  year: {
+    type: DataTypes.STRING
+  },
+}, {
+  sequelize, modelName: 'Course'
+});
+
 Activity.belongsTo(View);
 Activity.belongsTo(Controller);
 View.hasMany(Activity);
@@ -101,6 +116,8 @@ Controller.hasMany(Activity);
 
 User.belongsToMany(Activity, { through: 'UserActivities' });
 Activity.belongsToMany(User, { through: 'UserActivities' });
+
+User.belongsToMany(Course, { through: 'UserCourses' });
 
 sequelize.sync();
 
@@ -110,4 +127,5 @@ module.exports = {
   View: View,
   Activity: Activity,
   Controller: Controller,
+  Course: Course,
 }
