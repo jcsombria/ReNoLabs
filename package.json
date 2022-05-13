@@ -32,6 +32,7 @@
     "express-sse": "^0.5.3",
     "extract-zip": "^2.0.1",
     "fix": "^0.0.6",
+    "forever": "^4.0.3",
     "influx": "^5.9.2",
     "influxdb-nodejs": "^3.1.0",
     "mathjs": "^10.4.0",

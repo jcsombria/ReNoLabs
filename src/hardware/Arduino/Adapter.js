@@ -3,9 +3,6 @@ var spawn = require('child_process').spawn;
 const zmq = require('zeromq');
 
 const Adapter = require('../Adapter');
-
-
-
 const { exec } = require('child_process');
 
 /**
@@ -28,6 +25,14 @@ class ArduinoAdapter extends Adapter {
     if(this.connected) return;
     logger.info('Arduino Adapter: Starting default controller...');
     this.conn = spawn('python3',[`../var/controllers/${this.controller.id}/${this.controller.path}`]);
+//#exec(`python3 ../var/controllers/${this.controller.id}/${this.controller.path}`, (error, stdout, stderr) => {
+//  if (error) {
+//    console.error(`exec error: ${error}`);
+//    return;
+//  }
+//  console.log(`stdout: ${stdout}`);
+//  console.error(`stderr: ${stderr}`);
+//});
     this.conn.on('error', function(error) { console.log(error); });
     this.commandSocket = zmq.socket('req');
     var endpoint = 'tcp://127.0.0.1:5555';
@@ -55,6 +60,7 @@ class ArduinoAdapter extends Adapter {
   write(variable, value, callback) {
     try {
       this.state[variable] = value;
+      console.log(`${variable}:[${value}]`);
       this.commandSocket.send(`${variable}:[${value}]`);
     } catch(e) {
       logger.error(`0mq Adapter: Cannot write ${variable}. Ignore this message if appears immediately after disconnection.`)

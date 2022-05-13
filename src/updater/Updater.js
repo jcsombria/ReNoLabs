@@ -33,7 +33,7 @@ class Updater {
     'Javascript': name => {
       return name.endsWith('.js') || name.endsWith('.txt') || name.endsWith('.md');
     },
-  }
+  };
 
   ACTIONS = {
     // 'add': async (q) => { return this.add(q); },
@@ -48,7 +48,7 @@ class Updater {
     'activity': Activity,
     'user': User,
     'course': Course,
-  }
+  };
 
   RESOURCES = {
     'view': where => {
@@ -66,7 +66,7 @@ class Updater {
     'user': where => { return []; },
     'activity': where => { return []; },
     'course': where => { return []; }
-  }
+  };
 
   /* Add a new activity.
    * @param {object}   data a dictionary like object:
@@ -139,7 +139,7 @@ class Updater {
       logger.debug(`Cannot save view file: ${e.message}`);
       if (view) {
         fs.unlinkSync(`${Settings.VIEWS}/${view.id}.zip`);
-        fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });       
+        fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });
       }
       throw new InvalidViewError(`Cannot save view file. Reason: ${e.message}`)
     }
@@ -459,12 +459,12 @@ class Bundle {
     this.name = tmpfile.name;
     this.metadata = this._getMetadata();
   }
-  
+
   setName(name) {
     fs.renameSync(this.name, name);
     this.name = name;
   }
-  
+
   _getMetadata() {
     const zipfile = new AdmZip(this.name);
     var metadata = zipfile.getEntry('_metadata.txt');
@@ -486,7 +486,7 @@ class Bundle {
   get(key) {
     return this.metadata[key];
   }
-  
+
   extractTo(target) {
     const zip = new AdmZip(this.name);
     zip.extractAllTo(target);

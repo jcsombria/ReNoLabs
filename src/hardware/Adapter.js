@@ -128,7 +128,7 @@ class Adapter {
   write(variable, value, callback) {
     try {
       //this.state[variable] = value;
-      this.conn.stdin.write(variable + ':' + value);
+      this.conn.stdin.write(`${variable}:{$value}`);
       logger.debug(`${variable}->${value}`);
     } catch(e) {
       logger.error(`Adapter: Cannot write ${variable}. Ignore this message if appears immediately after disconnection.`)

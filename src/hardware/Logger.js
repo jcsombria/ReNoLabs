@@ -25,7 +25,7 @@ class Logger extends EventEmitter {
 				datalogger.info(data);
 				// this._toInfluxDB(data);
 			}
-		} catch {
+		} catch(e) {
 			logger.debug('Logger: Can\'t write log.');
 		}
 	}
