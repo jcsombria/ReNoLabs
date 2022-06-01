@@ -17,6 +17,7 @@
   import Controller from './components/controller.js'
   import Courses from './components/courses.js'
   import Views from './components/views.js'
+  import Activities from './components/activities.js'
 // 1. Define route components.
   // These can be imported from other files
   const Home = { template: `
@@ -64,68 +65,6 @@
 </div>
     `
   }
-
-//   const ActivitiesListing = {
-//     template: `
-// <table class="table table-sm table-striped table-hover table-borderless caption-top" id="activitiesTable">
-//   <caption>Actividades disponibles:</caption>
-//   <thead class="table-primary">
-//     <tr>
-//       <th scope="col" class="align-middle"><input type="checkbox" /></th>
-//       <th scope="col" class="align-middle"></th>
-//       <th scope="col" class="align-middle"></th>
-//       <th scope="col" class="align-middle">Nombre</th>
-//       <th scope="col" class="align-middle">Vista</th>
-//       <th scope="col" class="align-middle">Versión de la Vista</th>
-//       <th scope="col" class="align-middle">Controlador</th>
-//       <th scope="col" class="align-middle">Versión del Controlador</th>
-//     </tr>
-//   </thead>
-//   <tbody>
-//     <tr v-for="a in activities" :key="a.name">
-//       <td class="align-middle"><input type="checkbox" /></td>
-//       <td class="align-middle"><i @click="edit(a)" class="bi bi-pencil" style="cursor:pointer"></i></td>
-//       <td class="align-middle"><i class="bi bi-trash" style="cursor:pointer"></i></td>
-//       <th scope="row" class="align-middle">{{ a.name }}</th>
-//       <td class="align-middle">{{ a.viewName }}</td>
-//       <td class="align-middle">{{ a.View ? a.View.createdAt.toLocaleString() : "La más reciente" }}</td>
-//       <td class="align-middle">{{ a.controllerName }}</td>
-//       <td class="align-middle">{{ a.Controller ? a.Controller.createdAt.toLocaleString() : "La más reciente" }}</td>
-//     </tr>
-//   </tbody>
-//   <tfoot class="table-primary">
-//   </tfoot>
-// </table>
-//     `,
-
-//     data() {
-//       return {
-//         activities: [],
-//       }
-//     },
-
-//     methods: {
-//       reloadActivities() {
-//         model = 'activity';
-//         query = {};
-//         post(`/admin/q/${model}/get`,
-//           JSON.stringify(query),
-//           result => { this.activities = result; },
-//           error => {
-//             showMessage(`Cannot load activities from server.`, 'modalGenericMessage');
-//           }
-//         )
-//       },
-
-//       edit(activity) {
-//         this.$router.push(`/activity/${activity.name}`);
-//       }
-//     },
-
-//     mounted() {
-//       this.reloadActivities();
-//     }
-//   }
 
   const Activity = {
     template: `
@@ -189,91 +128,17 @@
     }
   }
 
-  const ActivitiesListing = {
-    template: `
-<table class="table table-sm table-striped table-hover table-borderless caption-top" id="viewsTable">
-  <caption>Vistas disponibles</caption>
-  <thead class="table-primary">
-      <tr>
-        <th class="align-middle" scope="col"><input type="checkbox" /></th>
-        <th class="align-middle" scope="col"></th>
-        <th class="align-middle" scope="col"></th>
-        <template v-for="c in columns">
-          <th class="align-middle" scope="col">{{ c }}</th>
-        </template>
-      </tr>
-  </thead>
-  <tbody>
-    <tr v-for="v in model" :key="v.id">
-      <td class="align-middle"><input type="checkbox" /></td>
-      <td class="align-middle"><i @click="edit(v)" class="bi bi-pencil" style="cursor:pointer"></i></td>
-      <td class="align-middle"><i class="bi bi-trash" style="cursor:pointer"></i></td>
-      <template v-for="f in fields">
-        <th v-if="f['strong']" class="align-middle" scope="row">{{ v[f['key']] }}</th>
-        <td v-else class="align-middle">{{ fields_value(v, f['key']) }}</td>
-      </template>
-    </tr>
-  </tbody>
-</table>
-    `,
-
-      data() {
-        return {
-          columns: ['Nombre', 'Vista', 'Versión de la Vista', 'Controlador', 'Versión del Controlador'],
-          fields: [
-            { 'key': 'name', 'strong': true },
-            { 'key': 'viewName', 'strong': true },
-            { 'key': 'View', 'strong': false },
-            { 'key': 'controllerName', 'strong': false },
-            { 'key': 'Controller', 'strong': false },
-          ],
-          model: [],
-          model_name: 'activity',
-          query: {}
-        }
-      },
-
-      methods: {
-        fields_value(row, key) {
-          var f = {
-              'View': (o) => { return o.View ? o.View.createdAt.toLocaleString() : "La más reciente" },
-              'Controller': (o) => { return o.Controller ? o.Controller.createdAt.toLocaleString() : "La más reciente" }
-            }
-          return (key in f) ? f[key](row) : row[key];
-        },
-
-        reloadActivities() {
-          post(`/admin/q/${this.model_name}/get`,
-            JSON.stringify(this.query),
-            result => { this.model = result; },
-            error => {
-              showMessage(`Cannot load ${this.model_name} from server.`, 'modalGenericMessage');
-            }
-          )
-        },
-
-        edit(entity) {
-          this.$router.push(`/${this.model_name}/${entity.name}`);
-        }
-      },
-
-      mounted() {
-        this.reloadActivities();
-      }
-    }
-
-
 
   // 2. Define some routes
   // Each route should map to a component.
   // We'll talk about nested routes later.
   const routes = [
     { path: '/', component: Home },
-    { path: '/activity', component: ActivitiesListing },
+    { path: '/activity', component: Activities },
     { path: '/activity/:name', component: Activity },
     { path: '/view', component: Views },
     { path: '/controller', component: Controller },
-    { path: '/users', component: ActivitiesListing },
+    { path: '/users', component: Activities },
     { path: '/courses', component: Courses },
   ]
 
