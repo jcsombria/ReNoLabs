@@ -1,3 +1,5 @@
+const ads = require('ads');
+
 module.exports = {
   'config': {
     //Handle name in twincat
