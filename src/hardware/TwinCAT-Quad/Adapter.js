@@ -1,21 +1,17 @@
-const ads = require('ads');
-const config_default = require('./Config');
+const ads = require('node-ads');
 const winston = require('winston');
 const logger = winston.loggers.get('log');
-const handles = require('./Variables');
 
 const Adapter = require('../Adapter');
 const State = require('../State');
 const Settings = require('../../settings');
 
-
 // Encapsulates the interaction with TwinCAT
 class TwinCATAdapter extends Adapter {
-	constructor(controller, options) {
-    super(controller, options);
-    this.handles = handles;
+	constructor(controller) {
+    super(controller);
     this.toRequest = ['UserUpdate'];
-    this.state = new State();
+    this.state = new TwinCATState();
   }
 
   /**
@@ -24,26 +20,26 @@ class TwinCATAdapter extends Adapter {
    start() {
 		// Store the reference to this in that, we will need it inside the callbacks
 		let that = this;
-    logger.silly('TwinCAT Adapter: Starting PLC Channel');
-
-    this.conn = ads.connect(this.options, function() {
+    logger.debug('TwinCAT Adapter: Starting PLC Channel');
+    const options = require(this.getPathFor('Config.js'));
+    this.handles = require(this.getPathFor('Variables.js'));
+    this.state.setHandles(this.handles);
+    this.conn = ads.connect(options, function() {
       logger.info('TwinCAT Adapter: TwinCAT channel started.');
-      for(var i=0; i<that.toRequest.length; i++) {
-        var v = that.toRequest[i];
-        this.notify(that.handles[v]);
-      }
+      that.toRequest.forEach(r => {
+        this.notify(that.handles[r]); 
+      });
 			that.onstart();
 		});
-
 		this.conn.on('notification', function(handle) {
       try {
-        logger.silly('TwinCAT Adapter: TwinCAT notification');
+        logger.debug('TwinCAT Adapter: TwinCAT notification');
+        console.log('dfFDFFD')
         that.ondata(handle);
       } catch(e) {
         logger.error(`TwinCAT Adapter: User data handler throws an error: ${e.message}`);
       }
 		});
-
     this.conn.on('error', function(error) {
       logger.error(`TwinCAT Adapter: ${error}`);
 			that.onerror(error);
@@ -53,15 +49,6 @@ class TwinCATAdapter extends Adapter {
   onstart() {
 		this.connected = true;
     this.state.addListener(this.conn);
-  }
-
-  ondata(ev) {
-    this.state.update(ev);
-		for(var i=0; i<this.toNotify.length; i++) {
-      var name = this.toNotify[i], value = this.state[name];
-			var data = {'variable': name, 'value': value};
-      this.notify('serverOut_clientIn', data);
-		}
   }
 
 	write(variable, value, callback) {
@@ -106,9 +93,13 @@ class TwinCATState extends State {
     };
   }
 
+  setHandles(handles) {
+    this.handles = handles;
+  }
+
   set config(value) {
-    handles.config.value = value;
-    this.notify([handles.config]);
+    this.handles.config.value = value;
+    this.notify([this.handles.config]);
     logger.debug(`TwinCAT Adapter: Set config=${value}`);
   }
 
@@ -118,16 +109,16 @@ class TwinCATState extends State {
 
   set reference(value) {
     logger.debug(`TwinCAT Adapter: Set reference=${value}`);
-    handles.referenceR.Tipo = [value.Roll.Tipo];
-    handles.referenceR.param = value.Roll.param;
-    handles.referenceP.Tipo = [value.Pitch.Tipo];
-    handles.referenceP.param = value.Pitch.param;
-    handles.referenceY.Tipo = [value.Yaw.Tipo];
-    handles.referenceY.param = value.Yaw.param;
+    this.handles.referenceR.Tipo = [value.Roll.Tipo];
+    this.handles.referenceR.param = value.Roll.param;
+    this.handles.referenceP.Tipo = [value.Pitch.Tipo];
+    this.handles.referenceP.param = value.Pitch.param;
+    this.handles.referenceY.Tipo = [value.Yaw.Tipo];
+    this.handles.referenceY.param = value.Yaw.param;
     this.notify([
-      handles.referenceR,
-      handles.referenceP,
-      handles.referenceY,
+      this.handles.referenceR,
+      this.handles.referenceP,
+      this.handles.referenceY,
     ]);
   }
 
@@ -137,21 +128,21 @@ class TwinCATState extends State {
 
   set controller(value) {
     logger.debug(`TwinCAT Adapter: set controller=${value}`);
-    handles.controller.Tipo = [value.Tipo];
-    handles.controller.Continuous = [1];
-    handles.controller.RealSys = [value.RealSys];
-    handles.controller.T = [value.T];
-    handles.PIDpr.values = value.PIDPR;
-    handles.PIDpr.bp = [0];
-    handles.PIDy.values = value.PIDY;
-    handles.PIDy.bp = [0];
-    handles.FL.K = State.string2array(value.FL.K);
-    handles.FL.bp = [0];
+    this.handles.controller.Tipo = [value.Tipo];
+    this.handles.controller.Continuous = [1];
+    this.handles.controller.RealSys = [value.RealSys];
+    this.handles.controller.T = [value.T];
+    this.handles.PIDpr.values = value.PIDPR;
+    this.handles.PIDpr.bp = [0];
+    this.handles.PIDy.values = value.PIDY;
+    this.handles.PIDy.bp = [0];
+    this.handles.FL.K = State.string2array(value.FL.K);
+    this.handles.FL.bp = [0];
     this.notify([
-      handles.controller,
-      handles.PIDpr,
-      handles.FL,
-      handles.PIDy,
+      this.handles.controller,
+      this.handles.PIDpr,
+      this.handles.FL,
+      this.handles.PIDy,
     ]);
   }
 
@@ -163,34 +154,26 @@ class TwinCATState extends State {
     return this._evolution;
   }
 
+
   // Parse PLC notification and update state
   update(o) {
+    console.log('DDD')
     logger.silly('TwinCAT Adapter: Incoming PLC data');
-		this._config = o.ControlState[0];
-		this._evolution = this._buffer2array(o.EvolutionData, 4, 14);
-		this._reference = {
-      'Roll': {
-        'Tipo': o['referenciaR.Tipo'][0],
-        'param': this._buffer2array(o['referenciaR.param'], 4, 4),
-      },
-		 	'Pitch': {
-        'Tipo': o['referenciaP.Tipo'][0],
-        'param': this._buffer2array(o['referenciaP.param'], 4, 4),
-      },
-			'Yaw': {
-        'Tipo': o['referenciaY.Tipo'][0],
-        'param': this._buffer2array(o['referenciaY.param'], 4, 4),
-      },
-		};
-		this._controller = {
-			'Tipo': o.ControlData.readUInt8(0),
-      'Continuous': o.ControlData.readUInt8(1),
-			'RealSys': o.ControlData.readUInt8(2),
-      'T': o.ControlData.readFloatLE(3),
-			'PIDPR': this._buffer2array(o.PIDrp, 4, 4, 1),
-			'PIDY': this._buffer2array(o.PIDy, 4, 4, 1),
-			'FL': this._extractFL(o.FLdat),
-		};
+		this._config = o.config[0];
+		this._evolution = o.evolution;
+		this._reference = o.reference;
+
+    console.log(this._controller)
+    console.log(o.controller)
+		// this._controller = {
+		// 	'Tipo': o.ControlData.readUInt8(0),
+    //   'Continuous': o.ControlData.readUInt8(1),
+		// 	'RealSys': o.ControlData.readUInt8(2),
+    //   'T': o.ControlData.readFloatLE(3),
+		// // 	'PIDPR': this._buffer2array(o.PIDrp, 4, 4, 1),
+		// // 	'PIDY': this._buffer2array(o.PIDy, 4, 4, 1),
+		// // 	'FL': this._extractFL(o.FLdat),
+		// };
   }
 
   _extractFL(o) {
@@ -224,4 +207,3 @@ class TwinCATState extends State {
 
 module.exports.Adapter = TwinCATAdapter;
 module.exports.State = State;
-module.exports.DefaultConfig = config_default;
