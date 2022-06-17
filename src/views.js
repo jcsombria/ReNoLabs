@@ -99,7 +99,7 @@ module.exports = {
       var name = `${Settings.DATA}/${files[i]}`;
       var stats = fs.statSync(name);
       f.push({
-        'name': name,
+        'name': files[i],
         'date': stats.atime,
         'size': stats.size
       });
@@ -107,7 +107,7 @@ module.exports = {
     var user = await db.users.getUser(req.user.username);
     res.render('table/experiments', { user: user, files: f });
   },
-  
+
   experience: async function(req, res) {
     try {
       var user = await db.users.getUser(req.user.username);
@@ -145,7 +145,7 @@ module.exports = {
   },
 
   download: function(req, res) {
-    res.download('./data/' + req.params[0]);
+    res.download(`${Settings.DATA}/${req.params[0]}`);
   },
   
   logout: function(req, res) {
