@@ -1,36 +1,28 @@
-<div id="app">
-  <h1>Administración</h1>
-  <p>
-    <router-view></router-view>
-    <div class="d-flex justify-content-center" id="activitiesNavBar">
-      <router-link to="/" class="btn btn-primary text-light">
-        <i class="bi bi-arrow-left"></i>Volver
-      </router-link>
-      <router-link to="/activity" class="btn btn-primary text-light">
-        Go to Activities
-      </router-link>
-    </div>
-  </p>
+<div id="app" class="d-flex flex-column align-content-start container-fluid mx-auto">
+  <router-view></router-view>
 </div>
 
 <script type="module">
+  // 1. Define route components.
+  // These can be imported from other files
+  import User from './components/users.js'
   import Controller from './components/controller.js'
   import Courses from './components/courses.js'
+  import CourseEditor from './components/course_editor.js'
   import Views from './components/views.js'
   import Activities from './components/activities.js'
-// 1. Define route components.
-  // These can be imported from other files
+
   const Home = { template: `
 <div class="select">
-  <div class="select-block"> 
+  <div class="select-block mb-3"> 
     <h1>Actividades</h1>
     <p align="center">
       <router-link to="/activity">
         <i class="bi bi-tools" style="font-size: 5rem;"></i>
       </router-link>
     </p>
-  </div> 
-  <div class="select-block"> 
+  </div>
+  <div class="select-block mb-3"> 
     <h1>Vista</h1>
     <p align="center">
       <router-link to="/view">
@@ -38,7 +30,7 @@
       </router-link>
     </p>
   </div> 
-  <div class="select-block"> 
+  <div class="select-block mb-3"> 
     <h1>Controlador</h1>
     <p align="center">
       <router-link to="/controller">
@@ -46,7 +38,7 @@
       </router-link>
     </p>
   </div> 
-  <div class="select-block"> 
+  <div class="select-block mb-3"> 
     <h1>Usuarios</h1>
     <p align="center">
       <router-link to="/users">
@@ -54,7 +46,7 @@
       </router-link>
     </p>
   </div>
-  <div class="select-block"> 
+  <div class="select-block mb-3"> 
     <h1>Cursos</h1>
     <p align="center">
       <router-link to="/courses">
@@ -138,8 +130,9 @@
     { path: '/activity/:name', component: Activity },
     { path: '/view', component: Views },
     { path: '/controller', component: Controller },
-    { path: '/users', component: Activities },
+    { path: '/users', component: User },
     { path: '/courses', component: Courses },
+    { path: '/courses/edit', component: CourseEditor },
   ]
 
   // 3. Create the router instance and pass the `routes` option

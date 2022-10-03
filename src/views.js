@@ -261,7 +261,6 @@ module.exports.admin = {
           res.redirect('/admin');
         })
         .catch(error => {
-          console.log(error)
           logger.debug(error);
           res.redirect('/admin');
         });

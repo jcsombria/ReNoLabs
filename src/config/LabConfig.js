@@ -29,6 +29,28 @@ module.exports = {
         parameter_indexes: [0, 1, 2, 3]
       }]
     },
+    controller: {
+      parameter_names: ['Manual', 'PID', 'Feedback Linearization', 'Sliding Mode'],
+      options: [{
+        name: 'kp',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Ti',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Td',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'N',
+        parameter_indexes: [0, 1, 2]
+      }, {
+        name: 'Step',
+        parameter_indexes: [0, 1, 2, 3]
+      }, {
+        name: 'Extern',
+        parameter_indexes: [0, 1, 2, 3]
+      }]
+    },
   },
 
   model: {

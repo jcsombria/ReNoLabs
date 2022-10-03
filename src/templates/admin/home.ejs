@@ -1,180 +1,13 @@
 <html>
   <head>
     <%- include('../ui/header'); %>
-    <title>Circuito Analogico - Administración</title>
-    <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>        
-    <script>
-      function initEditors(prefix) {
-        post(`/_api/${prefix}/get`, null, config => {
-          for (var i=0; i<config.data.length; i++) {
-            var editor = ace.edit('editor-'+prefix+'-'+i);
-            editor.setTheme('ace/theme/monokai');
-            editor.session.setMode('ace/mode/javascript');
-            editor.setValue(config.data[i].code);
-          }
-        });
-      }
-
-      function refreshTable(table) {
-        get(`/admin/table/get/${table}`,
-          result => {
-            load(result, table);
-            addInteractions[table]();
-          },
-        );
-      };
-
-      function get(url, callback) {
-        var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        $.ajax({
-          'url': url,
-          'method': 'get',
-          'headers': { 'CSRF-Token': token},
-          'success': callback
-        });  
-      }
-
-      function load(content, tab) {
-        console.log(`#${tab}`)
-        let component = $(`#${tab}`);
-        console.log(component)
-        if (component.length > 0) {
-          component.empty();
-          component.append(content);
-        }
-      }
-
-      const addInteractions = {
-        'activities': () => { addInteractionsTo('activities', 'activity', 'name'); },
-        'views' : () => { addInteractionsTo('views', 'view', 'id'); },
-        'controllers' : () => { addInteractionsTo('controllers', 'controller', 'id'); },
-        'users' : () => {},
-      };
-
-      function addInteractionsTo(table, component, idName) {
-        var rows = $(`[id^=${component}-]`);
-        for (var r of rows) {
-          let id = r.id.substring(component.length + 1);
-          let data = { 'where': {} };
-          data.where[idName] = id;
-          $(`[id="${r.id}"] .bi-trash`)[0].onclick = function() {
-            post(`/admin/q/${component}/delete`, 
-              JSON.stringify(data),
-              success => {
-                refreshTable(table);
-                showMessage(`${component} deleted`, 'modalGenericMessage');
-              },
-              error => {
-                showMessage(`${component} not deleted.`, 'modalGenericMessage');
-              }
-            )
-          };
-          $(`[id="${r.id}"] .bi-pencil`)[0].onclick = function() {
-            get(`/admin/${component}?name=${id}`, result => {
-              load(result, table);
-            });
-          }
-        }
-      }
-
-      function showMessage(message, modal) {
-        var m = document.getElementById(modal);
-        $(`#${modal}`).find('.alert')[0].innerHTML = message;
-        new bootstrap.Modal(m).show();
-      }
-
-      function submitForm(url, data, success, error) {
-        $.ajax({
-          'url': url,
-          'method': 'post',
-          'contentType': false,
-          'processData': false,
-          'data': data,
-          'success': success,
-          'error': error
-        });
-      }
-
-      function save(target, filename, url) {
-        post(url, { files: [{ filename: filename, code: ace.edit(target).getValue() }] },
-          result => {
-            var options = { backdrop: true };
-            var myModal = new bootstrap.Modal(document.getElementById('configModal'), options);
-            myModal.show();
-          }
-        );
-      };
-
-      function post(url, data, success, error) {
-        var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        $.ajax({
-          'url': url,
-          'method': 'post',
-          'contentType': 'application/json',
-          'data': data,
-          'processData': false,
-          'headers': { 'CSRF-Token': token},
-          'success': success,
-          'error': error
-        });
-      }
-
-      $(function() {
-        let tables = ['controllers', 'activities', 'views', 'users'];
-        tables.forEach(t => { refreshTable(t); });
-        // initEditors('config');
-        // initEditors('controller');
-      })
-    </script>
-
+    <title>ReNoLabs - Administración</title>
+    <!-- <script src="https://pagecdn.io/lib/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>         -->
+    <script src="./scripts/renolabs_library.js" type="text/javascript"></script>
   </head>
   <body class="bg-light">
     <%- include('../ui/menu', {active: 'admin'}); %>
-    <div class="d-flex align-items-start">
-      <div class="nav flex-column nav-pills bg-dark min-vh-100 align-items-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-        <!-- <button class="nav-link container-fluid d-flex active" id="v-pills-settings-tab" data-bs-toggle="pill" data-bs-target="#v-pills-settings" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
-          <i class="fs-5 bi bi-gear me-2"></i><span class="fs-5 d-none d-sm-inline" title="Configuración"> Configuración</span>
-        </button> -->
-        <button class="nav-link container-fluid d-flex active" id="v-pills-activity-tab" data-bs-toggle="pill" data-bs-target="#v-pills-activity" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
-          <i class="fs-5 bi bi-tools me-2"></i><span class="fs-5 d-none d-sm-inline" title="Actividades"> Actividades</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-view-tab" data-bs-toggle="pill" data-bs-target="#v-pills-view" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
-          <i class="fs-5 bi bi-tv me-2"></i><span class="fs-5 d-none d-sm-inline" title="Vista"> Vista</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-controller-tab" data-bs-toggle="pill" data-bs-target="#v-pills-controller" type="button" role="tab" aria-controls="v-pills-messages" aria-selected="false">
-          <i class="fs-5 bi bi-cpu me-2"></i><span class="fs-5 d-none d-sm-inline" title="Controlador"> Controlador</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-users-tab" data-bs-toggle="pill" data-bs-target="#v-pills-users" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">
-          <i class="bi bi-people me-2"></i><span class="fs-5 d-none d-sm-inline" title="Usuarios"> Usuarios</span>
-        </button>
-        <button class="nav-link container-fluid d-flex" id="v-pills-courses-tab" data-bs-toggle="pill"
-          data-bs-target="#v-pills-courses" type="button" role="tab" aria-controls="v-pills-settings" aria-selected="false">
-          <i class="bi bi-people me-2"></i><span class="fs-5 d-none d-sm-inline" title="Usuarios"> Cursos</span>
-        </button>
-      </div>
-      <div class="m-1 px-0 tab-content d-flex justify-content-center container-fluid" id="v-pills-tabContent">
-        <!-- <div class="tab-pane fade w-100 h-100 show active" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-home-tab">
-          < %- include('./edit/config', {files: config, prefix: 'config'}); % >
-        </div> -->
-        <div class="tab-pane fade w-100 h-100 show active" id="v-pills-activity" role="tabpanel" aria-labelledby="v-pills-activity-tab">
-          <%- include('./edit/activity') %>
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-view" role="tabpanel" aria-labelledby="v-pills-view-tab">
-          < %- include('./edit/views') % >
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-controller" role="tabpanel" aria-labelledby="v-pills-controller-tab">
-          < %- include('./edit/controllers') %>
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-users" role="tabpanel" aria-labelledby="v-pills-users-tab">
-          < %- include('./edit/users'); % >
-        </div>
-        <div class="tab-pane fade w-100 h-100" id="v-pills-courses" role="tabpanel"
-          aria-labelledby="v-pills-courses-tab">
-          < %- include('./edit/courses') % >
-        </div>
-      </div>
-    </div>
-
+    <%- include('./edit/admin') %>
 
     <div class="modal fade" id="modalGenericMessage" tabindex="-1" aria-labelledby="modalGenericMessageLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -190,11 +23,9 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Send message</button>
           </div>
         </div>
       </div>
     </div>
-
   <body>
 </html>

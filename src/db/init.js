@@ -4,16 +4,6 @@ const logger = require('winston').loggers.get('log');
 (async () => {
   try {
     await models.sequelize.sync({ force: true });
-    // await models.Controller.create({
-    //   name: 'C Controller',
-    //   path: 'controllers/C',
-    //   type: 'C'
-    // });
-    // await models.Controller.create({
-    //   name: 'Dobot Controller',
-    //   path: 'controllers/Dobot',
-    //   type: 'Python'
-    // });
   } catch(e) {
     console.log(e)
   }
@@ -57,20 +47,18 @@ const logger = require('winston').loggers.get('log');
     console.log('error');
   });
 
-  models.User.create({
-    username: 'dgoncalv@ucm.es',
-    displayName: 'Daniela Alejandra Goncalves',
-    emails: 'dgoncalv@ucm.es',
-    password: 'Dobot',
-    permissions: 'ADMIN'
-  }).then(u => {
-    console.log(`User ${username} created.`)
-  }).catch(e => {
-    console.log('error');
-  });
+  // models.User.findAll()
+  // .then(users => {
+  //   users.forEach(u => { console.log(`${u.username}:${u.password}`); })
+  // })
 
-  models.User.findAll()
-  .then(users => {
-    users.forEach(u => { console.log(`${u.username}:${u.password}`); })
-  })
+  // models.Course.create({
+  //   name: 'Sistemas Lineales',
+  //   year: '2020',
+  // }).then(u => {
+  //   console.log(`Course ${u.year} created.`)
+  // }).catch(e => {
+  //   console.log('error');
+  // });
+
 })();

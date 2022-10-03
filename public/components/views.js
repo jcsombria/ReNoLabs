@@ -24,9 +24,50 @@ export default {
     </tr>
   </tbody>
 </table>
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importViewModal">
-  Añadir vista...
-</button>
+<div class="d-flex justify-content-center" id="activitiesNavBar">
+  <button @click="$router.go(-1)" class="btn btn-primary text-light mx-3 my-3">
+    <i class="bi bi-arrow-left"></i>Atrás
+  </button>
+  <button @click="$router.go(1)" class="btn btn-primary text-light mx-3 my-3">
+  <i class="bi bi-arrow-right"></i>Adelante
+  </button>
+  <button class="btn btn-success mx-3 my-3" data-bs-toggle="modal" data-bs-target="#importViewModal">
+    Añadir vista...
+  </button>
+</div>
+<div class="modal fade" id="importViewModal" tabindex="-1" aria-labelledby="importViewModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form action="/admin/views/set" method="post" encType="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= csrfToken  %>">
+        <div class="modal-header">
+          <h5 class="modal-title" id="importViewModalLabel">Importar vista desde archivo EJS (zip)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="view" class="form-label">Archivo EJS (zip):</label>
+            <input type="file" class="form-control" name="view">
+          </div>
+
+          <div class="mb-3">
+            <label for="view" class="form-label">Nombre:</label>
+            <input type="text" class="form-control" name="name">
+          </div>
+      
+          <div class="mb-3">
+            <label for="view" class="form-label">Descripción:</label>
+            <input type="text" class="form-control" name="comments">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" value="Submit">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
     `,
 
     data() {
@@ -47,7 +88,9 @@ export default {
 
     methods: {
       reloadActivities() {
-        post(`/admin/q/${this.model_name}/get`,
+        console.log('dflñkasdjfñlsadkfjsdlñak')
+        console.log(this.query)
+        post(`/admin/q/${this.model_name}/get/`,
           JSON.stringify(this.query),
           result => { this.model = result; },
           error => {

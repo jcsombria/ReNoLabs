@@ -5,7 +5,15 @@ const sequelize = new Sequelize({
   storage: Settings.SQLITE_DB_FILE,
   logging: false, 
 });
-
+/*
+const sequelize = new Sequelize(
+  Settings.MARIADB_DATABASE,
+  Settings.MARIADB_USER,
+  Settings.MARIADB_PASSWORD, {
+  dialect: 'mariadb',
+  logging: false, 
+});
+*/
 class User extends Model {}
 User.init({
   username: {

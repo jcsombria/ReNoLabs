@@ -36,7 +36,7 @@ class Updater {
   };
 
   ACTIONS = {
-    // 'add': async (q) => { return this.add(q); },
+    'add': async (q) => { return this.add(q); },
     'delete': async (q) => { return this.delete(q); },
     // 'set': async (q) => { return this.set(q); },
     'get': async (q) => { return this.get(q); },
@@ -367,54 +367,89 @@ class Updater {
     return this._get_files(Settings.CONFIG, this.FILTERS['Javascript']);
   }
 
-  async deleteActivity(query) {
-    try {
-      await this._delete({
-        'model': Activity,
-        'where': { 'name': query.name },
-        'resources': []
+  // async deleteActivity(query) {
+  //   try {
+  //     await this._delete({
+  //       'model': Activity,
+  //       'where': { 'name': query.name },
+  //       'resources': []
+  //     });
+  //   } catch(e) {
+  //     throw new InvalidActivityError();
+  //   }
+  // }
+
+  // async deleteController(query) {
+  //   try {
+  //     await this._delete({
+  //       'model': Controller,
+  //       'where': { 'id': query.id },
+  //       'resources': [
+  //         `${Settings.CONTROLLERS}/${query.id}`,
+  //         `${Settings.CONTROLLERS}/${query.id}.zip`
+  //       ]
+  //     });
+  //   } catch(e) {
+  //     throw new InvalidControllerError();
+  //   }
+  // }
+
+  // async deleteView(query) {
+  //   try {
+  //     await this._delete({
+  //       'model': View,
+  //       'where': { 'id': query.id },
+  //       'resources': [
+  //         `${Settings.VIEWS_SERVE}/${query.id}`,
+  //         `${Settings.VIEWS}/${query.id}.zip`
+  //       ]
+  //     })
+  //   } catch(e) {
+  //     throw new InvalidViewError();
+  //   }
+  // }
+
+  // async _delete(query) {
+  //   var element = await query['model'].findOne({ where: query.where });
+  //   query['resources'].forEach(r => {
+  //     fs.rmdirSync(r, { recursive: true });
+  //   })
+  //   element.destroy();
+  // }
+
+  async query(q) {
+    return this.ACTIONS[q.action](q);
+  }
+
+  /* Add a new object.
+   * @param {object}   query a dictionary-like object:
+      {
+        model: <any valid object model>,
+        data: {...}
+      }
+  */
+  async add(query) {
+    console.log(query);
+    console.log(this.MODELS[query['model']])
+    return await this.MODELS[query['model']].create(query['data']);
+  }
+
+  async get(query) {
+    let q = {};
+    if ('where' in query) {
+      q['where'] = this.MODELS[query['where']]
+    }
+    if ('include' in query) { q['include'] = query['include'];
+    }
+    let validKeys = ['include', 'where'];
+    Object.keys(query)
+      .filter((k) => validKeys.includes(k))
+      .forEach((k) => {
+        q[k] = this.MODELS[query[k]];
       });
-    } catch(e) {
-      throw new InvalidActivityError();
-    }
-  }
-
-  async deleteController(query) {
-    try {
-      await this._delete({
-        'model': Controller,
-        'where': { 'id': query.id },
-        'resources': [
-          `${Settings.CONTROLLERS}/${query.id}`,
-          `${Settings.CONTROLLERS}/${query.id}.zip`
-        ]
-      });
-    } catch(e) {
-      throw new InvalidControllerError();
-    }
-  }
-
-  async deleteView(query) {
-    try {
-      await this._delete({
-        'model': View,
-        'where': { 'id': query.id },
-        'resources': [
-          `${Settings.VIEWS_SERVE}/${query.id}`,
-          `${Settings.VIEWS}/${query.id}.zip`
-        ]
-      })
-    } catch(e) {
-      throw new InvalidViewError();
-    }
-  }
-
-  async _delete(query) {
-    var element = await query['model'].findOne({ where: query.where });
-    query['resources'].forEach(r => {
-      fs.rmdirSync(r, { recursive: true });
-    })
-    element.destroy();
+    return validKeys.some((k) => k in q) ? 
+      this.MODELS[query.model].findAll(q) :
+      this.MODELS[query.model].findAll();
   }
 
   async delete(query) {
@@ -423,27 +458,6 @@ class Updater {
       fs.rmdirSync(r, { recursive: true });
     })
     element.destroy();
-  }
-
-  async get(query) {
-    var q = {};
-    if (query['where'] != undefined) {
-      q['where'] = this.MODELS[query['where']]
-    }
-    if (query['include'] != undefined) {
-      q['include'] = this.MODELS[query['include']]
-    }
-    // for (var k of ['where', 'include']) {
-    //   if (query[k] != undefined) { q[k] = query[k]; }
-    // }
-    console.log(q);
-    r = await this.MODELS[query.model].findAll(q)
-    console.log()
-    return this.MODELS[query.model].findAll(q);
-  }
-
-  async query(q) {
-    return this.ACTIONS[q.action](q);
   }
 }
 

@@ -5,6 +5,9 @@ const PUBLIC = `${BASE}/public`;
 const SQLITE_DB_FILE = process.env.SQLITE_DB_FILE || `${BASE}/var/db/database.sqlite`;
 
 module.exports = {
+  MARIADB_DATABASE: 'renolabs',
+  MARIADB_USER: 'renolabs',
+  MARIADB_PASSWORD: 'renolabs',
   SQLITE_DB_FILE: SQLITE_DB_FILE,
   CONFIG: `${CODEBASE}/config`,
   PUBLIC: PUBLIC,

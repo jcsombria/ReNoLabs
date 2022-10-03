@@ -1,29 +1,40 @@
 export default {
   template: `
-<table class="table table-sm table-striped table-hover table-borderless caption-top" id="viewsTable">
-  <caption>{{ title }}</caption>
-  <thead class="table-primary">
-      <tr>
-        <th class="align-middle" scope="col"><input type="checkbox" /></th>
-        <th class="align-middle" scope="col"></th>
-        <th class="align-middle" scope="col"></th>
-        <template v-for="c in columns">
-          <th class="align-middle" scope="col">{{ c }}</th>
+<div>
+  <table class="table table-sm table-striped table-hover table-borderless caption-top" id="viewsTable">
+    <caption>{{ title }}</caption>
+    <thead class="table-primary">
+        <tr>
+          <th class="align-middle" scope="col"><input type="checkbox" /></th>
+          <th class="align-middle" scope="col"></th>
+          <th class="align-middle" scope="col"></th>
+          <template v-for="c in columns">
+            <th class="align-middle" scope="col">{{ c }}</th>
+          </template>
+        </tr>
+    </thead>
+    <tbody>
+      <tr v-for="v in model" :key="v.id">
+        <td class="align-middle"><input type="checkbox" /></td>
+        <td class="align-middle"><i @click="edit(v)" class="bi bi-pencil" style="cursor:pointer"></i></td>
+        <td class="align-middle"><i @click="remove(v)" class="bi bi-trash" style="cursor:pointer"></i></td>
+        <template v-for="f in fields">
+          <th v-if="f['strong']" class="align-middle" scope="row">{{ v[f['key']] }}</th>
+          <td v-else class="align-middle">{{ fields_value[f['key']] }}</td>
         </template>
       </tr>
-  </thead>
-  <tbody>
-    <tr v-for="v in model" :key="v.id">
-      <td class="align-middle"><input type="checkbox" /></td>
-      <td class="align-middle"><i @click="edit(v)" class="bi bi-pencil" style="cursor:pointer"></i></td>
-      <td class="align-middle"><i @click="remove(v)" class="bi bi-trash" style="cursor:pointer"></i></td>
-      <template v-for="f in fields">
-        <th v-if="f['strong']" class="align-middle" scope="row">{{ v[f['key']] }}</th>
-        <td v-else class="align-middle">{{ fields_value[f['key']] }}</td>
-      </template>
-    </tr>
-  </tbody>
-</table>
+    </tbody>
+  </table>
+  <div class="d-flex justify-content-center" id="activitiesNavBar">
+    <button @click="$router.go(-1)" class="btn btn-primary text-light mx-3 my-3">
+      <i class="bi bi-arrow-left"></i>Atrás
+    </button>
+    <button @click="$router.go(1)" class="btn btn-primary text-light mx-3 my-3">
+      <i class="bi bi-arrow-right"></i>Adelante
+    </button>
+    <router-link to="/courses/edit" class="btn btn-success mx-3 my-3">Añadir Curso</router-link>
+  </div>
+</div>
     `,
 
     data() {
@@ -63,7 +74,7 @@ export default {
         post(`/admin/q/${this.model_name}/delete`,
           JSON.stringify({ 'where': { 'id': entity.id }}),
           result => {
-            console.log(result) 
+            console.log(result)
           },
           error => {
             showMessage(`Cannot load ${this.model_name} from server.`, 'modalGenericMessage');

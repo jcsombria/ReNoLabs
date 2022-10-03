@@ -27,7 +27,7 @@ class CAdapter extends Adapter {
     logger.debug(`User ${username} request to start C controller`);
     if(this.connected) { return; }
     logger.info('C Adapter: Starting default controller...');
-    logger.debug(`sudo ${Settings.CONTROLLERS}/${this.controller.id}/${this.controller.path}`)
+    logger.debug(`sudo ${this.getPathFor(this.controller.path)}`)
     this.conn = spawn('sudo', [`${Settings.CONTROLLERS}/${this.controller.id}/${this.controller.path}`]);
     this.conn.on('error', this.onerror.bind(this));
     this.conn.on('close', function() {this.connected = false;}.bind(this));
@@ -44,22 +44,6 @@ class CAdapter extends Adapter {
     this.conn.stdout.setEncoding('utf8');
     this.conn.stdout.on('data', this.ondata.bind(this));
     this.conn.stderr.on('data', this.onerrordata.bind(this));
-  }
-
-  /*
-   * Format the data received from the C controller and forward to the clients
-   * @param {object} ev The event with the data received from the controller.
-   */
-  ondata(ev) {
-    this.connected = true;
-    this.state.update(ev);
-    for(var i=0; i<this.toNotify.length; i++) {
-      var name = this.toNotify[i], value = this.state[name];
-      if(!value) continue;
-      var data = {'variable': name, 'value': value};
-      this.notify('signals.get', data);
-      logger.silly(`${name}->${value}`);
-    }
   }
 
   /* Compile the controller in userpath.

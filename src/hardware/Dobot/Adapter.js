@@ -42,14 +42,7 @@ class DobotAdapter extends Adapter {
    * @param {object} ev The event with the data received from the controller.
    */
   ondata(message) {
-    this.state.update(message.toString());
-    this.toNotify.forEach(v => {
-      this.notify('signals.get', {
-        'variable': v,
-        'value': this.state[v]
-      });
-      logger.silly(`${v}->${this.state[v]}`);
-    });
+    super.ondata(message.toString());
   }
 
   /* Send a command to write the value of a variable in the controller.

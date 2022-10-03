@@ -3,7 +3,6 @@ var spawn = require('child_process').spawn;
 const zmq = require('zeromq');
 
 const Adapter = require('../Adapter');
-const { exec } = require('child_process');
 
 /**
  * Encapsulates the interaction with the Dobot Server
