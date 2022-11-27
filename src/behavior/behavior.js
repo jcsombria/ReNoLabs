@@ -41,9 +41,9 @@ class Behavior {
 
   disconnect() {
     if(this.sender) {
-      logger.info('Disconnecting client: ' + this.sender.id);
       try {
-        this.session.end();
+        logger.info('Disconnecting client: ' + this.sender.id);
+        this.session.disconnect(this.sender.id);
       } catch(e) {
         logger.debug(`Cannot end session: ${e.message}`)
       }

@@ -1,6 +1,5 @@
 // Sessions Management
 const logger = require('winston').loggers.get('log');
-const Config = require('../config/AppConfig');
 const db = require('../db');
 const rules = require('../behavior/rules')
 const { EventGenerator, EventProcessor, EventDispatcher } = require('../behavior/events');
@@ -17,18 +16,18 @@ class HardwarePool {
     if (!(controller.type in hardware)) {
       throw new Error('Unknown hardware adapter.');
     }
-    if (!(controller.type in this.available)) {
-      this.available[controller.type] = {
+    if (!(controller.name in this.available)) {
+      this.available[controller.name] = {
         'adapter': new hardware[controller.type].Adapter(controller),
         'logger': new hardware[controller.type].Logger(),
         'eventGenerator': new EventGenerator(),
       };
-      this.available[controller.type].adapter.addListeners([
-        this.available[controller.type].logger,
-        this.available[controller.type].eventGenerator
+      this.available[controller.name].adapter.addListeners([
+        this.available[controller.name].logger,
+        this.available[controller.name].eventGenerator
       ]);
     }
-    return this.available[controller.type];
+    return this.available[controller.name];
   }
 }
 
@@ -42,13 +41,14 @@ class Session {
    * @param {string}         id        The id of the channel (socket) associated to the session.
    * @param {SessionManager} manager   The session manager.
    */
-  constructor (activity, user, id, manager, hardware) {
+  constructor (activity, user, manager, hardware) {
     this.activity = activity;
     this.user = user;
-    this.id = id;
     this.active = false;
+    this.clients = {};
     this.manager = manager;
     this.hardware = hardware;
+    this.token = Math.floor((Math.random() * 1000000) + 1);
     this.eventProcessor = new EventProcessor(this);
     this.eventDispatcher = new EventDispatcher(this.eventProcessor);
     // # Dispatching Rules
@@ -77,17 +77,63 @@ class Session {
     this.eventDispatcher.dispatch(event);
   }
 
-  stop() {
-    this.hardware.adapter.stop();
-    this.hardware.logger.end();
-  }
-
   start() {
     logger.debug(`User ${this.user.username} starts ${this.activity.name}.`);
     this.active = true;
     this.hardware.logger.start(this.user.username);
     this.hardware.adapter.start(this.user.username);
     this.hardware.adapter.play();
+    this.startTime = new Date();
+    this.endTime = new Date(this.startTime.getTime() + this.activity.sessionTimeout*60*1000);
+    this.timer = setTimeout(this._timeout.bind(this), this.activity.sessionTimeout*60*1000);
+  }
+
+  end() {
+    this.active = false;
+    logger.debug(`Stopping hardware`);
+    this.stop();
+    for (var c in this.clients) {
+      try {
+        logger.debug(`Disconnecting client ${c}`);
+        this.clients[c].disconnect();
+      } catch(e) {
+        logger.debug(`Cannot notify disconnection to client ${c}`);
+      }
+    }
+    this.manager.stop(this.activity.name);
+  }
+
+  connect(socket) {
+    if (socket.id == undefined) { return; }
+    this.clients[socket.id] = socket;
+    this.hardware.eventGenerator.addListener(socket);
+    this._clearDisconnectTimeout();
+  }
+
+
+  disconnect(id) {
+    try {
+      logger.debug(`Disconnecting client ${id}`);
+      this.clients[id].disconnect();
+    } catch(e) {
+      logger.debug('Can\'t disconnect client properly.')
+    }
+    delete this.clients[id];
+    if(!this.hasClients() && !this.disconnectTimer && this.active) {
+      logger.debug(`No clients left, starting disconnection timeout`)
+      return new Promise((resolve, reject) => {
+        this.disconnectTimer = setTimeout(function() {
+          logger.info(`Disconnection Timeout - ${new Date()}`);
+          this.end();
+          resolve(`Session expired - ${new Date()}`);
+        }.bind(this), this.activity.disconnectTimeout*1000);
+      });
+    };
+  }
+
+  stop() {
+    this.hardware.adapter.stop();
+    this.hardware.logger.end();
   }
 
   play() {
@@ -100,14 +146,6 @@ class Session {
 
   reset() {
     this.hardware.adapter.reset();
-  }
-
-  /*
-   * Finish the session.
-   */
-  async end() {
-    this.active = false;
-    return await this.manager.disconnect(this.id);
   }
 
   /*
@@ -128,7 +166,7 @@ class Session {
    * @return {boolean} True if the user is owner of the hardware, False otherwise.
    */
   isActive() {
-    return this.manager.isActiveUser(this.user.username);
+    return this.active;
   }
 
   /*
@@ -137,134 +175,21 @@ class Session {
   info() {
     return {
       user: this.user.username,
-      timeout: this.manager.getEndTime(),
+      timeout: this.endTime,
     }
   }
 
   get expired() {
     var now = new Date().getTime();
-    return this.manager.getEndTime() < now;
+    return this.endTime < now;
   }
 
   get finished() {
     return !this.active;
   }
-}
 
-// Coordina el inicio y fin de sesión entre hardware, logger y autenticación
-class SessionManager {
-  constructor() {
-    this.clients = {};
-    this.active_user = null;
-    this.running = false;
-  }
-  
-  get idle() {
-    return !this.hasClients() || !this.active_user;
-  }
 
-  isActiveUser(username) {
-    return this.active_user == username;
-  }
-
-  hasClients() {
-    return (Object.keys(this.clients).length > 0);
-  }
-
-  /** Connects a client to an activity
-   *  - If the activity has no opened session, a new one is created.
-   *  - If there is an openeed session, the connection is successful 
-   *  if and only if the user is supervisor or owns the previous session.
-   */
-  async connect(activity, credentials, socket, id) {
-    var user = await this.validate(credentials);
-    if (!user) return;
-    var theActivity = await models.Activity.findOne({
-      where: { name: activity },
-      include: models.Controller
-    })
-    if (!theActivity) return;
-    var controller = await getController(theActivity);
-    this.hardware = hardwarePool.getHardwareFor(controller);
-    var session = new Session(theActivity, user, id, this, this.hardware);
-    if(id != null) { this.clients[id] = socket; }
-    if (this.idle) {
-      this.active_user = user.username;
-      this.activity = theActivity;
-      this.token = Math.floor((Math.random() * 1000000) + 1);
-      this.sessionTimer = setTimeout(this._sessionTimeout.bind(this), this.activity.sessionTimeout*60*1000);
-      this.sessionStartTime = new Date();
-      this.sessionEndTime = new Date(this.sessionStartTime.getTime() + this.activity.sessionTimeout*60*1000);
-      this.running = true;
-      session.start();
-      logger.info(`Session started: user ${this.active_user} - ${new Date()}`);
-    } else {
-      let isActive = (this.active_user == user.username || !this.active_user);
-      let isSupervisor = db.users.isSupervisor(user);
-      if (!isActive && !isSupervisor) {
-        logger.debug(`User ${user.username} not allowed to connect to session ${id}.`);
-        socket.disconnect();
-        delete this.clients[id];
-        return;
-      }
-      if (isActive) { this._clearDisconnectTimeout(); }
-    }
-    logger.debug(`User ${user.username} connected to session ${id}.`);
-    session.token = this.token;
-    this.hardware.eventGenerator.addListener(socket);
-    return session;
-
-  }
-
-  async validate(credentials) {
-    try {
-      var token = credentials['key'];
-      if(token) {
-        if(this.token == token) {
-          return await db.users.getUser(this.active_user);
-        }
-      } else {
-        var user = await db.users.getUser(credentials['username']);
-        if(user && user.password == credentials['password']) {
-          return user;
-        }
-      }
-    } catch(e) {}
-  }
-
-  disconnect(id) {
-    logger.debug(`Disconnecting client ${id}`);
-    try {
-      this.clients[id].disconnect();
-    } catch(e) {
-      logger.debug('Can\'t disconnect client properly.')
-    }
-    delete this.clients[id];
-    logger.debug("clients:" + Object.keys(this.clients));
-    if(!this.hasClients() && !this.disconnectTimer && this.running) {
-      logger.debug(`No clients left, starting disconnection timeout`)
-      return new Promise((resolve, reject) => {
-        this.disconnectTimer = setTimeout(function() {
-          this.end();
-          logger.info(`Disconnection Timeout - ${new Date()}`);
-          resolve(`Session expired - ${new Date()}`);
-        }.bind(this), this.activity.disconnectTimeout*1000);
-          // this._disconnectTimeout.bind(this), this.activity.disconnectTimeout*1000);
-      });
-    };
-  }
-
-  getToken(credentials) {
-    var user = this.validate(credentials);
-    if (!user) return;
-    let isActive = (this.active_user == user.username);
-    let isSupervisor = db.users.isSupervisor(user);
-    if (isActive || isSupervisor || !this.active_user) {
-       return this.token;
-    }
-  }
-
-  _sessionTimeout() {
+  _timeout() {
     this.end();
     logger.info(`Session expired - ${new Date()}`);
   };
@@ -274,46 +199,89 @@ class SessionManager {
     logger.info(`Disconnection Timeout - ${new Date()}`);
   }
 
-  end() {
-    this._clearSessionTimeout();
-    this._clearDisconnectTimeout();
-    this.running = false;
-    this._disconnectAll();
-    this.hardware.adapter.stop();
-    this.hardware.logger.end();
-    this.active_user = null;
-  }
-
-  _clearSessionTimeout() {
-    clearTimeout(this.sessionTimer);
-    this.sessionTimer = undefined;
-  }
-
   _clearDisconnectTimeout() {
     clearTimeout(this.disconnectTimer);
     this.disconnectTimer = undefined;
   }
 
-  _disconnectAll() {
-    for (var c in this.clients) {
-      try {
-        logger.debug(`Disconnecting client ${c}`);
-        this.clients[c].disconnect();
-      } catch(e) {
-        logger.debug(`Cannot notify disconnection to client ${c}`);
+  hasClients() {
+    return (Object.keys(this.clients).length > 0);
+  }
+}
+
+// Coordina el inicio y fin de sesión entre hardware, logger y autenticación
+class SessionManager {
+  constructor() {
+    this.clients = {};
+    this.sessions = {};
+    this.tokens = {};
+  }
+
+  /** Connects a client to an activity
+   *  - If the activity has no opened session, a new one is created.
+   *  - If there is an openeed session, the connection is successful 
+   *  if and only if the user is supervisor or owns the previous session.
+   */
+  async connect(activity, credentials, socket) {
+    var theActivity = await models.Activity.findOne({
+      where: { name: activity },
+      include: models.Controller
+    })
+    if (!theActivity) {
+      throw new Error(`The activity ${theActivity} does not exist.`)
+    }
+    var user = await this.validate(credentials);
+    if (!user) {
+      throw new Error(`Authentication error.`)
+    }
+    const username = user.username;
+    if (this.hasActivities(user)) {
+      if (!(activity in this.sessions)) {
+        throw new Error('Only one activity is allowed at the same time.');
       }
     }
-  }
-
-  _logged(credentials, args, action) {
-    if (this.validate(credentials)) {
-      var a = action.bind(this);
-      return action.call(this, args);
+    if (activity in this.sessions) {
+      if (this.sessions[activity].user.username != user.username) {
+        throw new Error('The activity is locked by other user.')
+      }
+      logger.info(`User ${username} connected to previous session.`);
+      this.sessions[activity].connect(socket);
+      return this.sessions[activity];
     }
+    var controller = await getController(theActivity);
+    this.hardware = hardwarePool.getHardwareFor(controller);
+    this.sessions[activity] = new Session(theActivity, user, this, this.hardware);
+    this.sessions[activity].start();
+    this.sessions[activity].connect(socket);
+    this.tokens[this.sessions[activity].token] = this.sessions[activity];
+    logger.info(`Session started: user ${username} - ${new Date()}`);
+    return this.sessions[activity];
   }
 
-  getEndTime() {
-    return this.sessionEndTime;
+  stop(activity) {
+    delete this.sessions[activity];
+  }
+
+  async validate(credentials) {
+    try {
+      var token = credentials['key'];
+      if(token) {
+        return this.tokens[token].user;
+      }
+      var user = await db.users.getUser(credentials['username']);
+      if(user && user.password == credentials['password']) {
+        return user;
+      }
+    } catch(e) {}
+  }
+
+  hasActivities(user) {
+    for (const activity in this.sessions) {
+      if (this.sessions[activity].user.username == user.username) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

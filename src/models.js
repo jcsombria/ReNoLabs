@@ -1,19 +1,21 @@
 const Settings = require('./settings');
 const { Sequelize, DataTypes, Model, DATE, where } = require('sequelize');
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: Settings.SQLITE_DB_FILE,
-  logging: false, 
-});
-/*
+//const sequelize = new Sequelize({
+//  dialect: 'sqlite',
+//  storage: Settings.SQLITE_DB_FILE,
+//  logging: false,
+//});
+
 const sequelize = new Sequelize(
   Settings.MARIADB_DATABASE,
   Settings.MARIADB_USER,
   Settings.MARIADB_PASSWORD, {
-  dialect: 'mariadb',
-  logging: false, 
-});
-*/
+    host: '127.0.0.1',
+    dialect: 'mariadb',
+//    logging: false,
+  }
+);
+
 class User extends Model {}
 User.init({
   username: {
@@ -75,6 +77,12 @@ Activity.init({
   },
   viewName: {
     type: DataTypes.STRING, allowNull: false
+  },
+  description: {
+    type: DataTypes.TEXT, //allowNull: false
+  },
+  image: {
+    type: DataTypes.STRING, //allowNull: false
   }
 }, {
   sequelize, modelName: 'Activity'
@@ -97,7 +105,10 @@ Controller.init({
   },
   type: {
     type: DataTypes.STRING, allowNull: false,
-  }
+  },
+  config: {
+    type: DataTypes.STRING,
+  },
 }, {
   sequelize, modelName: 'Controller'
 });

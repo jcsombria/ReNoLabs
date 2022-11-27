@@ -38,8 +38,7 @@ export default {
 <div class="modal fade" id="modalController" tabindex="-1" aria-labelledby="modalController" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form action="/admin/controller/set" method="post" encType="multipart/form-data">
-        <input type="hidden" name="_csrf" value="<%= csrfToken  %>">
+      <form>
         <div class="modal-header">
           <h5 class="modal-title" id="modalControllerLabel">Importar controlador desde archivo (zip)</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -47,21 +46,26 @@ export default {
         <div class="modal-body">
           <div class="mb-3">
             <label for="view" class="form-label">Nombre:</label>
-            <input type="text" class="form-control" name="name">
+            <input type="text" class="form-control" name="name" v-model="form['name']">
           </div>
       
           <div class="mb-3">
             <label for="view" class="form-label">Descripción:</label>
-            <input type="text" class="form-control" name="comments">
+            <input type="text" class="form-control" name="comments" v-model="form['comments']">
           </div>
 
           <div class="mb-3">
             <label for="controller" class="form-label">Controlador (zip):</label>
-            <input type="file" class="form-control" name="controller">
+            <input type="file" class="form-control" name="controller" @input="event => form['controller'] = event.target">
           </div>
-      </div>
+
+          <div class="mb-3">
+            <label for="config" class="form-label">Configuración (JSON):</label>
+            <textarea class="form-control" name="config" rows="10" v-model="form['config']"></textarea>
+          </div>
+        </div>
         <div class="modal-footer">
-          <input type="submit" class="btn btn-primary" value="Submit">
+          <input type="button" @click="submit()" class="btn btn-primary" value="Submit">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -82,6 +86,7 @@ export default {
           ],
           model: [],
           model_name: 'controller',
+          form: {},
           query: {}
         }
       },
@@ -99,7 +104,26 @@ export default {
 
         edit(entity) {
           this.$router.push(`/${this.model_name}/${entity.name}`);
-        }
+        },
+
+        submit() {
+          const [file] = this.form['controller'].files;
+          if (file) {
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+              this.form['controller'] = reader.result;
+              post(`/admin/q/${this.model_name}/add`,
+                JSON.stringify({ 'data': this.form }),
+                result => { this.model = result; },
+                error => {
+                  showMessage(`Cannot load ${this.model_name} from server.`, 'modalGenericMessage');
+                }
+              )          
+            });
+            reader.readAsDataURL(file);
+          }
+        },
+
       },
 
       mounted() {

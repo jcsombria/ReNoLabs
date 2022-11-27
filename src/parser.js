@@ -373,8 +373,6 @@ class PrintInstruction extends Instruction {
  */
 class ShowInstruction extends Instruction {
   async execute(context) {
-    console.log('SHOW'); 
-    console.log(this.args[0]); 
     var value = context.getController().get(this.args[0]);
     context.getState().setGlobal(this.args[0], value);
     context.print(`[${value}]`);

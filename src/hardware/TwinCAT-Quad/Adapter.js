@@ -34,7 +34,6 @@ class TwinCATAdapter extends Adapter {
 		this.conn.on('notification', function(handle) {
       try {
         logger.debug('TwinCAT Adapter: TwinCAT notification');
-        console.log('dfFDFFD')
         that.ondata(handle);
       } catch(e) {
         logger.error(`TwinCAT Adapter: User data handler throws an error: ${e.message}`);
@@ -157,14 +156,10 @@ class TwinCATState extends State {
 
   // Parse PLC notification and update state
   update(o) {
-    console.log('DDD')
     logger.silly('TwinCAT Adapter: Incoming PLC data');
 		this._config = o.config[0];
 		this._evolution = o.evolution;
 		this._reference = o.reference;
-
-    console.log(this._controller)
-    console.log(o.controller)
 		// this._controller = {
 		// 	'Tipo': o.ControlData.readUInt8(0),
     //   'Continuous': o.ControlData.readUInt8(1),

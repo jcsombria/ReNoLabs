@@ -1,10 +1,8 @@
 // Lab configuration
 module.exports = {
-  view: '766659be-5fd0-4efb-bb72-5607ad14a96b',
-  controller: 'c_controller',
   info: {
-    name: 'Circuitos - Configuración',
-    description: '<h1>Práctica de Circuitos</h1>',
+    name: 'VRLABS-ISA',
+    description: '<h1>Plataforma VRLABS-ROBOTARIUM</h1>',
   },
   parameters: {
     reference: {

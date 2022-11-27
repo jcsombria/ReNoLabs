@@ -14,13 +14,12 @@ class Adapter {
   /**
    * @param {Controller} controller The controller info.
    */
-  constructor(controller, options) {
+  constructor(controller) {
     this.listeners = [];
     this.connected = false;
     this.conn = null;
     this.toNotify = ['config', 'evolution', 'reference', 'controller'];
     this.state = new State();
-    this.options = options; //(options !== undefined) ? options : HWConfig;
     this.controller = controller;
   }
 

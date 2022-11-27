@@ -34,6 +34,9 @@ class Updater {
       return name.endsWith('.js') || name.endsWith('.txt') || name.endsWith('.md');
     },
   };
+  EXPLICIT = {
+    'add controller' : this.addController,
+  }
 
   ACTIONS = {
     'add': async (q) => { return this.add(q); },
@@ -418,6 +421,10 @@ class Updater {
   // }
 
   async query(q) {
+    var action = `${q.action} ${q.model}`;
+    if (action in this.EXPLICIT) {
+      return this.EXPLICIT[action](q['data']);
+    }
     return this.ACTIONS[q.action](q);
   }
 
@@ -429,8 +436,6 @@ class Updater {
       }
   */
   async add(query) {
-    console.log(query);
-    console.log(this.MODELS[query['model']])
     return await this.MODELS[query['model']].create(query['data']);
   }
 
@@ -469,7 +474,10 @@ class Bundle {
 
   save(content) {
     const tmpfile = tmp.fileSync({ 'tmpdir': `${Settings.CONTROLLERS}/` });
-    fs.writeFileSync(tmpfile.name, content);
+    var regex = /^data:.+\/(.+);base64,(.*)$/;
+    var matches = content.match(regex);
+    var contentToWrite = (matches != null) ? Buffer.from(matches[2], 'base64') : content;
+    fs.writeFileSync(tmpfile.name, contentToWrite);    
     this.name = tmpfile.name;
     this.metadata = this._getMetadata();
   }

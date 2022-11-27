@@ -126,7 +126,6 @@ const io = new Server(httpServer, { cors: {
 
 io.on('connection', socket => {
   logger.debug('New socket.io connection');
-  var id = 'socket_' + socket.id;
   var credentials = {
     'key': socket.handshake.query.key,
     'username': socket.handshake.query.user,
@@ -134,15 +133,14 @@ io.on('connection', socket => {
   }
   var activity = socket.handshake.query.activity;
 
-  SessionManager.connect(activity, credentials, socket, id)
+  SessionManager.connect(activity, credentials, socket)
     .then(session => {
       if(!session) {
         throw new Error('Session not started');
       }
-      logger.debug(`User ${session.user.username} authenticated`);
-      // Behave as a normal user
+      logger.info(`User ${session.user.username} authenticated`);
       if (session.isActive()) {
-        logger.info('Entering user mode...');
+        logger.debug('Entering user mode...');
         logger.debug('Registering common services...');
         new behavior.Normal(session).register(socket);
       }    

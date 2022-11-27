@@ -16,13 +16,15 @@ class Logger extends EventEmitter {
 	constructor() {
 		super();
 		this.on('signals.get', this._ondata.bind(this));
+		this.started = DateFormat(new Date(), "yyyymmdd_HHMMss");
+                this.datalogger = winston.loggers.get(this.started);
 	}
 
 	log(data) {
 		logger.silly('Logging hardware data.');
 		try {
 			if (data) {
-				datalogger.info(data);
+				this.datalogger.info(data);
 				// this._toInfluxDB(data);
 			}
 		} catch(e) {
@@ -61,11 +63,11 @@ class Logger extends EventEmitter {
 			filename: this._getFilename(username),
 			level: 'silly',
 		});
-		datalogger.clear().add(this.logfile);
+		this.datalogger.clear().add(this.logfile);
 	}
 
 	end() {
-		datalogger.remove(this.logfile);
+		this.datalogger.remove(this.logfile);
 	}
 
 	_getFilename(name) {

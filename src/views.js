@@ -36,9 +36,23 @@ module.exports = {
     try {
       var user = await db.users.getUser(req.user.username);
       var activities = await models.Activity.findAll();
+      var files = fs.readdirSync(Settings.DATA)
+        .filter(e => { if (e.split('_')[0] == req.user.username) { return e; } })
+        .sort((a, b) => { return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
+      let f = [];
+      for (i = 0; i < 10; i++) {
+        var name = `${Settings.DATA}/${files[i]}`;
+        var stats = fs.statSync(name);
+        f.push({
+          'name': files[i],
+          'date': stats.atime,
+          'size': stats.size
+        });
+      }
       res.render('home', {
         user: user,
-        activities: activities
+        activities: activities,
+        files: f,
       });
     } catch(e) {
       logger.debug('Invalid Activity');
@@ -119,7 +133,7 @@ module.exports = {
         'username': req.user.username,
         'password': req.user.password
       };
-      SessionManager.connect(activity.name, credentials, res.socket, null)
+      SessionManager.connect(activity.name, credentials, res.socket)
         .then(session => {
           if(!session) {
             logger.debug(`Refused to connect user: ${user}`);
@@ -135,7 +149,7 @@ module.exports = {
           });
         }).catch(e => {
           logger.debug(e.message);
-          return res.status(500).send('Can\'t load activity');
+          return res.send('No se permite mas de una sesión abierta al mismo tiempo.');
         });
     } catch(e) {
       logger.debug('Invalid activity');
@@ -149,8 +163,10 @@ module.exports = {
   },
   
   logout: function(req, res) {
-    req.logOut();
-    res.redirect('/');
+    req.logOut(req.user, err => {
+      if(err) return next(err);
+      res.redirect("/");
+    });
   },
 }
 
