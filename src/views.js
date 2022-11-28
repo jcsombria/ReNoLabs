@@ -34,8 +34,7 @@ module.exports = {
 
   home: async function(req, res) {
     try {
-      var user = await db.users.getUser(req.user.username);
-      var activities = await models.Activity.findAll();
+      //var activities = (req.user.username == 'admin') ? await models.Activity.findAll() : await req.user.Activities;
       var files = fs.readdirSync(Settings.DATA)
         .filter(e => { if (e.split('_')[0] == req.user.username) { return e; } })
         .sort((a, b) => { return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
@@ -50,21 +49,22 @@ module.exports = {
         });
       }
       res.render('home', {
-        user: user,
-        activities: activities,
+        user: req.user,
+        activities: req.user.Activities,
         files: f,
       });
     } catch(e) {
-      logger.debug('Invalid Activity');
+      logger.debug(e);
       res.send('Activity not correctly configured.');
     }
   },
 
   menu: async function(req, res) {
     try {
-      var user = await db.users.getUser(req.user.username);
-      var activities = await models.Activity.findAll();
-      res.render('ui/menu', {user: user, activities: activities});
+      res.render('ui/menu', {
+        user: req.user,
+        activities: req.user.Activities
+      });
     } catch(e) {
       logger.debug('Invalid Activity');
       res.send('Activity not correctly configured.');
@@ -73,11 +73,9 @@ module.exports = {
 
   activity: async function(req, res) {
     try {
-      var user = await db.users.getUser(req.user.username);
-      var activities = await models.Activity.findAll();
       res.render('activity', {
-        user: user,
-        activities: activities,
+        user: req.user,
+        activities: req.user.Activities,
         activity: req.query.name
       });
     } catch(e) {
@@ -87,14 +85,13 @@ module.exports = {
 
   help: async function(req, res) {
     try {
-      var user = await db.users.getUser(req.user.username);
       var activity = await models.Activity.findOne({
         where: { name: req.query.name },
         include: models.View
       });
       var view = await getView(activity);
       res.render('help', {
-        user: user,
+        user: req.user,
         view: `${view.id}/${view.description}`
       });
     } catch(e) {
@@ -118,16 +115,18 @@ module.exports = {
         'size': stats.size
       });
     }
-    var user = await db.users.getUser(req.user.username);
-    res.render('table/experiments', { user: user, files: f });
+    res.render('table/experiments', {
+      user: req.user,
+      files: f
+    });
   },
 
   experience: async function(req, res) {
     try {
-      var user = await db.users.getUser(req.user.username);
-      var activity = await models.Activity.findOne({
-        where: { name: req.query.name },
-      });
+      var activity = req.user.Activities.find(a => a.name == req.query.name);
+      //var activity = await models.Activity.findOne({
+      //  where: { name: req.query.name },
+      //});
       var view = await getView(activity);
       var credentials = {
         'username': req.user.username,
@@ -140,7 +139,7 @@ module.exports = {
             return res.render('home', {user: user});
           }
           return res.render('remote_lab.ejs', {
-            user: user,
+            user: req.user,
             key: session.token,
             ip: Config.WebServer.ip,
             port: Config.WebServer.port,
@@ -161,7 +160,7 @@ module.exports = {
   download: function(req, res) {
     res.download(`${Settings.DATA}/${req.params[0]}`);
   },
-  
+
   logout: function(req, res) {
     req.logOut(req.user, err => {
       if(err) return next(err);

@@ -12,7 +12,7 @@ const sequelize = new Sequelize(
   Settings.MARIADB_PASSWORD, {
     host: '127.0.0.1',
     dialect: 'mariadb',
-//    logging: false,
+    logging: false,
   }
 );
 

@@ -5,7 +5,9 @@ const { where } = require('sequelize');
 const models = require('../models');
 
 const validateUser = function(username, password, done) {
-  models.User.findOne({ where: {username: username} })
+  models.User.findOne({
+    where: { username: username },
+  })
     .catch(error => { return done(error); })
     .then(user => {
       if(!user) {
@@ -27,7 +29,10 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(username, done) {
-  models.User.findOne({ where: {username: username} })
+  models.User.findOne({
+    where: {username: username},
+    include: models.Activity,
+  })
   .catch(error => { return done(error); })
   .then(user => { return done(null, user); });
 });
