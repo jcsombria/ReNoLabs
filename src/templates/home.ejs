@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<%- include('ui/header'); %>
-	</head>
-	<body>
-		<%- include('ui/menu', {user: user}); %>
-		<div class="container-fluid d-flex m-3 justify-content-center">
-			<div class="container-md d-flex flex-column align-items-center">
-				<h1 class="display-6">Actividades Disponibles</h1>
-				<div class="container d-flex flex-row mx-3 flex-wrap align-items-center">
-					<% activities.forEach(a => { %>
-						<div class="card text-center w-50">
-							<div class="card-header">Actividad</div>
-							<div class="card-body">
-								<img src="activities/<%= a.image %>" class="card-img-top mb-2" alt="Imagen de la actividad <%= a.name%>"-->
-								<h5 class="card-title fw-bold"><%= a.name %></h5>
-								<p class="card-text"><%= a.description %></p>
-								<a href="activity?name=<%= a.name %>" class="btn btn-success">Entra en esta actividad</a>
-							</div>
-						</div>
-					<% }) %>
-				</div>
-			</div>
+  <head>
+    <%- include('ui/header'); %>
+  </head>
+  <body>
+    <%- include('ui/menu', {user: user}); %>
+    <div class="container-fluid d-flex m-3 justify-content-center">
 
-			<div class="container d-flex flex-column align-items-center">
-				<h1 class="display-6">Últimos Experimentos</h1>
-				<div class="container" id="data">
-					<%- include('table/experiments'); %>
-				</div>
-			</div>
-		</div>
-	</body>
+      <div class="card text-center mx-3">
+        <div class="card-header"><h5 class="text-center">Actividades Disponibles</h5></div>
+        <div class="card-body">
+          <div class="container d-flex flex-row flex-wrap align-items-center">
+          <% activities.forEach(a => { %>
+            <div class="card text-center" style="width: 270px; height: 400px">
+              <div class="card-body mb-3">
+                <% if (a.state == "idle") { %>
+                <a href="activity?name=<%= a.name %>" class="btn btn-success mb-3">Entra en esta actividad</a>
+                <% } else if (a.state == "busy" ) { %>
+                <a href="activity?name=<%= a.name %>" class="btn btn-danger mb-3 disabled">Actividad ocupada</a>
+                <% } %>
+                <img src="activities/<%= a.image %>" class="mb-3" width="230" alt="Imagen de la actividad <%= a.name%>">
+                <h6 class="card-title fw-bold"><%= a.name %></h6>
+                <p class="card-text"><%= a.description %></p>
+              </div>
+            </div>
+          <% }) %>
+          </div>
+       </div>
+     </div>
+
+
+     <div class="card w-25">
+       <div class="card-header text-nowrap"><h5 class="text-center">Últimos Experimentos</h5></div>
+       <div class="card-body" id="data"><%- include('table/experiments'); %></div>
+     </div>
+  </div>
+</body>
 </html>

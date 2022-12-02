@@ -80,6 +80,8 @@ class Session {
   start() {
     logger.debug(`User ${this.user.username} starts ${this.activity.name}.`);
     this.active = true;
+    this.activity.state = "busy";
+    this.activity.save().catch(e => { logger.debug(e); });
     this.hardware.logger.start(this.user.username);
     this.hardware.adapter.start(this.user.username);
     this.hardware.adapter.play();
@@ -90,6 +92,8 @@ class Session {
 
   end() {
     this.active = false;
+    this.activity.state = "idle";
+    this.activity.save().catch(e => { logger.debug(e); });
     logger.debug(`Stopping hardware`);
     this.stop();
     for (var c in this.clients) {

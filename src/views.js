@@ -19,6 +19,24 @@ const MODELS = {
   'courses': models.Course,
 };
 
+function getExperiments(username, nExperiments) {
+  var files = fs.readdirSync(Settings.DATA)
+    .filter(e => { if (e.split('_')[0] == username) { return e; } })
+    .sort((a, b) => {
+      return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime();
+     });
+  if (nExperiments !== undefined) { files = files.slice(0, nExperiments); };
+  let experiments = files.map(item => {
+    var stats = fs.statSync(`${Settings.DATA}/${item}`);
+    return {
+      'name': item,
+      'date': stats.atime,
+      'size': stats.size
+    }
+  });
+  return experiments;
+}
+
 module.exports = {
   index: function (req, res) {
     if (req.isAuthenticated()) {
@@ -35,23 +53,10 @@ module.exports = {
   home: async function(req, res) {
     try {
       //var activities = (req.user.username == 'admin') ? await models.Activity.findAll() : await req.user.Activities;
-      var files = fs.readdirSync(Settings.DATA)
-        .filter(e => { if (e.split('_')[0] == req.user.username) { return e; } })
-        .sort((a, b) => { return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
-      let f = [];
-      for (i = 0; i < 10; i++) {
-        var name = `${Settings.DATA}/${files[i]}`;
-        var stats = fs.statSync(name);
-        f.push({
-          'name': files[i],
-          'date': stats.atime,
-          'size': stats.size
-        });
-      }
       res.render('home', {
         user: req.user,
         activities: req.user.Activities,
-        files: f,
+        files: getExperiments(req.user.username, 10),
       });
     } catch(e) {
       logger.debug(e);
@@ -102,31 +107,15 @@ module.exports = {
 
   // Read current user's files
   data: async function(req, res) {
-    var files = fs.readdirSync(Settings.DATA)
-      .filter(e => { if (e.split('_')[0] == req.user.username) { return e; } })
-      .sort((a, b) => { return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime(); });
-    let f = [];
-    for (i = 0; i < files.length; i++) {
-      var name = `${Settings.DATA}/${files[i]}`;
-      var stats = fs.statSync(name);
-      f.push({
-        'name': files[i],
-        'date': stats.atime,
-        'size': stats.size
-      });
-    }
     res.render('table/experiments', {
       user: req.user,
-      files: f
+      files: getExperiments(req.user.username)
     });
   },
 
   experience: async function(req, res) {
     try {
       var activity = req.user.Activities.find(a => a.name == req.query.name);
-      //var activity = await models.Activity.findOne({
-      //  where: { name: req.query.name },
-      //});
       var view = await getView(activity);
       var credentials = {
         'username': req.user.username,

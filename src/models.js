@@ -32,6 +32,9 @@ User.init({
   },
   permissions: {
     type: DataTypes.TEXT
+  },
+  isAdmin: {
+    type: DataTypes.BOOLEAN, defaultValue: false,
   }
 }, {
   sequelize, modelName: 'User'
@@ -67,10 +70,10 @@ Activity.init({
     type: DataTypes.STRING, allowNull: false, primaryKey: true
   },
   sessionTimeout: {
-    type: DataTypes.DECIMAL, allowNull: false, default: 15
+    type: DataTypes.DECIMAL, allowNull: false, defaultValue: 30
   },
   disconnectTimeout: {
-    type: DataTypes.DECIMAL, allowNull: false, defaultValue: 5 
+    type: DataTypes.DECIMAL, allowNull: false, defaultValue: 10
   },
   controllerName: {
     type: DataTypes.STRING, allowNull: false
@@ -79,10 +82,13 @@ Activity.init({
     type: DataTypes.STRING, allowNull: false
   },
   description: {
-    type: DataTypes.TEXT, //allowNull: false
+    type: DataTypes.TEXT,
   },
   image: {
-    type: DataTypes.STRING, //allowNull: false
+    type: DataTypes.STRING,
+  },
+  state: {
+    type: DataTypes.STRING,
   }
 }, {
   sequelize, modelName: 'Activity'
