@@ -18,9 +18,17 @@ class EventGenerator extends events.EventEmitter {
   }
 
   start() {
-    setInterval(this._withProcessing(this.flush.bind(this)), this.period);
-    setInterval(this._withProcessing(this.heartbeat.bind(this)), this.periodHeartbeat);
+    this.timerFlush = setInterval(this._withProcessing(this.flush.bind(this)), this.period);
+    this.timerHeartbeat = setInterval(
+      this._withProcessing(this.heartbeat.bind(this)),
+      this.periodHeartbeat
+    );
     this.on(this.EVENT, this._withProcessing(this.onEvolution.bind(this)));
+  }
+
+  stop() {
+    clearTimeout(this.timerFlush);
+    clearTimeout(this.timerHeartbeat);
   }
 
   addListener(l) {

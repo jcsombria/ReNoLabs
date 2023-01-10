@@ -12,63 +12,85 @@ const { Controller, User, Activity, View, Course } = require('../models');
 const Settings = require('../settings');
 const { HardwarePool } = require('../sessions');
 
-const CONTROLLER_USER_PATH = "users/";
+const CONTROLLER_USER_PATH = 'users/';
 
 class InvalidActivityError extends Error {}
 class InvalidControllerError extends Error {}
 class InvalidViewError extends Error {}
 
 class Updater {
-
   FILTERS = {
-    'C': name => {
-      return name.endsWith('.c') || name == "Makefile" || name.endsWith('.txt') || name.endsWith('.md');
+    C: (name) => {
+      return (
+        name.endsWith('.c') ||
+        name == 'Makefile' ||
+        name.endsWith('.txt') ||
+        name.endsWith('.md')
+      );
     },
-    'Python': name => {
-      return name.endsWith('.py') || name.endsWith('.txt') || name.endsWith('.md');
+    Python: (name) => {
+      return (
+        name.endsWith('.py') || name.endsWith('.txt') || name.endsWith('.md')
+      );
     },
-    'Dobot': name => {
-      return name.endsWith('.py') || name.endsWith('.txt') || name.endsWith('.md');
+    Dobot: (name) => {
+      return (
+        name.endsWith('.py') || name.endsWith('.txt') || name.endsWith('.md')
+      );
     },
-    'Javascript': name => {
-      return name.endsWith('.js') || name.endsWith('.txt') || name.endsWith('.md');
+    Javascript: (name) => {
+      return (
+        name.endsWith('.js') || name.endsWith('.txt') || name.endsWith('.md')
+      );
     },
   };
   EXPLICIT = {
-    'add controller' : this.addController,
-  }
+    'add controller': this.addController,
+  };
 
   ACTIONS = {
-    'add': async (q) => { return this.add(q); },
-    'delete': async (q) => { return this.delete(q); },
+    add: async (q) => {
+      return this.add(q);
+    },
+    delete: async (q) => {
+      return this.delete(q);
+    },
     // 'set': async (q) => { return this.set(q); },
-    'get': async (q) => { return this.get(q); },
+    get: async (q) => {
+      return this.get(q);
+    },
   };
 
   MODELS = {
-    'view': View,
-    'controller': Controller,
-    'activity': Activity,
-    'user': User,
-    'course': Course,
+    view: View,
+    controller: Controller,
+    activity: Activity,
+    user: User,
+    course: Course,
   };
 
   RESOURCES = {
-    'view': where => {
+    view: (where) => {
       return [
         `${Settings.VIEWS_SERVE}/${where.id}`,
-        `${Settings.VIEWS}/${where.id}.zip`
-      ]
+        `${Settings.VIEWS}/${where.id}.zip`,
+      ];
     },
-    'controller': where => {
+    controller: (where) => {
       return [
         `${Settings.CONTROLLERS}/${where.id}`,
-        `${Settings.CONTROLLERS}/${where.id}.zip`
-      ]
+        `${Settings.CONTROLLERS}/${where.id}.zip`,
+      ];
     },
-    'user': where => { return []; },
-    'activity': where => { return []; },
-    'course': where => { return []; }
+    user: (where) => {
+      return [];
+    },
+    activity: (where) => {
+      return [];
+    },
+    course: (where) => {
+      return [];
+    },
   };
 
   /* Add a new activity.
@@ -93,25 +115,27 @@ class Updater {
         sessionTimeout: data.sessionTimeout || 5,
         viewName: data.viewName,
         controllerName: data.controllerName,
-      }
+      };
       if (data.view) {
-        var view = await this.addView({view: data.view});
+        var view = await this.addView({ view: data.view });
         activity.ViewId = view.id;
         activity.viewName = view.name;
       }
       if (data.controller) {
-        var controller = await this.addController({controller: data.controller});
+        var controller = await this.addController({
+          controller: data.controller,
+        });
         activity.ControllerId = controller.id;
         activity.controllerName = controller.name;
       }
-      if(!activity.viewName) {
-        throw new InvalidActivityError('Invalid view'); 
+      if (!activity.viewName) {
+        throw new InvalidActivityError('Invalid view');
       }
-      if(!activity.controllerName) {
-        throw new InvalidActivityError('Invalid controller'); 
+      if (!activity.controllerName) {
+        throw new InvalidActivityError('Invalid controller');
       }
       return await Activity.create(activity);
-    } catch(e) {
+    } catch (e) {
       throw new InvalidActivityError(e.message);
     }
   }
@@ -138,13 +162,13 @@ class Updater {
       view.description = bundle.get('html-description');
       view.path = bundle.get('main-simulation');
       return await view.save();
-    } catch(e) {
+    } catch (e) {
       logger.debug(`Cannot save view file: ${e.message}`);
       if (view) {
         fs.unlinkSync(`${Settings.VIEWS}/${view.id}.zip`);
         fs.rmdirSync(`${Settings.VIEWS_SERVE}/${view.id}`, { recursive: true });
       }
-      throw new InvalidViewError(`Cannot save view file. Reason: ${e.message}`)
+      throw new InvalidViewError(`Cannot save view file. Reason: ${e.message}`);
     }
   }
 
@@ -163,25 +187,31 @@ class Updater {
     try {
       var bundle = new Bundle(data.controller);
       var controller = Controller.build({
-        name: data.name || bundle.get('name'), 
+        name: data.name || bundle.get('name'),
         type: data.language || bundle.get('type'),
-        path: bundle.get('main-script')
+        path: bundle.get('main-script'),
       });
       bundle.setName(`${Settings.CONTROLLERS}/${controller.id}.zip`);
       bundle.extractTo(`${Settings.CONTROLLERS}/${controller.id}`);
       controller.save();
       try {
-        HardwarePool.getHardwareFor(controller)['adapter'].compile(data.callback);
-      } catch(error) { logger.debug(error )}
+        HardwarePool.getHardwareFor(controller)['adapter'].compile(
+          data.callback
+        );
+      } catch (error) {
+        logger.debug(error);
+      }
       return controller;
-    } catch(e) {
-      console.log(e)
+    } catch (e) {
+      console.log(e);
       logger.debug('Cannot save controller file.');
       if (controller) {
         fs.unlinkSync(`${Settings.CONTROLLERS}/${controller.id}.zip`);
-        fs.rmdirSync(`${Settings.CONTROLLERS}/${controller.id}`, { recursive: true });
+        fs.rmdirSync(`${Settings.CONTROLLERS}/${controller.id}`, {
+          recursive: true,
+        });
       }
-      throw new InvalidControllerError('Cannot save controller file.')
+      throw new InvalidControllerError('Cannot save controller file.');
     }
   }
 
@@ -209,16 +239,18 @@ class Updater {
       logger.debug('Updater: Folder not found!');
       let default_path = this._get_default_folder(language);
       try {
-        logger.debug(`Updater: Copying default controller ${default_path}->${user_path}`);
+        logger.debug(
+          `Updater: Copying default controller ${default_path}->${user_path}`
+        );
         var fileNames = fs.readdirSync(default_path);
         fs.mkdirSync(user_path, { recursive: true });
         for (var i = 0; i < fileNames.length; i++) {
           var name = fileNames[i];
           var content = fs.readFileSync(default_path + name);
           var stats = fs.statSync(default_path + name);
-          fs.writeFileSync(user_path + name, content, {mode: stats.mode});
+          fs.writeFileSync(user_path + name, content, { mode: stats.mode });
         }
-      } catch(e1) {
+      } catch (e1) {
         logger.warn(`Updater: Missing default controller ${default_path}`);
         return false;
       }
@@ -232,7 +264,7 @@ class Updater {
       var filename = files[f].filename;
       var content = files[f].code;
       logger.debug(`file: ${filename}`);
-      if(!is_selectable || is_selectable(filename)) {
+      if (!is_selectable || is_selectable(filename)) {
         var code_stream = fs.createWriteStream(`${userpath}/${filename}`);
         code_stream.write(content);
         code_stream.end();
@@ -251,35 +283,48 @@ class Updater {
    */
   async getController(query) {
     try {
-      var controller = await Controller.findOne({ where: { name: query.name } });
+      var controller = await Controller.findOne({
+        where: { name: query.name },
+      });
       if (!query.format || query.format != 'zip') {
-        return this._get_files(`${Settings.CONTROLLERS}/${controller.id}`, this.FILTERS[query.language]);
+        return this._get_files(
+          `${Settings.CONTROLLERS}/${controller.id}`,
+          this.FILTERS[query.language]
+        );
       }
       var filename = `${Settings.CONTROLLERS}/${controller.id}.zip`;
-      return [{
-        filename: filename,
-        code: fs.readFileSync(filename, {encoding: 'utf8'})
-      }];
-    } catch(e) {
-      logger.debug(e.message)
+      return [
+        {
+          filename: filename,
+          code: fs.readFileSync(filename, { encoding: 'utf8' }),
+        },
+      ];
+    } catch (e) {
+      logger.debug(e.message);
       throw new InvalidControllerError();
     }
   }
 
   _get_files(path, is_selectable) {
-    let defaultFilter = [() => { return true; }];
+    let defaultFilter = [
+      () => {
+        return true;
+      },
+    ];
     var filter = is_selectable || defaultFilter;
     var fileNames = fs.readdirSync(path);
     var files = [];
     for (var i = 0; i < fileNames.length; i++) {
       var name = fileNames[i];
-      if(filter(name)) {
+      if (filter(name)) {
         var fileInfo = {};
         fileInfo.filename = name;
         try {
-          fileInfo.code = fs.readFileSync(`${path}/${name}`, {encoding: 'utf8'});
+          fileInfo.code = fs.readFileSync(`${path}/${name}`, {
+            encoding: 'utf8',
+          });
           files.push(fileInfo);
-        } catch(e) {
+        } catch (e) {
           logger.debug(`Cannot read ${fileInfo.filename}`);
         }
       }
@@ -299,14 +344,19 @@ class Updater {
     try {
       var view = await View.findOne({ where: { name: query.name } });
       if (!query.format || query.format != 'zip') {
-        return this._get_files(`${Settings.VIEWS_SERVE}/${view.id}`, this.FILTERS[query.language]);
+        return this._get_files(
+          `${Settings.VIEWS_SERVE}/${view.id}`,
+          this.FILTERS[query.language]
+        );
       }
       var filename = `${Settings.VIEWS}/${view.id}.zip`;
-      return [{
-        filename: filename,
-        code: fs.readFileSync(filename, {encoding: 'utf8'})
-      }];
-    } catch(e) {
+      return [
+        {
+          filename: filename,
+          code: fs.readFileSync(filename, { encoding: 'utf8' }),
+        },
+      ];
+    } catch (e) {
       throw new InvalidViewError();
     }
   }
@@ -316,10 +366,10 @@ class Updater {
    */
   setUsers(users) {
     var userList = JSON.parse(users);
-    userList.forEach(async u => {
+    userList.forEach(async (u) => {
       try {
         await User.create(u);
-      } catch(error) {
+      } catch (error) {
         logger.log(error.message);
       }
     });
@@ -332,9 +382,11 @@ class Updater {
       logger.debug(`Creating folder: ${backup_path}.`);
       fs.mkdirSync(backup_path);
     }
-    var date = DateFormat(new Date(), "_yyyymmdd_HHMMss");
+    var date = DateFormat(new Date(), '_yyyymmdd_HHMMss');
     var backup = backup_path + path.basename(filename) + date;
-    logger.info(`Saving ${path.basename(filename)} as ${path.basename(backup)}.`);
+    logger.info(
+      `Saving ${path.basename(filename)} as ${path.basename(backup)}.`
+    );
     fs.copyFileSync(filename, backup);
   }
 
@@ -358,7 +410,7 @@ class Updater {
   setConfig(data) {
     var files = fs.readdirSync(Settings.CONFIG);
     for (var i = 0; i < files.length; i++) {
-      if(this.FILTERS['Javascript'](files[i])) {
+      if (this.FILTERS['Javascript'](files[i])) {
         var filename = `${Settings.CONFIG}'/'files[i]`;
         this._archive(filename, Settings.CONFIG + '/backup');
       }
@@ -440,44 +492,45 @@ class Updater {
   }
 
   async get(query) {
+    const preprocess = {
+      where: (v) => v,
+      include: (v) => v.map((o) => this.MODELS[o]),
+    };
+    const validKeys = Object.keys(preprocess);
     let q = {};
-    if ('where' in query) {
-      q['where'] = this.MODELS[query['where']]
-    }
-    if ('include' in query) { q['include'] = query['include'];
-    }
-    let validKeys = ['include', 'where'];
     Object.keys(query)
       .filter((k) => validKeys.includes(k))
-      .forEach((k) => {
-        q[k] = this.MODELS[query[k]];
+      .map((k) => {
+        q[k] = preprocess[k](query[k]);
       });
-    return validKeys.some((k) => k in q) ? 
-      this.MODELS[query.model].findAll(q) :
-      this.MODELS[query.model].findAll();
+    return validKeys.some((k) => k in q)
+      ? this.MODELS[query.model].findAll(q)
+      : this.MODELS[query.model].findAll();
   }
 
   async delete(query) {
-    var element = await this.MODELS[query.model].findOne({ where: query.where });
-    this.RESOURCES[query.model](query.where).forEach(r => {
+    var element = await this.MODELS[query.model].findOne({
+      where: query.where,
+    });
+    this.RESOURCES[query.model](query.where).forEach((r) => {
       fs.rmdirSync(r, { recursive: true });
-    })
+    });
     element.destroy();
   }
 }
 
 class Bundle {
-
   constructor(content) {
     this.save(content);
   }
 
   save(content) {
-    const tmpfile = tmp.fileSync({ 'tmpdir': `${Settings.CONTROLLERS}/` });
+    const tmpfile = tmp.fileSync({ tmpdir: `${Settings.CONTROLLERS}/` });
     var regex = /^data:.+\/(.+);base64,(.*)$/;
     var matches = content.match(regex);
-    var contentToWrite = (matches != null) ? Buffer.from(matches[2], 'base64') : content;
-    fs.writeFileSync(tmpfile.name, contentToWrite);    
+    var contentToWrite =
+      matches != null ? Buffer.from(matches[2], 'base64') : content;
+    fs.writeFileSync(tmpfile.name, contentToWrite);
     this.name = tmpfile.name;
     this.metadata = this._getMetadata();
   }
@@ -490,15 +543,15 @@ class Bundle {
   _getMetadata() {
     const zipfile = new AdmZip(this.name);
     var metadata = zipfile.getEntry('_metadata.txt');
-    var data = metadata.  getData();
+    var data = metadata.getData();
     var content = Buffer.from(data).toString();
     const lines = content.split(/\r?\n/);
     var result = {};
-    lines.forEach(l => {
+    lines.forEach((l) => {
       try {
         var pair = l.match(/([^:]*):\s(\S.*)/);
         result[pair[1]] = pair[2];
-      } catch(e) {
+      } catch (e) {
         // logger.warn("Can't parse metadata pair.");
       }
     });

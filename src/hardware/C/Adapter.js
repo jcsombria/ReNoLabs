@@ -1,5 +1,5 @@
 const logger = require('winston').loggers.get('log');
-const spawn = require('child_process').spawn;
+const { spawn } = require('child_process');
 const HWConfig = require('./Config');
 const Adapter = require('../Adapter');
 const State = require('../State');
@@ -28,7 +28,8 @@ class CAdapter extends Adapter {
     if(this.connected) { return; }
     logger.info('C Adapter: Starting default controller...');
     logger.debug(`sudo ${this.getPathFor(this.controller.path)}`)
-    this.conn = spawn('sudo', [`${Settings.CONTROLLERS}/${this.controller.id}/${this.controller.path}`]);
+    this.conn = spawn(this.getPathFor(this.controller.path));
+
     this.conn.on('error', this.onerror.bind(this));
     this.conn.on('close', function() {this.connected = false;}.bind(this));
     /* En caso de fallo del controlador resetea las variables config y evolucion. */
@@ -82,16 +83,16 @@ class CAdapter extends Adapter {
 
 /* Encapsulate the state of the C controller */
 class CState extends State {
-  set evolution(value) {
-    try {
-      let changed = ((!this._evolution && value) || Math.abs(this._evolution[0] - value[0])>1e-3);
-      if(this.config == 2 && changed) {
-        this._evolution = value;
-      }
-    } catch(e) {
-      logger.warn('C Adapter: Cannot set evolution');
-    }
-  }
+  // set evolution(value) {
+  //   try {
+  //     // let changed = ((!this._evolution && value) || Math.abs(this._evolution[0] - value[0])>1e-3);
+  //     // if(this.config == 2 && changed) {
+  //       this._evolution = value;
+  //     // }
+  //   } catch(e) {
+  //     logger.warn('C Adapter: Cannot set evolution');
+  //   }
+  // }
 
   set controller(value) {
     this._controller = value;

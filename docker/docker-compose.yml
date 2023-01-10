@@ -1,37 +1,27 @@
 version: "2"
 services:
-  #node:
-  #  image: "node:8"
-  #  user: "node"
-  #  working_dir: /home/node/app
-  #  environment:
-  #    - NODE_ENV=production
-  #  volumes:
-  #    - ./volumes/node:/home/node/app
-  #  expose:
-  #    - "8080"
-  #  command: "npm start"
+  vrlabs_node:
+    build: .
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ../:/home/node/app
+    expose:
+      - "80"
+    command: "npm start"
 
-#  influxdb:
-#    ports:
-#      - "8086:8086"
-#    volumes:
-#      - ./volumes/influxdb:/var/lib/influxdb
-#    image: "influxdb:latest"
+  # influxdb:
+  #   ports:
+  #     - "8086:8086"
+  #   volumes:
+  #     - ./volumes/influxdb:/var/lib/influxdb
+  #   image: "influxdb:latest"
 
-
-  db:
+  vrlabs_db:
     image: mariadb
-    restart: always
     environment:
       MARIADB_ROOT_PASSWORD: admin#mariadb@1
     ports:
       - "3306:3306"
  #   volumes:
  #     - ./volumes/mariadb:/var/lib/mysql
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8081:8080

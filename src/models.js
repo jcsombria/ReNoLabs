@@ -1,22 +1,42 @@
 const Settings = require('./settings');
+const fs = require('fs');
 const { Sequelize, DataTypes, Model, DATE, where } = require('sequelize');
-//const sequelize = new Sequelize({
-//  dialect: 'sqlite',
-//  storage: Settings.SQLITE_DB_FILE,
-//  logging: false,
-//});
-
-const sequelize = new Sequelize(
-  Settings.MARIADB_DATABASE,
-  Settings.MARIADB_USER,
-  Settings.MARIADB_PASSWORD, {
-    host: '127.0.0.1',
-    dialect: 'mariadb',
+const sequelize = (Settings.DB_SERVER=='sqlite') ?
+  new Sequelize({
+    dialect: 'sqlite',
+    storage: Settings.SQLITE_DB_FILE,
     logging: false,
-  }
+  }) : 
+  new Sequelize(
+    Settings.MARIADB_DATABASE,
+    Settings.MARIADB_USER,
+    Settings.MARIADB_PASSWORD, {
+      host: '127.0.0.1',
+      dialect: 'mariadb',
+      logging: false,
+    }
 );
 
-class User extends Model {}
+class User extends Model {
+  // Returns the last nExperiments of the user
+  getExperiments(nExperiments) {
+    var files = fs.readdirSync(Settings.DATA)
+      .filter(e => { if (e.split('_')[0] == this.username) { return e; } })
+      .sort((a, b) => {
+        return fs.statSync(`${Settings.DATA}/${b}`).mtime.getTime() - fs.statSync(Settings.DATA + '/' + a).mtime.getTime();
+      });
+    if (nExperiments !== undefined) { files = files.slice(0, nExperiments); };
+    let experiments = files.map(item => {
+      var stats = fs.statSync(`${Settings.DATA}/${item}`);
+      return {
+        'name': item,
+        'date': stats.atime,
+        'size': stats.size
+      }
+    });
+    return experiments;
+  }
+}
 User.init({
   username: {
     type: DataTypes.STRING, allowNull: false, primaryKey: true
@@ -47,6 +67,12 @@ View.init({
   },
   name: {
     type: DataTypes.STRING, allowNull: false
+  },
+  extern: {
+    type: DataTypes.BOOLEAN,
+  },
+  model: {
+    type: DataTypes.JSON,
   },
   path: {
     type: DataTypes.STRING
@@ -96,28 +122,40 @@ Activity.init({
 
 
 class Controller extends Model {}
-Controller.init({
-  id: {
-    type: DataTypes.UUID, defaultValue: Sequelize.UUIDV4, primaryKey: true
+Controller.init(
+  {
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: Sequelize.UUIDV4,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    path: {
+      type: DataTypes.STRING,
+    },
+    date: {
+      type: DataTypes.DATE,
+      defaultValue: Sequelize.NOW,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    config: {
+      type: DataTypes.STRING,
+    },
+    model: {
+      type: DataTypes.JSON,
+    },
   },
-  name: {
-    type: DataTypes.STRING, allowNull: false
-  },
-  path: {
-    type: DataTypes.STRING
-  },
-  date: {
-    type: DataTypes.DATE, defaultValue: Sequelize.NOW
-  },
-  type: {
-    type: DataTypes.STRING, allowNull: false,
-  },
-  config: {
-    type: DataTypes.STRING,
-  },
-}, {
-  sequelize, modelName: 'Controller'
-});
+  {
+    sequelize,
+    modelName: 'Controller',
+  }
+);
 
 class Course extends Model {}
 Course.init({

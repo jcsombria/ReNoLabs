@@ -17,7 +17,7 @@ class Logger extends EventEmitter {
 		super();
 		this.on('signals.get', this._ondata.bind(this));
 		this.started = DateFormat(new Date(), "yyyymmdd_HHMMss");
-                this.datalogger = winston.loggers.get(this.started);
+		this.datalogger = winston.loggers.get(this.started);
 	}
 
 	log(data) {

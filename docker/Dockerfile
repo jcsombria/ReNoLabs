@@ -1,7 +1,6 @@
-# syntax=docker/dockerfile:1
-FROM python:3
-ENV PYTHONUNBUFFERED=1
-WORKDIR /code
-COPY requirements.txt /code/
-RUN pip install -r requirements.txt
-COPY . /code/
+FROM node:16
+COPY package.json /home/node/app
+RUN npm i
+WORKDIR /home/node/app
+EXPOSE 80
+USER node

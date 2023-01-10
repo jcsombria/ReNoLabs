@@ -67,14 +67,7 @@ class State {
   }
 
   set evolution(value) {
-    try {
-      let changed = ((!this._evolution && value) || Math.abs(this._evolution[0] - value[0])>1e-3);
-      if(this.config == 2 && changed) {
-        this._evolution = value;
-      }
-    } catch(e) {
-      logger.warn('C Adapter: Cannot set evolution');
-    }
+    this._evolution = value;
   }
 
   get evolution() {

@@ -23,7 +23,7 @@ const RIP = require('./RIPGeneric');
 const RIPConfig = require('../config/RIPConfig');
 const SSE = require('express-sse');
 const logger = require('winston').loggers.get('log');
-const SessionManager = require('../sessions').SessionManager;
+const { ActivityManager } = require('../sessions');
 const jsonrpc = require('../rip/jsonrpc')
 
 class RIPBroker extends EventEmitter {
@@ -117,11 +117,11 @@ class Experience {
 	}
 
 	set(variables, values) {
-		SessionManager.hw.write(variables, values);
+		ActivityManager.hw.write(variables, values);
 	}
 
 	get(variables) {
-		SessionManager.hw.read(variables);
+		ActivityManager.hw.read(variables);
 	}
 }
 

@@ -10,7 +10,6 @@ const Settings = require('../settings');
  * - start, play, pause, reset, end
  */
 class Adapter {
-
   /**
    * @param {Controller} controller The controller info.
    */
@@ -26,20 +25,22 @@ class Adapter {
   // Interface listener
   // {
   addListeners(o) {
-    o.forEach(l => {
-      if(!(l in this.listeners)) { this.listeners.push(l); }
+    o.forEach((l) => {
+      if (!(l in this.listeners)) {
+        this.listeners.push(l);
+      }
     });
   }
 
   addListener(l) {
-    if(!(l in this.listeners)) {
+    if (!(l in this.listeners)) {
       this.listeners.push(l);
     }
   }
 
   removeListener(o) {
     var i = this.listeners.indexOf(o);
-    if(i != -1) {
+    if (i != -1) {
       this.listeners.splice(i, 1);
     }
   }
@@ -52,7 +53,9 @@ class Adapter {
    * @param {string} username The name of the user that request to start the controller.
    */
   start(username) {
-    logger.error('Adapter: start is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
+    logger.error(
+      'Adapter: start is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.'
+    );
   }
 
   _getDefaultFolder(language) {
@@ -72,7 +75,7 @@ class Adapter {
    * @param {object} data The event data.
    */
   notify(ev, data) {
-    for(var i=0; i<this.listeners.length; i++) {
+    for (var i = 0; i < this.listeners.length; i++) {
       logger.silly(`notify ${ev} to listener ${i}`);
       this.listeners[i].emit(ev, data);
     }
@@ -85,10 +88,10 @@ class Adapter {
   ondata(ev) {
     this.connected = true;
     this.state.update(ev);
-    this.toNotify.forEach(v => {
+    this.toNotify.forEach((v) => {
       this.notify('signals.get', {
-        'variable': v,
-        'value': this.state[v]
+        variable: v,
+        value: this.state[v],
       });
       logger.silly(`${v}->${this.state[v]}`);
     });
@@ -98,25 +101,18 @@ class Adapter {
    * @param {string} error The information about the error.
    */
   onerror(error) {
-    logger.error('Adapter: stop is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
+    logger.error(
+      'Adapter: stop is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.'
+    );
   }
 
   /* Handles errors in stderr.
    * @param {string} error The information about the error.
    */
   onerrordata(error) {
-    logger.error('Adapter: onerrordata is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
-  }
-
-  /* Read the cached value of a variable of the C controller.
-   * @patam {string} variable the name of the variable
-   */
-  read(variable) {
-    try {
-      return this.state[variable];
-    } catch(e) {
-      logger.error(`Adapter: Cannot read ${variable}`)
-    }
+    logger.error(
+      'Adapter: onerrordata is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.'
+    );
   }
 
   /* Send a command to write the value of a variable in the C controller.
@@ -127,10 +123,12 @@ class Adapter {
   write(variable, value, callback) {
     try {
       //this.state[variable] = value;
-      this.conn.stdin.write(`${variable}:{$value}`);
+      this.conn.stdin.write(`${variable}:${value}`);
       logger.debug(`${variable}->${value}`);
-    } catch(e) {
-      logger.error(`Adapter: Cannot write ${variable}. Ignore this message if appears immediately after disconnection.`)
+    } catch (e) {
+      logger.error(
+        `Adapter: Cannot write ${variable}. Ignore this message if appears immediately after disconnection.`
+      );
     }
   }
 
@@ -157,7 +155,7 @@ class Adapter {
     logger.info('Adapter: Sending stop to controller.');
     this.write('config', 0);
     this.connected = false;
-//    this.state.removeListener(this.conn);
+    this.listeners = [];
   }
 
   /* Compile the controller in userpath.
@@ -165,7 +163,9 @@ class Adapter {
    * @patam {function} callback Invoked with the result of the compilation
    */
   compile(userpath, callback) {
-    logger.error('Adapter: compile is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.');
+    logger.error(
+      'Adapter: compile is NOT Implemented and should not have been invoked! It MUST be overriden by subclasses.'
+    );
   }
 
   _prepareUserFolder(username, language) {
@@ -178,12 +178,12 @@ class Adapter {
       logger.debug(`Copying default controller ${default_path}->${user_path}`);
       var fileNames = fs.readdirSync(default_path);
       logger.debug(fileNames);
-      fs.mkdirSync(user_path, {recursive: true});
+      fs.mkdirSync(user_path, { recursive: true });
       for (var i = 0; i < fileNames.length; i++) {
         var name = fileNames[i];
         var content = fs.readFileSync(default_path + name);
         var stats = fs.statSync(default_path + name);
-        fs.writeFileSync(user_path + name, content, {mode: stats.mode});
+        fs.writeFileSync(user_path + name, content, { mode: stats.mode });
       }
     }
   }
@@ -195,7 +195,7 @@ class Adapter {
       var filename = files[f].filename;
       var content = files[f].code;
       logger.debug(`file: ${filename}`);
-      if(!is_selectable || is_selectable(filename)) {
+      if (!is_selectable || is_selectable(filename)) {
         var code_stream = fs.createWriteStream(userpath + filename);
         code_stream.write(content);
         code_stream.end();
