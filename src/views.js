@@ -35,7 +35,7 @@ module.exports = {
       {
         username: req.user.username,
         displayName: req.user.displayName,
-        role: req.user.isAdmin ? 'admin' : 'user',
+        role: req.user.role,
       },
       Settings.ACCESS_TOKEN_SECRET,
       { expiresIn: '60m' }
@@ -46,18 +46,6 @@ module.exports = {
   authenticate: function (req, res) {
     return res.json({ result: 'Authenticated' });
   },
-
-  // activity: function (req, res) {
-  //   try {
-  //     res.render("activity", {
-  //       user: req.user,
-  //       activities: req.user.Activities,
-  //       activity: req.query.name,
-  //     });
-  //   } catch (e) {
-  //     logger.debug("Invalid Activity");
-  //   }
-  // },
 
   help: async function (req, res) {
     try {
@@ -88,10 +76,6 @@ module.exports = {
   // Read current user's files
   data: function (req, res) {
     res.json(req.user.getExperiments());
-    // res.render("table/experiments", {
-    //   user: req.user,
-    //   files: req.user.getExperiments(),
-    // });
   },
 
   request_activity: async function (req, res) {
@@ -142,12 +126,9 @@ module.exports = {
       const view = await getView(activity);
       ActivityManager.getSession(activity, user).connect(res.socket);
       return res.render('remote_lab.ejs', {
-        user,
         key: getToken(req),
-        ip: Config.WebServer.ip,
-        port: Config.WebServer.port,
-        view: `${view.id}/${view.path}`,
         activity: activity.name,
+        view: `${view.id}/${view.path}`,
       });
     } catch (e) {
       logger.debug(e);
@@ -398,23 +379,23 @@ module.exports.api.deprecated = {
     //     res.send(data);
     //   },
   },
-  // view: {
-  //   set: function (req, res) {
-  //     var data = {
-  //       name: req.body.name,
-  //       comment: req.body.comment,
-  //       view: Buffer.from(req.body.view, "base64"),
-  //       activity: req.body.activity,
-  //     };
-  //     Updater.addView(data)
-  //       .then((v) => {
-  //         res.send({ status: "OK", data: {} });
-  //       })
-  //       .catch((e) => {
-  //         res.send({ status: "ERROR", data: {} });
-  //       });
-  //   },
-  // },
+  view: {
+    set: function (req, res) {
+      var data = {
+        name: req.body.name,
+        comment: req.body.comment,
+        view: Buffer.from(req.body.view, "base64"),
+        activity: req.body.activity,
+      };
+      Updater.addView(data)
+        .then((v) => {
+          res.send({ status: "OK", data: {} });
+        })
+        .catch((e) => {
+          res.send({ status: "ERROR", data: {} });
+        });
+    },
+  },
   controller: {
     get: async function (req, res) {
       logger.info('Maintenance - Sending code...');
@@ -465,24 +446,5 @@ module.exports.api.deprecated = {
     //     },
     //   });
     // },
-  },
-};
-
-const Config = require('./config/AppConfig');
-const LabConfig = require('./config/LabConfig');
-module.exports.test = {
-  peggy: function (req, res) {
-    res.render('test_peggy.ejs');
-  },
-
-  serve: function (req, res) {
-    res.render(`tests/${req.params.page}.ejs`);
-  },
-
-  vue: function (req, res) {
-    res.render(`tests/vue.ejs`, {
-      model: LabConfig.model,
-      viewmodel: LabConfig.view,
-    });
   },
 };

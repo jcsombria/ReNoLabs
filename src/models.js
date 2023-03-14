@@ -6,7 +6,7 @@ const sequelize = (Settings.DB_SERVER=='sqlite') ?
     dialect: 'sqlite',
     storage: Settings.SQLITE_DB_FILE,
     logging: false,
-  }) : 
+  }) :
   new Sequelize(
     Settings.MARIADB_DATABASE,
     Settings.MARIADB_USER,
@@ -20,6 +20,9 @@ const sequelize = (Settings.DB_SERVER=='sqlite') ?
 class User extends Model {
   // Returns the last nExperiments of the user
   getExperiments(nExperiments) {
+    if (!fs.existsSync(Settings.DATA)) {
+      fs.mkdirSync(Settings.DATA);
+    }
     var files = fs.readdirSync(Settings.DATA)
       .filter(e => { if (e.split('_')[0] == this.username) { return e; } })
       .sort((a, b) => {
@@ -35,6 +38,17 @@ class User extends Model {
       }
     });
     return experiments;
+  }
+
+  get role() {
+    if (this.isAdmin) {
+      return 'admin';
+    }
+    const roles = this.permissions.split(';');
+    if(roles.includes('PROFESSOR')) {
+      return 'professor';
+    }
+    return 'student';
   }
 }
 User.init({
@@ -172,6 +186,30 @@ Course.init({
   sequelize, modelName: 'Course'
 });
 
+
+class Session extends Model {}
+Session.init({
+  id: {
+    type: DataTypes.UUID, defaultValue: Sequelize.UUIDV4, primaryKey: true
+  },
+  startedAt: {
+    type: DataTypes.DATE,
+    defaultValue: Sequelize.NOW,
+  },
+  finishedAt: {
+    type: DataTypes.DATE,
+  },
+  role: {
+    type: DataTypes.STRING,
+  },
+  data: {
+    type: DataTypes.STRING
+  }
+}, {
+  sequelize, modelName: 'Session'
+});
+
+
 Activity.belongsTo(View);
 Activity.belongsTo(Controller);
 View.hasMany(Activity);
@@ -181,14 +219,17 @@ User.belongsToMany(Activity, { through: 'UserActivities' });
 Activity.belongsToMany(User, { through: 'UserActivities' });
 
 User.belongsToMany(Course, { through: 'UserCourses' });
+Session.belongsTo(Activity);
+Session.belongsTo(User);
 
 sequelize.sync();
 
 module.exports = {
-  sequelize: sequelize,
-  User: User,
-  View: View,
-  Activity: Activity,
-  Controller: Controller,
-  Course: Course,
+  sequelize,
+  User,
+  View,
+  Activity,
+  Controller,
+  Course,
+  Session
 }

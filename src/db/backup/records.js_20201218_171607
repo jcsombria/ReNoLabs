@@ -1,5 +1,0 @@
-module.exports = [
-  { "id": "0", "username": "admin", "displayName": "Administrator", "password": "admin", "emails": [{ "value": "administrator@example.com" }], "permissions": ["ADMIN", "RO"] },
-  { "id": "1", "username": "supervisor", "displayName": "Supervisor", "password": "supervisor", "emails": [{ "value": "supervisor@example.com" }], "permissions": ["RO"] },
-  { "id": "2", "username": "jesus", "displayName": "Jesus", "password": "jesus", "emails": [{ "value": "supervisor@example.com" }], "permissions": ["USER"] },
-];

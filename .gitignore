@@ -71,3 +71,4 @@ var/
 database.sqlite
 public/
 test/
+src/settings.js

@@ -64,14 +64,14 @@ class Agent extends Adapter {
     }
   }
 
-  /* Send a command to write the value of a variable in the C controller.
+  /* Send a command to write the value of a variable in the controller.
    * @param {string}   variable the name of the variable
    * @param {string}   value    the value of the variable
    * @param {function} callback Invoked after success
    */
   write(variable, value, callback) {
     try {
-      this.control.send(JSON.stringify({ 'target': this.config.target, 'variable':variable, 'value':value }));
+      this.control.send(JSON.stringify({ 'target': this.config.target, 'variable': variable, 'value': value }));
     } catch(e) {
       logger.error(`Agent: Cannot write ${variable}. Ignore this message if appears immediately after disconnection.`)
     }
@@ -86,7 +86,7 @@ class Agent extends Adapter {
   }
 }
 
-/* Encapsulate the state of the C controller */
+/* Encapsulate the state of the controller */
 class AgentState extends State {
   constructor() {
     super();

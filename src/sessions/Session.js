@@ -40,11 +40,63 @@ class HardwarePool {
     hardware.adapter.stop();
     hardware.logger.end();
     hardware.eventGenerator.stop();
-    delete this.busy[hardware.name]; 
+    delete this.busy[hardware.name];
   }
 }
 
 const hardwarePool = new HardwarePool();
+
+
+class SessionReadOnly {
+  constructor(session) {
+    this.session = session;
+  }
+
+  connect(socket) {
+    if (socket.id == undefined) {
+      return;
+    }
+    this.socket = socket;
+    this.session.hardware.eventGenerator.addListener(socket);
+  }
+
+  disconnect(id) {
+    try {
+      logger.debug(`Disconnecting read only client ${id}`);
+      this.socket.disconnect();
+    } catch (e) {
+      logger.debug("Can't disconnect read only client properly.");
+    }
+  }
+
+  /* TO DO: Implement as a rule in the dispatcher. */
+  process(event) {}
+
+  /*
+   * @return {object} Information about the current session.
+   */
+  info() {
+    return {
+      user: this.session.user.username,
+      timeout: this.session.endTime,
+    };
+  }
+
+  get expired() {
+    return this.session.expired;
+  }
+
+  get finished() {
+    return !this.active;
+  }
+
+  /**
+   * @return {number} Seconds remaining in the session
+   */
+  get expiresIn() {
+    return this.session.expiresIn;
+  }
+}
 
 /* Session model. */
 class Session {
@@ -94,7 +146,7 @@ class Session {
     this.eventDispatcher.dispatch(event);
   }
 
-  start() {
+  async start() {
     logger.debug(`User ${this.user.username} starts ${this.activity.name}.`);
     this.active = true;
     this.activity.state = 'busy';
@@ -112,6 +164,13 @@ class Session {
       this._timeout.bind(this),
       this.activity.sessionTimeout * 60 * 1000
     );
+    this.session = await models.Session.create({
+      ActivityName: this.activity.name,
+      UserUsername: this.user.username,
+      startedAt: this.startTime,
+      finishedAt: this.endTime,
+      data: this.hardware.logger.name,
+    });
   }
 
   end() {
@@ -120,6 +179,8 @@ class Session {
     this.activity.save().catch((e) => {
       logger.debug(e);
     });
+    this.session.finishedAt = new Date();
+    this.session.save();
     logger.debug(`Stopping hardware`);
     this.stop();
     for (var c in this.clients) {
@@ -266,11 +327,11 @@ class ActivityManager {
    * @returns The session
    */
   getSession(activity, user) {
-    if (
-      !(activity.name in this.sessions) ||
-      this.sessions[activity.name].user.username != user.username
-    ) {
+    if (!(activity.name in this.sessions)) {
       return;
+    }
+    if (this.sessions[activity.name].user.username != user.username) {
+      return ; //new SessionReadOnly(this.sessions[activity.name]);
     }
     return this.sessions[activity.name];
   }

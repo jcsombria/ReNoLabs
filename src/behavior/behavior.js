@@ -1,4 +1,3 @@
-const db = require('../db');
 const logger = require('winston').loggers.get('log');
 const Config = require('../config/AppConfig');
 const { Updater } = require('../updater');
@@ -117,18 +116,18 @@ class BehaviorAdminMaintenance extends BehaviorMaintenance {
     this.sender.emit('codeCompleted', {});
   }
 
-  get_users() {
-    logger.info('Sending list of users...A great power comes with a great responsibility!');
-    logger.debug(db.users.getUsers());
-    this.sender.emit(USERS_GET, db.users.getUsers());
-  }
+  // get_users() {
+  //   logger.info('Sending list of users...A great power comes with a great responsibility!');
+  //   logger.debug(db.users.getUsers());
+  //   this.sender.emit(USERS_GET, db.users.getUsers());
+  // }
 
-  set_users(data) {
-    Updater.setUsers(data);
-    logger.info('Updating list of users...A great power comes with a great responsibility!');
-    db.users.reload();
-    this.sender.emit(USERS_SET, db.users.getUsers());
-  }
+  // set_users(data) {
+  //   Updater.setUsers(data);
+  //   logger.info('Updating list of users...A great power comes with a great responsibility!');
+  //   db.users.reload();
+  //   this.sender.emit(USERS_SET, db.users.getUsers());
+  // }
 
   get_signals() {
     logger.info('Sending config...A great power comes with a great responsibility!');

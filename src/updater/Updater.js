@@ -8,7 +8,7 @@ const tmp = require('tmp');
 
 const Config = require('../config/AppConfig');
 const LabConfig = require('../config/LabConfig');
-const { Controller, User, Activity, View, Course } = require('../models');
+const { Controller, User, Activity, View, Course, Session } = require('../models');
 const Settings = require('../settings');
 const { HardwarePool } = require('../sessions');
 
@@ -67,6 +67,7 @@ class Updater {
     activity: Activity,
     user: User,
     course: Course,
+    session: Session,
   };
 
   RESOURCES = {
@@ -422,56 +423,6 @@ class Updater {
     return this._get_files(Settings.CONFIG, this.FILTERS['Javascript']);
   }
 
-  // async deleteActivity(query) {
-  //   try {
-  //     await this._delete({
-  //       'model': Activity,
-  //       'where': { 'name': query.name },
-  //       'resources': []
-  //     });
-  //   } catch(e) {
-  //     throw new InvalidActivityError();
-  //   }
-  // }
-
-  // async deleteController(query) {
-  //   try {
-  //     await this._delete({
-  //       'model': Controller,
-  //       'where': { 'id': query.id },
-  //       'resources': [
-  //         `${Settings.CONTROLLERS}/${query.id}`,
-  //         `${Settings.CONTROLLERS}/${query.id}.zip`
-  //       ]
-  //     });
-  //   } catch(e) {
-  //     throw new InvalidControllerError();
-  //   }
-  // }
-
-  // async deleteView(query) {
-  //   try {
-  //     await this._delete({
-  //       'model': View,
-  //       'where': { 'id': query.id },
-  //       'resources': [
-  //         `${Settings.VIEWS_SERVE}/${query.id}`,
-  //         `${Settings.VIEWS}/${query.id}.zip`
-  //       ]
-  //     })
-  //   } catch(e) {
-  //     throw new InvalidViewError();
-  //   }
-  // }
-
-  // async _delete(query) {
-  //   var element = await query['model'].findOne({ where: query.where });
-  //   query['resources'].forEach(r => {
-  //     fs.rmdirSync(r, { recursive: true });
-  //   })
-  //   element.destroy();
-  // }
-
   async query(q) {
     var action = `${q.action} ${q.model}`;
     if (action in this.EXPLICIT) {
@@ -495,6 +446,8 @@ class Updater {
     const preprocess = {
       where: (v) => v,
       include: (v) => v.map((o) => this.MODELS[o]),
+      group: (v) => v,
+      order: (v) => v,
     };
     const validKeys = Object.keys(preprocess);
     let q = {};

@@ -49,6 +49,7 @@
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
     "peggy": "^1.2.0",
+    "read-last-lines": "^1.8.0",
     "sequelize": "^6.6.4",
     "socket.io": "^4.2.0",
     "sqlite3": "^4.2.0",

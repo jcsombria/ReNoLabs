@@ -74,6 +74,11 @@ class Logger extends EventEmitter {
 		var date = DateFormat(new Date(), "yyyymmdd_HHMMss");
 		return `${Settings.DATA}/${name}_${date}.txt`;
 	}
+
+
+	get name() {
+		return `${this.username}_${this.started}.txt`;
+	}
 }
 
 module.exports = Logger;

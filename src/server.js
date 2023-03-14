@@ -10,8 +10,6 @@ const views = require('./views');
 // Express modules.
 const jwt = require('jsonwebtoken');
 const express = require('express');
-// const login = require('connect-ensure-login');
-// const fileUpload = require('express-fileupload');
 const cookie_parser = require('cookie-parser');
 const cors = require('cors');
 const express_session = require('express-session')({
@@ -22,61 +20,31 @@ const express_session = require('express-session')({
 const passport = require('./auth/passport');
 // Init express app.
 const app = express();
-// app.set('views', Settings.TEMPLATES);
-// app.set('view engine', 'ejs');
-// app.use(express.static(Settings.PUBLIC));
+app.set('views', Settings.TEMPLATES);
+app.set('view engine', 'ejs');
+app.use(express.static(Settings.PUBLIC));
 // app.use(cookie_parser());
 app.use(cors());
 app.use(express.json({ type: 'application/json', limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express_session);
-// app.use(flash());
-// app.use(fileUpload());
 app.use(passport.initialize());
 app.use(passport.session());
 // API {
-app.post(
-  '/login',
-  passport.authenticate('local', { session: false }),
-  views.login
-);
-app.post(
-  '/authenticate',
-  passport.authenticate('jwt', { session: false }),
-  views.authenticate
-);
-app.get(
-  '/request_activity',
-  passport.authenticate('jwt', { session: false }),
-  views.request_activity
-);
-app.get(
-  '/remotelab',
-  passport.authenticate('jwt', { session: false }),
-  views.connect_to_activity
-);
+app.post('/login', passport.authenticate('local', { session: false }), views.login);
+app.post('/authenticate', passport.authenticate('jwt', { session: false }), views.authenticate);
+app.get('/request_activity', passport.authenticate('jwt', { session: false }), views.request_activity);
+app.get('/remotelab', passport.authenticate('jwt', { session: false }), views.connect_to_activity);
 app.get('/help', passport.authenticate('jwt', { session: false }), views.help);
+app.get('/download/*', passport.authenticate('jwt', { session: false }), views.download);
 app.post('/data', passport.authenticate('jwt', { session: false }), views.data);
-app.get(
-  '/download/*',
-  passport.authenticate('jwt', { session: false }),
-  views.download
-);
-// app.get("/logout", , views.logout);
 // }
 // Admin API
 function onlyAdmin(req, res, next) {
-  if (!req.user.isAdmin) {
-    return res.status(401);
-  }
+  if (!req.user.isAdmin) { return res.status(401); }
   next();
 }
-app.post(
-  '/admin/q/:model/:action/',
-  passport.authenticate('jwt', { session: false }),
-  // onlyAdmin,
-  views.api.query
-);
+app.post('/admin/q/:model/:action/', passport.authenticate('jwt', { session: false }), views.api.query);
 
 // URLs - legacy API (will be removed soon) {
 app.get(
@@ -105,12 +73,12 @@ app.post(
 //   onlyAdmin,
 //   views.api.deprecated.config.set
 // );
-// app.post(
-//   '/api/view/set',
-//   passport.authenticate('basic', { session: false }),
-//  onlyAdmin,
-//   views.api.view.set
-// );
+app.post(
+  '/api/view/set',
+  passport.authenticate('basic', { session: false }),
+  onlyAdmin,
+  views.api.deprecated.view.set
+);
 app.post(
   '/api/q/:model/:action/',
   passport.authenticate('basic', { session: false }),
@@ -129,9 +97,9 @@ var httpServer = app.listen(
   }
 );
 // Redirect undefined routes
-app.get('*', (re1, resf) => {
-  res.redirect('/');
-});
+//app.get('*', (req, res) => {
+//  res.redirect('/');
+//});
 // This section enables socket.io communications
 const { Server } = require('socket.io');
 const models = require('./models');
